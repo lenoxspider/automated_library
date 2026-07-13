@@ -1,0 +1,756 @@
+const express = require('express');
+const path = require('path');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+const db = require('./database');
+
+// Configure Nodemailer transporter using private env credentials
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.office365.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false, // false for 587, true for 465
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  },
+  tls: {
+    rejectUnauthorized: false // avoids certificate validation issues
+  }
+});
+
+function sendVerificationEmail(email, token, name) {
+  const verificationLink = `http://localhost:3000/api/auth/verify?token=${token}`;
+  
+  const mailOptions = {
+    from: `"SmartLib Library" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: 'Activate Your SmartLib Account',
+    html: `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #4f46e5; font-size: 28px; margin: 0; font-family: sans-serif;">SmartLib</h2>
+          <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">Digital Library Management System</p>
+        </div>
+        <h3 style="color: #0f172a; font-size: 20px;">Welcome to SmartLib, ${name}!</h3>
+        <p style="color: #334155; font-size: 15px; line-height: 1.6;">Your student library account has been registered. Please activate your account by clicking the button below to verify your email address:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationLink}" style="background-color: #4f46e5; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Verify Email Address</a>
+        </div>
+        <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">Or copy and paste this link into your browser address bar:</p>
+        <p style="word-break: break-all; font-size: 13px;"><a href="${verificationLink}" style="color: #4f46e5;">${verificationLink}</a></p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+        <p style="font-size: 11px; color: #94a3b8; text-align: center;">If you did not request this registration, please disregard this automated email.</p>
+      </div>
+    `
+  };
+
+  return new Promise((resolve, reject) => {
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Failed to send verification email to:', email, error.message);
+        reject(error);
+      } else {
+        console.log('Verification email successfully sent to:', email, info.response);
+        resolve(info);
+      }
+    });
+  });
+}
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Simple in-memory session management
+const sessions = {};
+
+// Authentication Middleware
+function authenticate(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+  }
+  const token = authHeader.split(' ')[1];
+  const session = sessions[token];
+  if (!session) {
+    return res.status(401).json({ error: 'Session expired. Please log in again.' });
+  }
+  req.user = session.user;
+  next();
+}
+
+// Role authorization helper
+function authorize(roles) {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Forbidden. Insufficient permissions.' });
+    }
+    next();
+  };
+}
+
+// Helper to check and update overdue status
+function checkAndUpdateOverdue() {
+  const today = new Date().toISOString().split('T')[0];
+  db.serialize(() => {
+    // Select all borrowed items that are overdue and update status
+    db.run(
+      `UPDATE borrowings 
+       SET status = 'overdue' 
+       WHERE status = 'borrowed' AND due_date < ?`,
+      [today],
+      function (err) {
+        if (err) {
+          if (!err.message.includes('no such table')) {
+            console.error("Error updating overdue status:", err);
+          }
+        }
+      }
+    );
+
+    // Auto-create unpaid fines for overdue books
+    db.all(
+      `SELECT b.id, b.due_date 
+       FROM borrowings b
+       LEFT JOIN fines f ON b.id = f.borrowing_id
+       WHERE b.status = 'overdue' AND f.id IS NULL`,
+      [],
+      (err, rows) => {
+        if (err) {
+          if (!err.message.includes('no such table')) {
+            console.error("Error selecting outstanding fines:", err);
+          }
+          return;
+        }
+        rows.forEach((row) => {
+          const due = new Date(row.due_date);
+          const now = new Date();
+          const diffDays = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
+          const fineAmount = Math.max(0, diffDays * 1.0);
+          if (fineAmount > 0) {
+            db.run(
+              `INSERT OR IGNORE INTO fines (borrowing_id, amount, status) VALUES (?, ?, 'unpaid')`,
+              [row.id, fineAmount]
+            );
+          }
+        });
+      }
+    );
+  });
+}
+
+// Regularly check for overdue borrowings
+setInterval(checkAndUpdateOverdue, 30000); // every 30 seconds
+
+
+// ==========================================
+// AUTHENTICATION API
+// ==========================================
+
+// Register User (Admins and Librarians can create anyone; Members can self-register for testing)
+app.post('/api/auth/register', (req, res) => {
+  const { username, password, role, name, email, student_id, index_number } = req.body;
+  if (!username || !password || !role || !name || !email) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+  if (/\d/.test(name)) {
+    return res.status(400).json({ error: 'Full Name cannot contain numbers.' });
+  }
+  if (role === 'member' && (!student_id || !index_number)) {
+    return res.status(400).json({ error: 'Student ID and Index Number are required for students.' });
+  }
+
+  const verificationToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+  db.run(
+    `INSERT INTO users (username, password, role, name, email, verification_token, is_verified, student_id, index_number) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+    [username, password, role, name, email, verificationToken, student_id || null, index_number || null],
+    async function (err) {
+      if (err) {
+        if (err.message.includes('UNIQUE constraint failed')) {
+          return res.status(400).json({ error: 'Username is already taken.' });
+        }
+        return res.status(500).json({ error: err.message });
+      }
+
+      const userId = this.lastID;
+
+      try {
+        await sendVerificationEmail(email, verificationToken, name);
+        res.status(201).json({ message: 'Registration successful. A verification email has been sent.' });
+      } catch (emailError) {
+        db.run(`DELETE FROM users WHERE id = ?`, [userId], (delErr) => {
+          if (delErr) console.error("Error rolling back user registration:", delErr);
+          res.status(500).json({ error: `Registration failed. Could not send verification email: ${emailError.message}` });
+        });
+      }
+    }
+  );
+});
+
+// Login
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required.' });
+  }
+
+  db.get(
+    `SELECT * FROM users WHERE username = ? AND password = ?`,
+    [username, password],
+    (err, user) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      if (!user) {
+        return res.status(400).json({ error: 'Invalid username or password.' });
+      }
+      if (user.is_verified === 0) {
+        return res.status(400).json({ error: 'Please verify your email address before logging in.' });
+      }
+
+      // Generate simple session token
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      sessions[token] = {
+        user: { id: user.id, username: user.username, role: user.role, name: user.name, email: user.email },
+        createdAt: Date.now()
+      };
+
+      res.json({ token, user: sessions[token].user });
+    }
+  );
+});
+
+// GET Email Verification
+app.get('/api/auth/verify', (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.status(400).send('<h1 style="font-family: sans-serif; text-align: center; margin-top: 100px; color: #ef4444;">Verification token is missing.</h1>');
+  }
+
+  db.get(`SELECT * FROM users WHERE verification_token = ?`, [token], (err, user) => {
+    if (err) return res.status(500).send('<h1>Server Error during verification.</h1>');
+    if (!user) {
+      return res.status(400).send(`
+        <div style="font-family: 'Segoe UI', sans-serif; text-align: center; margin-top: 100px; padding: 20px;">
+          <h1 style="color: #ef4444;">Verification Failed</h1>
+          <p style="color: #64748b; font-size: 16px;">The verification link is invalid, expired, or has already been used.</p>
+          <a href="/" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-top: 20px;">Go to Login</a>
+        </div>
+      `);
+    }
+
+    db.run(
+      `UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?`,
+      [user.id],
+      (err) => {
+        if (err) return res.status(500).send('<h1>Failed to update verification status.</h1>');
+        res.send(`
+          <div style="font-family: 'Segoe UI', sans-serif; text-align: center; margin-top: 100px; padding: 20px;">
+            <div style="color: #10b981; font-size: 64px; margin-bottom: 20px;">✓</div>
+            <h1 style="color: #0f172a; font-size: 28px; margin-bottom: 10px;">Email Verified Successfully!</h1>
+            <p style="color: #475569; font-size: 16px; margin-bottom: 30px;">Thank you, ${user.name}. Your account is now active and ready to log in.</p>
+            <a href="/" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to Login</a>
+          </div>
+        `);
+      }
+    );
+  });
+});
+
+// Logout
+app.post('/api/auth/logout', authenticate, (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader.split(' ')[1];
+  delete sessions[token];
+  res.json({ success: true, message: 'Logged out successfully.' });
+});
+
+// Get current session
+app.get('/api/auth/me', authenticate, (req, res) => {
+  res.json({ user: req.user });
+});
+
+
+// ==========================================
+// BOOK MANAGEMENT API
+// ==========================================
+
+// Get all books with optional search query
+app.get('/api/books', (req, res) => {
+  const { search } = req.query;
+  let sql = 'SELECT * FROM books';
+  let params = [];
+
+  if (search) {
+    sql += ' WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? OR isbn LIKE ?';
+    const queryParam = `%${search}%`;
+    params = [queryParam, queryParam, queryParam, queryParam];
+  }
+
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// Add a book (Librarian, Admin)
+app.post('/api/books', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const { title, author, genre, isbn, total_copies } = req.body;
+  if (!title || !author || !genre || !isbn || total_copies === undefined) {
+    return res.status(400).json({ error: 'All book details are required.' });
+  }
+
+  db.run(
+    `INSERT INTO books (title, author, genre, isbn, total_copies, available_copies) VALUES (?, ?, ?, ?, ?, ?)`,
+    [title, author, genre, isbn, total_copies, total_copies],
+    function (err) {
+      if (err) {
+        if (err.message.includes('UNIQUE constraint failed')) {
+          return res.status(400).json({ error: 'ISBN already exists.' });
+        }
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ id: this.lastID, title, author, genre, isbn, total_copies, available_copies: total_copies });
+    }
+  );
+});
+
+// Update a book (Librarian, Admin)
+app.put('/api/books/:id', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const { title, author, genre, isbn, total_copies } = req.body;
+  const bookId = req.params.id;
+
+  db.get(`SELECT * FROM books WHERE id = ?`, [bookId], (err, book) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!book) return res.status(404).json({ error: 'Book not found.' });
+
+    // Calculate new available copies based on change in total_copies
+    const diff = total_copies - book.total_copies;
+    const newAvailable = book.available_copies + diff;
+
+    if (newAvailable < 0) {
+      return res.status(400).json({ error: 'Total copies cannot be less than current checked out copies.' });
+    }
+
+    db.run(
+      `UPDATE books 
+       SET title = ?, author = ?, genre = ?, isbn = ?, total_copies = ?, available_copies = ? 
+       WHERE id = ?`,
+      [title, author, genre, isbn, total_copies, newAvailable, bookId],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Book updated successfully.' });
+      }
+    );
+  });
+});
+
+// Remove a book (Librarian, Admin)
+app.delete('/api/books/:id', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  db.run(`DELETE FROM books WHERE id = ?`, [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Book deleted successfully.' });
+  });
+});
+
+
+// ==========================================
+// MEMBER & USER MANAGEMENT API
+// ==========================================
+
+// Get all users (Admin, Librarian)
+app.get('/api/users', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  db.all(`SELECT id, username, role, name, email, student_id, index_number FROM users`, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// View a member's full borrowing history
+app.get('/api/users/:id/history', authenticate, (req, res) => {
+  const userId = req.params.id;
+
+  // Members can only see their own history, Admins/Librarians can see anyone's
+  if (req.user.role === 'member' && req.user.id !== parseInt(userId)) {
+    return res.status(403).json({ error: 'Access denied.' });
+  }
+
+  db.all(
+    `SELECT b.id, b.borrow_date, b.due_date, b.return_date, b.status,
+            bk.title, bk.author, bk.isbn,
+            f.amount as fine_amount, f.status as fine_status
+     FROM borrowings b
+     JOIN books bk ON b.book_id = bk.id
+     LEFT JOIN fines f ON b.id = f.borrowing_id
+     WHERE b.member_id = ?
+     ORDER BY b.borrow_date DESC`,
+    [userId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
+});
+
+// Delete a user (Admin only)
+app.delete('/api/users/:id', authenticate, authorize(['admin']), (req, res) => {
+  const userId = req.params.id;
+  if (req.user.id === parseInt(userId)) {
+    return res.status(400).json({ error: 'You cannot delete your own account.' });
+  }
+
+  db.run(`DELETE FROM users WHERE id = ?`, [userId], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'User account deleted successfully.' });
+  });
+});
+
+
+// ==========================================
+// BORROWING & RETURNS API
+// ==========================================
+
+// List all borrowings
+app.get('/api/borrowings', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  db.all(
+    `SELECT b.id, b.borrow_date, b.due_date, b.return_date, b.status,
+            bk.title, bk.author, bk.isbn,
+            u.name as member_name, u.email as member_email,
+            f.amount as fine_amount, f.status as fine_status
+     FROM borrowings b
+     JOIN books bk ON b.book_id = bk.id
+     JOIN users u ON b.member_id = u.id
+     LEFT JOIN fines f ON b.id = f.borrowing_id
+     ORDER BY b.borrow_date DESC`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
+});
+
+// Issue a book (Librarian, Admin)
+app.post('/api/borrowings', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const { book_id, member_id, due_date } = req.body;
+  if (!book_id || !member_id || !due_date) {
+    return res.status(400).json({ error: 'Book, Member, and Due Date are required.' });
+  }
+
+  db.get(`SELECT * FROM books WHERE id = ?`, [book_id], (err, book) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!book) return res.status(404).json({ error: 'Book not found.' });
+    if (book.available_copies <= 0) {
+      return res.status(400).json({ error: 'No copies of this book are currently available.' });
+    }
+
+    db.get(`SELECT * FROM users WHERE id = ? AND role = 'member'`, [member_id], (err, member) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!member) return res.status(404).json({ error: 'Member not found.' });
+
+      // Record borrowing transaction
+      const today = new Date().toISOString().split('T')[0];
+      db.serialize(() => {
+        db.run(
+          `INSERT INTO borrowings (book_id, member_id, borrow_date, due_date, status) VALUES (?, ?, ?, ?, 'borrowed')`,
+          [book_id, member_id, today, due_date],
+          function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+
+            // Decrement book availability
+            db.run(
+              `UPDATE books SET available_copies = available_copies - 1 WHERE id = ?`,
+              [book_id],
+              (err) => {
+                if (err) console.error("Error decrementing book availability:", err);
+              }
+            );
+
+            // Fulfill reservation if this member had one pending for this book
+            db.run(
+              `UPDATE reservations 
+               SET status = 'fulfilled' 
+               WHERE book_id = ? AND member_id = ? AND status = 'pending'`,
+              [book_id, member_id]
+            );
+
+            res.json({ message: 'Book issued successfully.', borrowingId: this.lastID });
+          }
+        );
+      });
+    });
+  });
+});
+
+// Return a book (Librarian, Admin)
+app.post('/api/borrowings/:id/return', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const borrowingId = req.params.id;
+  const today = new Date().toISOString().split('T')[0];
+
+  db.get(`SELECT * FROM borrowings WHERE id = ?`, [borrowingId], (err, borrowing) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!borrowing) return res.status(404).json({ error: 'Borrowing transaction not found.' });
+    if (borrowing.return_date) return res.status(400).json({ error: 'Book already returned.' });
+
+    const due = new Date(borrowing.due_date);
+    const now = new Date();
+    const diffDays = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
+    const fineAmount = Math.max(0, diffDays * 1.0);
+
+    db.serialize(() => {
+      // Update borrowing record
+      db.run(
+        `UPDATE borrowings SET return_date = ?, status = 'returned' WHERE id = ?`,
+        [today, borrowingId],
+        (err) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          // Increment book availability
+          db.run(
+            `UPDATE books SET available_copies = available_copies + 1 WHERE id = ?`,
+            [borrowing.book_id]
+          );
+
+          // Calculate fine and create fine record if overdue
+          if (fineAmount > 0) {
+            db.run(
+              `INSERT OR REPLACE INTO fines (borrowing_id, amount, status) VALUES (?, ?, 'unpaid')`,
+              [borrowingId, fineAmount],
+              (err) => {
+                if (err) console.error("Error creating fine:", err);
+              }
+            );
+            res.json({ message: 'Book returned with a late fine.', fineAmount });
+          } else {
+            res.json({ message: 'Book returned successfully. No fine.' });
+          }
+        }
+      );
+    });
+  });
+});
+
+
+// ==========================================
+// BOOK RESERVATIONS API
+// ==========================================
+
+// Get all reservations (Members see their own, Admin/Librarian see all)
+app.get('/api/reservations', authenticate, (req, res) => {
+  let sql = `
+    SELECT r.id, r.reservation_date, r.status,
+           bk.title, bk.author, bk.isbn, bk.available_copies,
+           u.name as member_name, u.email as member_email, u.id as member_id
+    FROM reservations r
+    JOIN books bk ON r.book_id = bk.id
+    JOIN users u ON r.member_id = u.id
+  `;
+  let params = [];
+
+  if (req.user.role === 'member') {
+    sql += ' WHERE r.member_id = ?';
+    params = [req.user.id];
+  }
+
+  sql += ' ORDER BY r.reservation_date DESC';
+
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// Reserve a book (Members can reserve)
+app.post('/api/reservations', authenticate, (req, res) => {
+  const { book_id } = req.body;
+  const member_id = req.user.role === 'member' ? req.user.id : req.body.member_id;
+
+  if (!book_id || !member_id) {
+    return res.status(400).json({ error: 'Book and Member are required.' });
+  }
+
+  // Check if member already has a pending reservation for this book
+  db.get(
+    `SELECT * FROM reservations WHERE book_id = ? AND member_id = ? AND status = 'pending'`,
+    [book_id, member_id],
+    (err, reservation) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (reservation) {
+        return res.status(400).json({ error: 'You already have a pending reservation for this book.' });
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      db.run(
+        `INSERT INTO reservations (book_id, member_id, reservation_date, status) VALUES (?, ?, ?, 'pending')`,
+        [book_id, member_id, today],
+        function (err) {
+          if (err) return res.status(500).json({ error: err.message });
+          res.json({ message: 'Book reserved successfully.', reservationId: this.lastID });
+        }
+      );
+    }
+  );
+});
+
+// Cancel a reservation
+app.post('/api/reservations/:id/cancel', authenticate, (req, res) => {
+  const reservationId = req.params.id;
+
+  db.get(`SELECT * FROM reservations WHERE id = ?`, [reservationId], (err, resv) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!resv) return res.status(404).json({ error: 'Reservation not found.' });
+
+    // Members can only cancel their own reservations
+    if (req.user.role === 'member' && resv.member_id !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    db.run(
+      `UPDATE reservations SET status = 'cancelled' WHERE id = ?`,
+      [reservationId],
+      (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Reservation cancelled successfully.' });
+      }
+    );
+  });
+});
+
+
+// ==========================================
+// FINE MANAGEMENT API
+// ==========================================
+
+// Get all fines
+app.get('/api/fines', authenticate, (req, res) => {
+  let sql = `
+    SELECT f.id, f.amount, f.status, f.payment_date,
+           bk.title,
+           u.name as member_name, u.email as member_email, u.id as member_id
+    FROM fines f
+    JOIN borrowings b ON f.borrowing_id = b.id
+    JOIN books bk ON b.book_id = bk.id
+    JOIN users u ON b.member_id = u.id
+  `;
+  let params = [];
+
+  if (req.user.role === 'member') {
+    sql += ' WHERE b.member_id = ?';
+    params = [req.user.id];
+  }
+
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// Record fine payment (Librarian, Admin)
+app.post('/api/fines/:id/pay', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const fineId = req.params.id;
+  const today = new Date().toISOString().split('T')[0];
+
+  db.run(
+    `UPDATE fines SET status = 'paid', payment_date = ? WHERE id = ?`,
+    [today, fineId],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: 'Fine payment recorded successfully.' });
+    }
+  );
+});
+
+
+// ==========================================
+// REPORTS & DASHBOARD API
+// ==========================================
+
+// Record a site visit/telemetry event
+app.post('/api/analytics/visit', (req, res) => {
+  const now = new Date().toISOString();
+  db.run(`INSERT INTO site_visits (visit_time) VALUES (?)`, [now], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// Get dashboard and analytics reports
+app.get('/api/reports/dashboard', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const stats = {};
+  
+  db.get(`SELECT COUNT(*) as total FROM books`, [], (err, row) => {
+    stats.totalBooks = row ? row.total : 0;
+    
+    db.get(`SELECT COUNT(*) as active FROM borrowings WHERE status = 'borrowed'`, [], (err, row) => {
+      stats.activeBorrowings = row ? row.active : 0;
+
+      db.get(`SELECT COUNT(*) as overdue FROM borrowings WHERE status = 'overdue'`, [], (err, row) => {
+        stats.overdueBorrowings = row ? row.overdue : 0;
+
+        db.get(`SELECT SUM(amount) as total FROM fines WHERE status = 'paid'`, [], (err, row) => {
+          stats.totalFinesCollected = row && row.total ? row.total : 0;
+
+          // Retrieve site visits stats
+          db.get(`SELECT COUNT(*) as count FROM site_visits`, [], (err, row) => {
+            stats.totalVisits = row ? row.count : 0;
+
+            // Hourly visit traffic distribution
+            db.all(
+              `SELECT strftime('%H', visit_time) as hour, COUNT(*) as count 
+               FROM site_visits 
+               GROUP BY hour 
+               ORDER BY hour ASC`,
+              [],
+              (err, hourlyVisits) => {
+                stats.hourlyVisits = hourlyVisits || [];
+
+                // Top 5 most borrowed books
+                db.all(
+                  `SELECT bk.title, COUNT(b.id) as count 
+                   FROM borrowings b 
+                   JOIN books bk ON b.book_id = bk.id 
+                   GROUP BY b.book_id 
+                   ORDER BY count DESC 
+                   LIMIT 5`,
+                  [],
+                  (err, topBooks) => {
+                    stats.topBooks = topBooks || [];
+
+                    // Monthly borrowing trends
+                    db.all(
+                      `SELECT strftime('%Y-%m', borrow_date) as month, COUNT(id) as count 
+                       FROM borrowings 
+                       GROUP BY month 
+                       ORDER BY month DESC 
+                       LIMIT 6`,
+                      [],
+                      (err, trends) => {
+                        stats.borrowingTrends = trends ? trends.reverse() : [];
+                        res.json(stats);
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          });
+        });
+      });
+    });
+  });
+});
+
+
+// Fallback to serving front-end Single Page Application for all page routes
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Run server
+app.listen(PORT, () => {
+  console.log(`SmartLib server is running on http://localhost:${PORT}`);
+  checkAndUpdateOverdue(); // Run initial status check
+});
