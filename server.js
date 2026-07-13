@@ -57,6 +57,46 @@ function sendVerificationEmail(email, token, name) {
   });
 }
 
+function sendResetEmail(email, token, name) {
+  const resetLink = `http://localhost:3000/?reset_token=${token}`;
+  
+  const mailOptions = {
+    from: `"SmartLib Library" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: 'Reset Your SmartLib Password',
+    html: `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #4f46e5; font-size: 28px; margin: 0; font-family: sans-serif;">SmartLib</h2>
+          <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">Digital Library Management System</p>
+        </div>
+        <h3 style="color: #0f172a; font-size: 20px;">Hello, ${name}!</h3>
+        <p style="color: #334155; font-size: 15px; line-height: 1.6;">We received a request to reset your SmartLib student account password. If you did not make this request, you can ignore this email.</p>
+        <p style="color: #334155; font-size: 15px; line-height: 1.6;">Click the button below to specify a new password. This recovery link is valid for 30 minutes:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" style="background-color: #4f46e5; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Reset Password</a>
+        </div>
+        <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">Or copy and paste this link into your browser address bar:</p>
+        <p style="word-break: break-all; font-size: 13px;"><a href="${resetLink}" style="color: #4f46e5;">${resetLink}</a></p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+        <p style="font-size: 11px; color: #94a3b8; text-align: center;">This is an automated security notification. Please do not reply directly.</p>
+      </div>
+    `
+  };
+
+  return new Promise((resolve, reject) => {
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Failed to send reset email to:', email, error.message);
+        reject(error);
+      } else {
+        console.log('Reset email successfully sent to:', email, info.response);
+        resolve(info);
+      }
+    });
+  });
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -219,6 +259,102 @@ app.post('/api/auth/login', (req, res) => {
       };
 
       res.json({ token, user: sessions[token].user });
+    }
+  );
+});
+
+// Request Password Reset
+app.post('/api/auth/forgot-password', (req, res) => {
+  const { student_id, index_number } = req.body;
+  if (!student_id || !index_number) {
+    return res.status(400).json({ error: 'Student ID and Index Number are required.' });
+  }
+
+  // Find user by student_id and index_number
+  db.all(
+    `SELECT * FROM users WHERE student_id = ? AND index_number = ?`,
+    [student_id, index_number],
+    async (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (rows.length === 0) {
+        return res.status(400).json({ error: 'No account found matching this Student ID and Index Number.' });
+      }
+      if (rows.length > 1) {
+        return res.status(400).json({ error: 'Multiple accounts match this criteria. Please contact support.' });
+      }
+
+      const user = rows[0];
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const expiry = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
+
+      db.run(
+        `UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?`,
+        [token, expiry, user.id],
+        async function (updateErr) {
+          if (updateErr) return res.status(500).json({ error: updateErr.message });
+          
+          try {
+            await sendResetEmail(user.email, token, user.name);
+            res.json({ message: 'Password recovery email has been sent successfully.' });
+          } catch (emailErr) {
+            res.status(500).json({ error: `Could not send recovery email: ${emailErr.message}` });
+          }
+        }
+      );
+    }
+  );
+});
+
+// Verify Reset Token (used on SPA load)
+app.get('/api/auth/verify-reset-token', (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ error: 'Reset token is required.' });
+
+  const now = new Date().toISOString();
+  db.get(
+    `SELECT email, name FROM users WHERE reset_token = ? AND reset_token_expiry > ?`,
+    [token, now],
+    (err, user) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!user) return res.status(400).json({ error: 'Reset link is invalid or has expired.' });
+      
+      // Mask email for privacy (e.g. da***i79@gmail.com)
+      const parts = user.email.split('@');
+      const emailUser = parts[0];
+      const emailDomain = parts[1];
+      const maskedUser = emailUser.length > 3 
+        ? emailUser.substring(0, 2) + '*'.repeat(emailUser.length - 3) + emailUser.slice(-1) 
+        : emailUser[0] + '*';
+      const maskedEmail = `${maskedUser}@${emailDomain}`;
+
+      res.json({ email: maskedEmail, name: user.name });
+    }
+  );
+});
+
+// Perform Password Reset
+app.post('/api/auth/reset-password', (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ error: 'Token and new password are required.' });
+  }
+
+  const now = new Date().toISOString();
+  db.get(
+    `SELECT id FROM users WHERE reset_token = ? AND reset_token_expiry > ?`,
+    [token, now],
+    (err, user) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!user) return res.status(400).json({ error: 'Reset link is invalid or has expired.' });
+
+      db.run(
+        `UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?`,
+        [password, user.id],
+        (updateErr) => {
+          if (updateErr) return res.status(500).json({ error: updateErr.message });
+          res.json({ message: 'Password has been reset successfully.' });
+        }
+      );
     }
   );
 });

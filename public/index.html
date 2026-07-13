@@ -47,6 +47,7 @@
                 </form>
                 <div class="auth-footer">
                     <p>Don't have an account? <span id="toggle-register" class="link-text">Create Account</span></p>
+                    <p style="margin-top: 10px;"><span id="toggle-forgot" class="link-text">Forgot Password?</span></p>
                 </div>
             </div>
         </div>
@@ -123,6 +124,79 @@
                 </form>
                 <div class="auth-footer">
                     <p>Already have an account? <span id="toggle-login" class="link-text">Sign In</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lost Password Page -->
+    <div id="forgot-container" class="auth-wrapper hidden">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>SmartLib</span>
+                </div>
+                <h2>Lost Password</h2>
+                <p>Verify your student credentials to receive a reset link</p>
+            </div>
+            <div class="auth-body">
+                <form id="forgot-form">
+                    <div class="input-group">
+                        <label for="forgot-student-id">Student ID</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                            <input type="text" id="forgot-student-id" required placeholder="Enter Student ID">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="forgot-index-number">Index Number</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-hashtag"></i>
+                            <input type="text" id="forgot-index-number" required placeholder="Enter Index Number">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Request Reset Link</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Remember your password? <span id="toggle-login-from-forgot" class="link-text">Sign In</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Execution Page -->
+    <div id="reset-container" class="auth-wrapper hidden">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>SmartLib</span>
+                </div>
+                <h2>Reset Password</h2>
+                <p style="margin-bottom: 8px;">Resetting password for:</p>
+                <p id="reset-email-display" style="font-weight: bold; color: var(--accent-color); font-size: 15px;"></p>
+            </div>
+            <div class="auth-body">
+                <form id="reset-form">
+                    <div class="input-group">
+                        <label for="reset-new-password">New Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="reset-new-password" required placeholder="Enter new password">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="reset-confirm-password">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="reset-confirm-password" required placeholder="Confirm new password">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Update Password</button>
+                </form>
+                <div class="auth-footer">
+                    <p><span id="toggle-login-from-reset" class="link-text">Return to Sign In</span></p>
                 </div>
             </div>
         </div>

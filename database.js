@@ -26,7 +26,9 @@ function initializeSchema() {
         is_verified INTEGER DEFAULT 0,
         verification_token TEXT,
         student_id TEXT,
-        index_number TEXT
+        index_number TEXT,
+        reset_token TEXT,
+        reset_token_expiry TEXT
       )
     `);
 
@@ -35,6 +37,8 @@ function initializeSchema() {
     db.run("ALTER TABLE users ADD COLUMN verification_token TEXT", (err) => {});
     db.run("ALTER TABLE users ADD COLUMN student_id TEXT", (err) => {});
     db.run("ALTER TABLE users ADD COLUMN index_number TEXT", (err) => {});
+    db.run("ALTER TABLE users ADD COLUMN reset_token TEXT", (err) => {});
+    db.run("ALTER TABLE users ADD COLUMN reset_token_expiry TEXT", (err) => {});
 
     // 2. Books Table
     db.run(`

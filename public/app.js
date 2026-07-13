@@ -62,15 +62,22 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(nextTheme);
     });
 
-    // Check for existing session
-    const savedToken = localStorage.getItem('smartlib_token');
-    const savedUser = localStorage.getItem('smartlib_user');
-    if (savedToken && savedUser) {
-        currentToken = savedToken;
-        currentUser = JSON.parse(savedUser);
-        setupDashboard(currentUser);
+    // Check for reset_token or existing session
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('reset_token');
+
+    if (resetToken) {
+        handleResetTokenLoad(resetToken);
     } else {
-        showLoginView();
+        const savedToken = localStorage.getItem('smartlib_token');
+        const savedUser = localStorage.getItem('smartlib_user');
+        if (savedToken && savedUser) {
+            currentToken = savedToken;
+            currentUser = JSON.parse(savedUser);
+            setupDashboard(currentUser);
+        } else {
+            showLoginView();
+        }
     }
 
     // Toggle Login / Register Views
@@ -84,9 +91,27 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('login-container').classList.remove('hidden');
     });
 
+    document.getElementById('toggle-forgot').addEventListener('click', () => {
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('forgot-container').classList.remove('hidden');
+    });
+
+    document.getElementById('toggle-login-from-forgot').addEventListener('click', () => {
+        document.getElementById('forgot-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
+    });
+
+    document.getElementById('toggle-login-from-reset').addEventListener('click', () => {
+        document.getElementById('reset-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
+        window.history.pushState({}, document.title, window.location.pathname);
+    });
+
     // Form Event Listeners
     document.getElementById('login-form').addEventListener('submit', handleLogin);
     document.getElementById('register-form').addEventListener('submit', handleRegister);
+    document.getElementById('forgot-form').addEventListener('submit', handleForgotPasswordSubmit);
+    document.getElementById('reset-form').addEventListener('submit', handleResetPasswordSubmit);
     document.getElementById('book-form').addEventListener('submit', handleBookSubmit);
     document.getElementById('issue-form').addEventListener('submit', handleIssueSubmit);
 
@@ -1243,5 +1268,74 @@ async function loadReportsCenter() {
                 `;
             });
         }
+    } catch (err) {}
+}
+
+let activeResetToken = null;
+
+async function handleResetTokenLoad(token) {
+    activeResetToken = token;
+    // Hide all containers
+    document.getElementById('login-container').classList.add('hidden');
+    document.getElementById('register-container').classList.add('hidden');
+    document.getElementById('forgot-container').classList.add('hidden');
+    document.getElementById('app-container').classList.add('hidden');
+    document.getElementById('reset-container').classList.remove('hidden');
+
+    document.getElementById('reset-email-display').textContent = 'Validating reset token...';
+
+    try {
+        const response = await fetch(`/api/auth/verify-reset-token?token=${token}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Invalid reset token.');
+        }
+
+        document.getElementById('reset-email-display').textContent = data.email;
+    } catch (err) {
+        showToast(err.message, 'error');
+        // Clear token from url and return to login
+        window.history.pushState({}, document.title, window.location.pathname);
+        document.getElementById('reset-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
+    }
+}
+
+async function handleForgotPasswordSubmit(e) {
+    e.preventDefault();
+    const student_id = document.getElementById('forgot-student-id').value;
+    const index_number = document.getElementById('forgot-index-number').value;
+
+    try {
+        const res = await apiCall('/api/auth/forgot-password', 'POST', { student_id, index_number });
+        showToast(res.message);
+        document.getElementById('forgot-form').reset();
+        
+        // Return to login
+        document.getElementById('forgot-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
+    } catch (err) {}
+}
+
+async function handleResetPasswordSubmit(e) {
+    e.preventDefault();
+    const password = document.getElementById('reset-new-password').value;
+    const confirm = document.getElementById('reset-confirm-password').value;
+
+    if (password !== confirm) {
+        showToast('Passwords do not match.', 'error');
+        return;
+    }
+
+    try {
+        const res = await apiCall('/api/auth/reset-password', 'POST', { token: activeResetToken, password });
+        showToast(res.message);
+        document.getElementById('reset-form').reset();
+        
+        // Remove parameter and switch to login
+        window.history.pushState({}, document.title, window.location.pathname);
+        document.getElementById('reset-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
     } catch (err) {}
 }
