@@ -128,6 +128,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Enforce numbers-only validation as the user types
+    const restrictToDigits = (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '');
+    };
+
+    const inputsToRestrict = [
+        'reg-student-id',
+        'reg-index-number',
+        'forgot-student-id',
+        'forgot-index-number'
+    ];
+
+    inputsToRestrict.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', restrictToDigits);
+    });
+
     const reportSelect = document.getElementById('report-select-type');
     if (reportSelect) {
         reportSelect.addEventListener('change', () => {
