@@ -138,15 +138,16 @@ function initializeSchema() {
     // Create/Update the default administrator account, ensuring it is verified
     db.get("SELECT * FROM users WHERE username = 'admin'", (err, row) => {
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@smartlib.com';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
       if (!row) {
         db.run(
           "INSERT INTO users (username, password, role, name, email, is_verified) VALUES (?, ?, ?, ?, ?, 1)",
-          ["admin", "admin123", "admin", "System Administrator", adminEmail],
+          ["admin", adminPassword, "admin", "System Administrator", adminEmail],
           (err) => {
             if (err) {
               console.error("Error creating default admin:", err.message);
             } else {
-              console.log(`Default admin account created: admin / admin123 (${adminEmail})`);
+              console.log(`Default admin account created: admin / ${adminPassword} (${adminEmail})`);
             }
           }
         );
