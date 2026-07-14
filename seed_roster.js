@@ -2,7 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
-const VCF_PATH = 'C:\\Users\\YOOF1337\\Downloads\\Telegram Desktop\\combined_contacts.vcf';
+// Allows passing VCF path as command-line argument, defaults to local contacts.vcf or the local dev path
+const VCF_PATH = process.argv[2] || 
+                 (fs.existsSync(path.join(__dirname, 'contacts.vcf')) 
+                    ? path.join(__dirname, 'contacts.vcf') 
+                    : 'C:\\Users\\YOOF1337\\Downloads\\Telegram Desktop\\combined_contacts.vcf');
 const DB_PATH = path.join(__dirname, 'library.db');
 
 async function seed() {
