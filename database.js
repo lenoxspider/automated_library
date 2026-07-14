@@ -101,8 +101,19 @@ function initializeSchema() {
       )
     `);
 
-    // Migration statement for existing databases
+    // 7. Student Roster Master Table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS student_roster (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        student_id TEXT UNIQUE NOT NULL,
+        index_number TEXT UNIQUE NOT NULL
+      )
+    `);
+
+    // Migration statements for existing databases
     db.run("CREATE TABLE IF NOT EXISTS site_visits (id INTEGER PRIMARY KEY AUTOINCREMENT, visit_time TEXT NOT NULL)", (err) => {});
+    db.run("CREATE TABLE IF NOT EXISTS student_roster (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, student_id TEXT UNIQUE NOT NULL, index_number TEXT UNIQUE NOT NULL)", (err) => {});
 
     // Create/Update the default administrator account, ensuring it is verified
     db.get("SELECT * FROM users WHERE username = 'admin'", (err, row) => {

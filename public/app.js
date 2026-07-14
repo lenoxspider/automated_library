@@ -115,16 +115,65 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('book-form').addEventListener('submit', handleBookSubmit);
     document.getElementById('issue-form').addEventListener('submit', handleIssueSubmit);
 
-    // Toggle University Student fields based on role selection
+    // Toggle wizard steps based on role selection
     const regRoleSelect = document.getElementById('reg-role');
-    const universityFields = document.getElementById('university-fields');
-    if (regRoleSelect && universityFields) {
+    if (regRoleSelect) {
         regRoleSelect.addEventListener('change', (e) => {
+            const step1 = document.getElementById('reg-step-1');
+            const step2 = document.getElementById('reg-step-2');
+            const nameGroup = document.getElementById('reg-name-group');
+            const welcomeBanner = document.getElementById('reg-verified-welcome');
+
             if (e.target.value === 'member') {
-                universityFields.classList.remove('hidden');
+                step1.classList.remove('hidden');
+                step2.classList.add('hidden');
             } else {
-                universityFields.classList.add('hidden');
+                step1.classList.add('hidden');
+                step2.classList.remove('hidden');
+                welcomeBanner.classList.add('hidden');
+                nameGroup.classList.remove('hidden');
             }
+        });
+    }
+
+    // Step 1: Next button handler
+    const btnRegNext = document.getElementById('btn-reg-next');
+    if (btnRegNext) {
+        btnRegNext.addEventListener('click', async () => {
+            const student_id = document.getElementById('reg-student-id').value;
+            const index_number = document.getElementById('reg-index-number').value;
+
+            if (!student_id || !index_number) {
+                showToast('Please enter both Student ID and Index Number.', 'error');
+                return;
+            }
+
+            try {
+                const data = await apiCall('/api/auth/verify-roster', 'POST', { student_id, index_number });
+                verifiedStudentName = data.name;
+                
+                document.getElementById('reg-verified-welcome').innerHTML = `
+                    <i class="fa-solid fa-circle-check"></i>
+                    Identity Verified: <strong>${data.name}</strong>
+                `;
+                document.getElementById('reg-verified-welcome').classList.remove('hidden');
+                document.getElementById('reg-name-group').classList.add('hidden');
+                
+                document.getElementById('reg-step-1').classList.add('hidden');
+                document.getElementById('reg-step-2').classList.remove('hidden');
+            } catch (err) {
+                // Error toast already shown by apiCall
+            }
+        });
+    }
+
+    // Step 2: Back button handler
+    const btnRegBack = document.getElementById('btn-reg-back');
+    if (btnRegBack) {
+        btnRegBack.addEventListener('click', () => {
+            document.getElementById('reg-step-1').classList.remove('hidden');
+            document.getElementById('reg-step-2').classList.add('hidden');
+            verifiedStudentName = '';
         });
     }
 
@@ -248,6 +297,15 @@ function showLoginView() {
     if (regRole) {
         regRole.innerHTML = '<option value="member">Member (Student / Staff)</option>';
     }
+
+    // Reset register wizard state
+    const step1 = document.getElementById('reg-step-1');
+    const step2 = document.getElementById('reg-step-2');
+    if (step1 && step2) {
+        step1.classList.remove('hidden');
+        step2.classList.add('hidden');
+    }
+    verifiedStudentName = '';
 }
 
 // Open / Close Modal Helpers
@@ -372,33 +430,36 @@ async function handleLogin(e) {
     }
 }
 
+let verifiedStudentName = '';
+
 async function handleRegister(e) {
     e.preventDefault();
-    const name = document.getElementById('reg-name').value;
+    const role = document.getElementById('reg-role').value;
     const email = document.getElementById('reg-email').value;
     const username = document.getElementById('reg-username').value;
     const password = document.getElementById('reg-password').value;
-    const role = document.getElementById('reg-role').value;
-    
     const student_id = role === 'member' ? document.getElementById('reg-student-id').value : null;
     const index_number = role === 'member' ? document.getElementById('reg-index-number').value : null;
 
-    if (/\d/.test(name)) {
-        showToast('Full Name cannot contain numbers.', 'error');
+    const name = role === 'member' ? verifiedStudentName : document.getElementById('reg-name').value;
+
+    if (!name) {
+        showToast('Identification verification is incomplete. Please do Step 1.', 'error');
         return;
     }
-    if (role === 'member' && (!student_id || !index_number)) {
-        showToast('Student ID and Index Number are required for students.', 'error');
+    if (role !== 'member' && /\d/.test(name)) {
+        showToast('Full Name cannot contain numbers.', 'error');
         return;
     }
 
     try {
         const res = await apiCall('/api/auth/register', 'POST', { username, password, role, name, email, student_id, index_number });
         showToast(res.message || 'Account registered successfully!');
-        document.getElementById('register-form').reset();
         
-        // Hide university fields for next registration
-        document.getElementById('university-fields').classList.remove('hidden');
+        document.getElementById('register-form').reset();
+        document.getElementById('reg-step-2').classList.add('hidden');
+        document.getElementById('reg-step-1').classList.remove('hidden');
+        verifiedStudentName = '';
         
         // If logged in already as staff, return to dashboard
         if (currentToken) {

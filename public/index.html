@@ -67,34 +67,6 @@
             <div class="auth-body">
                 <form id="register-form">
                     <div class="input-group">
-                        <label for="reg-name">Full Name</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-id-card"></i>
-                            <input type="text" id="reg-name" required placeholder="e.g. John Doe">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="reg-email">Email Address</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-envelope"></i>
-                            <input type="email" id="reg-email" required placeholder="e.g. john@example.com">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="reg-username">Username</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-user"></i>
-                            <input type="text" id="reg-username" required placeholder="Choose a username">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="reg-password">Password</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-lock"></i>
-                            <input type="password" id="reg-password" required placeholder="Create a password">
-                        </div>
-                    </div>
-                    <div class="input-group">
                         <label for="reg-role">Role</label>
                         <div class="input-wrapper">
                             <i class="fa-solid fa-users-gear"></i>
@@ -103,24 +75,64 @@
                             </select>
                         </div>
                     </div>
-                    <!-- University Student fields (Toggled dynamically via JS) -->
-                    <div id="university-fields">
+
+                    <!-- STEP 1: Student Verification -->
+                    <div id="reg-step-1">
                         <div class="input-group">
                             <label for="reg-student-id">Student ID</label>
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-graduation-cap"></i>
-                                <input type="text" id="reg-student-id" placeholder="e.g. 20230104">
+                                <input type="text" id="reg-student-id" placeholder="Enter Student ID">
                             </div>
                         </div>
                         <div class="input-group">
                             <label for="reg-index-number">Index Number</label>
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-hashtag"></i>
-                                <input type="text" id="reg-index-number" placeholder="e.g. 12345/2023">
+                                <input type="text" id="reg-index-number" placeholder="Enter Index Number">
                             </div>
                         </div>
+                        <button type="button" id="btn-reg-next" class="btn btn-primary btn-block" style="margin-top: 16px;">Verify Identity & Next</button>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Register Account</button>
+
+                    <!-- STEP 2: Setup Credentials -->
+                    <div id="reg-step-2" class="hidden">
+                        <div id="reg-verified-welcome" style="margin-bottom: 20px; padding: 12px; background-color: rgba(16,185,129,0.1); color: #10b981; border-radius: 8px; font-size: 14px; text-align: center; border: 1px dashed #10b981;">
+                            <!-- Welcome classmate name goes here -->
+                        </div>
+                        <div class="input-group" id="reg-name-group">
+                            <label for="reg-name">Full Name</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-id-card"></i>
+                                <input type="text" id="reg-name" placeholder="e.g. John Doe">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-email">Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-envelope"></i>
+                                <input type="email" id="reg-email" required placeholder="e.g. classmate@example.com">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-username">Username</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-user"></i>
+                                <input type="text" id="reg-username" required placeholder="Choose a username">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-password">Password</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" id="reg-password" required placeholder="Create a password">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="button" id="btn-reg-back" class="btn btn-outline" style="flex: 1;">Back</button>
+                            <button type="submit" class="btn btn-primary" style="flex: 2;">Register Account</button>
+                        </div>
+                    </div>
                 </form>
                 <div class="auth-footer">
                     <p>Already have an account? <span id="toggle-login" class="link-text">Sign In</span></p>

@@ -189,7 +189,36 @@ setInterval(checkAndUpdateOverdue, 30000); // every 30 seconds
 // AUTHENTICATION API
 // ==========================================
 
-// Register User (Admins and Librarians can create anyone; Members can self-register for testing)
+// Verify Student ID & Index Number against master roster (Step 1)
+app.post('/api/auth/verify-roster', (req, res) => {
+  const { student_id, index_number } = req.body;
+  if (!student_id || !index_number) {
+    return res.status(400).json({ error: 'Student ID and Index Number are required.' });
+  }
+
+  // 1. Check if user is already registered in users table
+  db.get(`SELECT id FROM users WHERE student_id = ?`, [student_id], (err, existingUser) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (existingUser) {
+      return res.status(400).json({ error: 'An account has already been registered with this Student ID.' });
+    }
+
+    // 2. Query roster
+    db.get(
+      `SELECT name FROM student_roster WHERE student_id = ? AND index_number = ?`,
+      [student_id, index_number],
+      (err, student) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!student) {
+          return res.status(400).json({ error: 'Student details not found in the official university roster.' });
+        }
+        res.json({ message: 'Identity verified successfully.', name: student.name });
+      }
+    );
+  });
+});
+
+// Register User (Admins and Librarians can create anyone; Members self-register via roster matching)
 app.post('/api/auth/register', (req, res) => {
   const { username, password, role, name, email, student_id, index_number } = req.body;
   if (!username || !password || !role || !name || !email) {
@@ -198,36 +227,57 @@ app.post('/api/auth/register', (req, res) => {
   if (/\d/.test(name)) {
     return res.status(400).json({ error: 'Full Name cannot contain numbers.' });
   }
-  if (role === 'member' && (!student_id || !index_number)) {
-    return res.status(400).json({ error: 'Student ID and Index Number are required for students.' });
-  }
 
-  const verificationToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
-
-  db.run(
-    `INSERT INTO users (username, password, role, name, email, verification_token, is_verified, student_id, index_number) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`,
-    [username, password, role, name, email, verificationToken, student_id || null, index_number || null],
-    async function (err) {
-      if (err) {
-        if (err.message.includes('UNIQUE constraint failed')) {
-          return res.status(400).json({ error: 'Username is already taken.' });
+  // Helper function to proceed with user insertion
+  const proceedWithRegister = (finalName) => {
+    const verificationToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    db.run(
+      `INSERT INTO users (username, password, role, name, email, verification_token, is_verified, student_id, index_number) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+      [username, password, role, finalName, email, verificationToken, student_id || null, index_number || null],
+      async function (err) {
+        if (err) {
+          if (err.message.includes('UNIQUE constraint failed')) {
+            return res.status(400).json({ error: 'Username is already taken.' });
+          }
+          return res.status(500).json({ error: err.message });
         }
-        return res.status(500).json({ error: err.message });
-      }
 
-      const userId = this.lastID;
+        const userId = this.lastID;
 
-      try {
-        await sendVerificationEmail(email, verificationToken, name);
-        res.status(201).json({ message: 'Registration successful. A verification email has been sent.' });
-      } catch (emailError) {
-        db.run(`DELETE FROM users WHERE id = ?`, [userId], (delErr) => {
-          if (delErr) console.error("Error rolling back user registration:", delErr);
-          res.status(500).json({ error: `Registration failed. Could not send verification email: ${emailError.message}` });
-        });
+        try {
+          await sendVerificationEmail(email, verificationToken, finalName);
+          res.status(201).json({ message: 'Registration successful. A verification email has been sent.' });
+        } catch (emailError) {
+          db.run(`DELETE FROM users WHERE id = ?`, [userId], (delErr) => {
+            if (delErr) console.error("Error rolling back user registration:", delErr);
+            res.status(500).json({ error: `Registration failed. Could not send verification email: ${emailError.message}` });
+          });
+        }
       }
+    );
+  };
+
+  if (role === 'member') {
+    if (!student_id || !index_number) {
+      return res.status(400).json({ error: 'Student ID and Index Number are required for students.' });
     }
-  );
+    // Re-verify roster on registration to prevent API bypass
+    db.get(
+      `SELECT name FROM student_roster WHERE student_id = ? AND index_number = ?`,
+      [student_id, index_number],
+      (err, student) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!student) {
+          return res.status(400).json({ error: 'Student details not found on the roster.' });
+        }
+        // Force database record to use the clean roster name
+        proceedWithRegister(student.name);
+      }
+    );
+  } else {
+    // Librarians / Admins registered directly
+    proceedWithRegister(name);
+  }
 });
 
 // Login
