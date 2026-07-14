@@ -318,7 +318,7 @@ function loadViewData(viewId) {
 async function handleAdminUserSubmit(e) {
     e.preventDefault();
     const name = document.getElementById('user-form-name').value;
-    const email = document.getElementById('user-form-email').value;
+    const email = document.getElementById('user-form-email').value.trim().toLowerCase();
     const username = document.getElementById('user-form-username').value;
     const password = document.getElementById('user-form-password').value;
     const role = document.getElementById('user-form-role').value;
@@ -332,6 +332,10 @@ async function handleAdminUserSubmit(e) {
     }
     if (role === 'member' && (!student_id || !index_number)) {
         showToast('Student ID and Index Number are required for students.', 'error');
+        return;
+    }
+    if (!email.endsWith('@gmail.com')) {
+        showToast('Only Gmail addresses (@gmail.com) are accepted.', 'error');
         return;
     }
 

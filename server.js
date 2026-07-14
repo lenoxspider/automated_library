@@ -229,6 +229,9 @@ app.post('/api/auth/register', (req, res) => {
   if (/\d/.test(name)) {
     return res.status(400).json({ error: 'Full Name cannot contain numbers.' });
   }
+  if (!email.toLowerCase().endsWith('@gmail.com')) {
+    return res.status(400).json({ error: 'Only Gmail addresses (@gmail.com) are accepted.' });
+  }
 
   // Helper function to proceed with user insertion
   const proceedWithRegister = (finalName) => {

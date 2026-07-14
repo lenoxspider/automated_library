@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Submit handler
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('reg-email').value.trim();
+        const email = document.getElementById('reg-email').value.trim().toLowerCase();
         const username = document.getElementById('reg-username').value.trim();
         const password = document.getElementById('reg-password').value;
         const student_id = document.getElementById('reg-student-id').value.trim();
@@ -59,6 +59,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!verifiedStudentName) {
             showToast('Student identity not verified. Please complete Step 1.', 'error');
+            return;
+        }
+
+        if (!email.endsWith('@gmail.com')) {
+            showToast('Only Gmail addresses (@gmail.com) are accepted.', 'error');
             return;
         }
 
