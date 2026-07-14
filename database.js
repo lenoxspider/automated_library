@@ -111,9 +111,29 @@ function initializeSchema() {
       )
     `);
 
+    // 8. Library Policy Settings Table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS library_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    `, () => {
+      // Seed default configurations
+      db.run("INSERT OR IGNORE INTO library_settings (key, value) VALUES ('max_loans', '3')");
+      db.run("INSERT OR IGNORE INTO library_settings (key, value) VALUES ('block_fines', '1')");
+      db.run("INSERT OR IGNORE INTO library_settings (key, value) VALUES ('block_overdue', '1')");
+    });
+
     // Migration statements for existing databases
     db.run("CREATE TABLE IF NOT EXISTS site_visits (id INTEGER PRIMARY KEY AUTOINCREMENT, visit_time TEXT NOT NULL)", (err) => {});
     db.run("CREATE TABLE IF NOT EXISTS student_roster (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, student_id TEXT UNIQUE NOT NULL, index_number TEXT UNIQUE NOT NULL)", (err) => {});
+    db.run("CREATE TABLE IF NOT EXISTS library_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)", (err) => {
+      if (!err) {
+        db.run("INSERT OR IGNORE INTO library_settings (key, value) VALUES ('max_loans', '3')");
+        db.run("INSERT OR IGNORE INTO library_settings (key, value) VALUES ('block_fines', '1')");
+        db.run("INSERT OR IGNORE INTO library_settings (key, value) VALUES ('block_overdue', '1')");
+      }
+    });
 
     // Create/Update the default administrator account, ensuring it is verified
     db.get("SELECT * FROM users WHERE username = 'admin'", (err, row) => {

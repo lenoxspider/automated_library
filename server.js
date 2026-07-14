@@ -639,35 +639,67 @@ app.post('/api/borrowings', authenticate, authorize(['admin', 'librarian']), (re
       if (err) return res.status(500).json({ error: err.message });
       if (!member) return res.status(404).json({ error: 'Member not found.' });
 
-      // Record borrowing transaction
-      const today = new Date().toISOString().split('T')[0];
-      db.serialize(() => {
-        db.run(
-          `INSERT INTO borrowings (book_id, member_id, borrow_date, due_date, status) VALUES (?, ?, ?, ?, 'borrowed')`,
-          [book_id, member_id, today, due_date],
-          function (err) {
+      // Enforce borrowing policy rules
+      db.all(`SELECT * FROM library_settings`, [], (err, settingsRows) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const config = {};
+        settingsRows.forEach(r => { config[r.key] = r.value; });
+
+        const maxLoansLimit = parseInt(config.max_loans || '3', 10);
+        const blockFinesEnabled = config.block_fines === '1';
+        const blockOverdueEnabled = config.block_overdue === '1';
+
+        db.all(`SELECT status FROM borrowings WHERE member_id = ? AND status IN ('borrowed', 'overdue')`, [member_id], (err, loans) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          if (loans.length >= maxLoansLimit) {
+            return res.status(400).json({ error: `Checkout blocked: Member has reached maximum concurrent checkout limit of ${maxLoansLimit} books (Currently borrowing: ${loans.length}).` });
+          }
+
+          const hasOverdueLoans = loans.some(l => l.status === 'overdue');
+          if (blockOverdueEnabled && hasOverdueLoans) {
+            return res.status(400).json({ error: 'Checkout blocked: Member has overdue books that must be returned first.' });
+          }
+
+          db.get(`SELECT SUM(amount) as total FROM fines WHERE member_id = ? AND status = 'unpaid'`, [member_id], (err, fineRow) => {
             if (err) return res.status(500).json({ error: err.message });
 
-            // Decrement book availability
-            db.run(
-              `UPDATE books SET available_copies = available_copies - 1 WHERE id = ?`,
-              [book_id],
-              (err) => {
-                if (err) console.error("Error decrementing book availability:", err);
-              }
-            );
+            const unpaidFinesTotal = fineRow && fineRow.total ? fineRow.total : 0;
+            if (blockFinesEnabled && unpaidFinesTotal > 0) {
+              return res.status(400).json({ error: `Checkout blocked: Member has unpaid outstanding fines total of $${unpaidFinesTotal.toFixed(2)}.` });
+            }
 
-            // Fulfill reservation if this member had one pending for this book
-            db.run(
-              `UPDATE reservations 
-               SET status = 'fulfilled' 
-               WHERE book_id = ? AND member_id = ? AND status = 'pending'`,
-              [book_id, member_id]
-            );
+            // Policy check passed -> Execute checkout
+            const today = new Date().toISOString().split('T')[0];
+            db.serialize(() => {
+              db.run(
+                `INSERT INTO borrowings (book_id, member_id, borrow_date, due_date, status) VALUES (?, ?, ?, ?, 'borrowed')`,
+                [book_id, member_id, today, due_date],
+                function (err) {
+                  if (err) return res.status(500).json({ error: err.message });
 
-            res.json({ message: 'Book issued successfully.', borrowingId: this.lastID });
-          }
-        );
+                  db.run(
+                    `UPDATE books SET available_copies = available_copies - 1 WHERE id = ?`,
+                    [book_id],
+                    (err) => {
+                      if (err) console.error("Error decrementing book availability:", err);
+                    }
+                  );
+
+                  db.run(
+                    `UPDATE reservations 
+                     SET status = 'fulfilled' 
+                     WHERE book_id = ? AND member_id = ? AND status = 'pending'`,
+                    [book_id, member_id]
+                  );
+
+                  res.json({ message: 'Book issued successfully.', borrowingId: this.lastID });
+                }
+              );
+            });
+          });
+        });
       });
     });
   });

@@ -75,6 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('book-form').addEventListener('submit', handleBookSubmit);
     document.getElementById('issue-form').addEventListener('submit', handleIssueSubmit);
     document.getElementById('admin-user-form').addEventListener('submit', handleAdminUserSubmit);
+    const policyForm = document.getElementById('policy-settings-form');
+    if (policyForm) {
+        policyForm.addEventListener('submit', handlePolicySettingsSubmit);
+    }
 
     // Toggle user role fields inside user modal
     const userFormRole = document.getElementById('user-form-role');
@@ -295,6 +299,8 @@ function loadViewData(viewId) {
         loadManageUsers();
     } else if (viewId === 'view-reports-center') {
         loadReportsCenter();
+    } else if (viewId === 'view-borrowing-rules') {
+        loadBorrowingRules();
     }
 }
 
@@ -1248,71 +1254,64 @@ async function loadReportsCenter() {
     } catch (err) {}
 }
 
-let activeResetToken = null;
+// ==================================================
+// BORROWING POLICY ENFORCEMENT
+// ==================================================
 
-async function handleResetTokenLoad(token) {
-    activeResetToken = token;
-    // Hide all containers
-    document.getElementById('login-container').classList.add('hidden');
-    document.getElementById('register-container').classList.add('hidden');
-    document.getElementById('forgot-container').classList.add('hidden');
-    document.getElementById('app-container').classList.add('hidden');
-    document.getElementById('reset-container').classList.remove('hidden');
-
-    document.getElementById('reset-email-display').textContent = 'Validating reset token...';
-
+async function loadBorrowingRules() {
     try {
-        const response = await fetch(`/api/auth/verify-reset-token?token=${token}`);
-        const data = await response.json();
+        // 1. Load active configurations
+        const settings = await apiCall('/api/settings');
         
-        if (!response.ok) {
-            throw new Error(data.error || 'Invalid reset token.');
+        document.getElementById('policy-max-loans').value = settings.max_loans || 3;
+        document.getElementById('policy-block-fines').checked = settings.block_fines === '1';
+        document.getElementById('policy-block-overdue').checked = settings.block_overdue === '1';
+
+        // 2. Load blocked members list
+        const blockedMembers = await apiCall('/api/reports/blocked-members');
+        
+        document.getElementById('policy-blocked-count').textContent = blockedMembers.length;
+
+        const tbody = document.getElementById('policy-blocked-tbody');
+        tbody.innerHTML = '';
+
+        if (blockedMembers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--success-color); font-weight: 500;"><i class="fa-solid fa-circle-check"></i> All members currently comply with borrowing policies. No active blocks.</td></tr>';
+            return;
         }
 
-        document.getElementById('reset-email-display').textContent = data.email;
+        blockedMembers.forEach(m => {
+            const infractionsHTML = m.violations.map(v => `
+                <div style="margin-bottom: 4px; color: var(--danger-color); font-weight: 500; font-size: 13px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> ${v}
+                </div>
+            `).join('');
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${m.name}</strong><br><span style="font-size: 11px; color: var(--text-secondary);">${m.email}</span></td>
+                    <td><code>${m.student_id}</code></td>
+                    <td><code>${m.index_number}</code></td>
+                    <td>${infractionsHTML}</td>
+                </tr>
+            `;
+        });
     } catch (err) {
-        showToast(err.message, 'error');
-        // Clear token from url and return to login
-        window.history.pushState({}, document.title, window.location.pathname);
-        document.getElementById('reset-container').classList.add('hidden');
-        document.getElementById('login-container').classList.remove('hidden');
+        showToast('Failed to load borrowing policies registry.', 'error');
     }
 }
 
-async function handleForgotPasswordSubmit(e) {
+async function handlePolicySettingsSubmit(e) {
     e.preventDefault();
-    const student_id = document.getElementById('forgot-student-id').value;
-    const index_number = document.getElementById('forgot-index-number').value;
+    const max_loans = parseInt(document.getElementById('policy-max-loans').value, 10);
+    const block_fines = document.getElementById('policy-block-fines').checked;
+    const block_overdue = document.getElementById('policy-block-overdue').checked;
 
     try {
-        const res = await apiCall('/api/auth/forgot-password', 'POST', { student_id, index_number });
-        showToast(res.message);
-        document.getElementById('forgot-form').reset();
-        
-        // Return to login
-        document.getElementById('forgot-container').classList.add('hidden');
-        document.getElementById('login-container').classList.remove('hidden');
-    } catch (err) {}
-}
-
-async function handleResetPasswordSubmit(e) {
-    e.preventDefault();
-    const password = document.getElementById('reset-new-password').value;
-    const confirm = document.getElementById('reset-confirm-password').value;
-
-    if (password !== confirm) {
-        showToast('Passwords do not match.', 'error');
-        return;
+        const response = await apiCall('/api/settings', 'PUT', { max_loans, block_fines, block_overdue });
+        showToast(response.message);
+        loadBorrowingRules();
+    } catch (err) {
+        // Handled by apiCall
     }
-
-    try {
-        const res = await apiCall('/api/auth/reset-password', 'POST', { token: activeResetToken, password });
-        showToast(res.message);
-        document.getElementById('reset-form').reset();
-        
-        // Remove parameter and switch to login
-        window.history.pushState({}, document.title, window.location.pathname);
-        document.getElementById('reset-container').classList.add('hidden');
-        document.getElementById('login-container').classList.remove('hidden');
-    } catch (err) {}
 }
