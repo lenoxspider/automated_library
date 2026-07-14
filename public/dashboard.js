@@ -1,6 +1,6 @@
 // Global State Management
-let currentUser = null;
-let currentToken = null;
+let currentToken = localStorage.getItem('smartlib_token');
+let currentUser = JSON.parse(localStorage.getItem('smartlib_user'));
 let currentTheme = localStorage.getItem('smartlib_theme') || 'light';
 let charts = {};
 
@@ -50,130 +50,42 @@ function applyTheme(theme) {
 
 // Init Application
 document.addEventListener('DOMContentLoaded', () => {
-    // Record visit telemetry
-    apiCall('/api/analytics/visit', 'POST').catch(() => {});
+    // 1. Session Enforcement
+    if (!currentToken || !currentUser) {
+        localStorage.removeItem('smartlib_token');
+        localStorage.removeItem('smartlib_user');
+        window.location.href = '/login';
+        return;
+    }
+
+    // Unhide main workspace once verified
+    document.getElementById('app-container').classList.remove('hidden');
 
     // Theme Switch
     applyTheme(currentTheme);
     document.getElementById('theme-switch').addEventListener('click', () => {
-        currentTheme = currentTheme === 'light' ? 'dark' : 'theme-switch';
-        currentTheme = currentTheme === 'theme-switch' ? 'dark' : currentTheme; // Simple toggle fix
         const nextTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         applyTheme(nextTheme);
     });
 
-    // Check for reset_token or existing session
-    const urlParams = new URLSearchParams(window.location.search);
-    const resetToken = urlParams.get('reset_token');
-
-    if (resetToken) {
-        handleResetTokenLoad(resetToken);
-    } else {
-        const savedToken = localStorage.getItem('smartlib_token');
-        const savedUser = localStorage.getItem('smartlib_user');
-        if (savedToken && savedUser) {
-            currentToken = savedToken;
-            currentUser = JSON.parse(savedUser);
-            setupDashboard(currentUser);
-        } else {
-            showLoginView();
-        }
-    }
-
-    // Toggle Login / Register Views
-    document.getElementById('toggle-register').addEventListener('click', () => {
-        document.getElementById('login-container').classList.add('hidden');
-        document.getElementById('register-container').classList.remove('hidden');
-    });
-
-    document.getElementById('toggle-login').addEventListener('click', () => {
-        document.getElementById('register-container').classList.add('hidden');
-        document.getElementById('login-container').classList.remove('hidden');
-    });
-
-    document.getElementById('toggle-forgot').addEventListener('click', () => {
-        document.getElementById('login-container').classList.add('hidden');
-        document.getElementById('forgot-container').classList.remove('hidden');
-    });
-
-    document.getElementById('toggle-login-from-forgot').addEventListener('click', () => {
-        document.getElementById('forgot-container').classList.add('hidden');
-        document.getElementById('login-container').classList.remove('hidden');
-    });
-
-    document.getElementById('toggle-login-from-reset').addEventListener('click', () => {
-        document.getElementById('reset-container').classList.add('hidden');
-        document.getElementById('login-container').classList.remove('hidden');
-        window.history.pushState({}, document.title, window.location.pathname);
-    });
+    // Populate dashboard settings
+    setupDashboard(currentUser);
 
     // Form Event Listeners
-    document.getElementById('login-form').addEventListener('submit', handleLogin);
-    document.getElementById('register-form').addEventListener('submit', handleRegister);
-    document.getElementById('forgot-form').addEventListener('submit', handleForgotPasswordSubmit);
-    document.getElementById('reset-form').addEventListener('submit', handleResetPasswordSubmit);
     document.getElementById('book-form').addEventListener('submit', handleBookSubmit);
     document.getElementById('issue-form').addEventListener('submit', handleIssueSubmit);
+    document.getElementById('admin-user-form').addEventListener('submit', handleAdminUserSubmit);
 
-    // Toggle wizard steps based on role selection
-    const regRoleSelect = document.getElementById('reg-role');
-    if (regRoleSelect) {
-        regRoleSelect.addEventListener('change', (e) => {
-            const step1 = document.getElementById('reg-step-1');
-            const step2 = document.getElementById('reg-step-2');
-            const nameGroup = document.getElementById('reg-name-group');
-            const welcomeBanner = document.getElementById('reg-verified-welcome');
-
+    // Toggle user role fields inside user modal
+    const userFormRole = document.getElementById('user-form-role');
+    const userFormUnivFields = document.getElementById('user-form-university-fields');
+    if (userFormRole && userFormUnivFields) {
+        userFormRole.addEventListener('change', (e) => {
             if (e.target.value === 'member') {
-                step1.classList.remove('hidden');
-                step2.classList.add('hidden');
+                userFormUnivFields.classList.remove('hidden');
             } else {
-                step1.classList.add('hidden');
-                step2.classList.remove('hidden');
-                welcomeBanner.classList.add('hidden');
-                nameGroup.classList.remove('hidden');
+                userFormUnivFields.classList.add('hidden');
             }
-        });
-    }
-
-    // Step 1: Next button handler
-    const btnRegNext = document.getElementById('btn-reg-next');
-    if (btnRegNext) {
-        btnRegNext.addEventListener('click', async () => {
-            const student_id = document.getElementById('reg-student-id').value;
-            const index_number = document.getElementById('reg-index-number').value;
-
-            if (!student_id || !index_number) {
-                showToast('Please enter both Student ID and Index Number.', 'error');
-                return;
-            }
-
-            try {
-                const data = await apiCall('/api/auth/verify-roster', 'POST', { student_id, index_number });
-                verifiedStudentName = data.name;
-                
-                document.getElementById('reg-verified-welcome').innerHTML = `
-                    <i class="fa-solid fa-circle-check"></i>
-                    Identity Verified: <strong>${data.name}</strong>
-                `;
-                document.getElementById('reg-verified-welcome').classList.remove('hidden');
-                document.getElementById('reg-name-group').classList.add('hidden');
-                
-                document.getElementById('reg-step-1').classList.add('hidden');
-                document.getElementById('reg-step-2').classList.remove('hidden');
-            } catch (err) {
-                // Error toast already shown by apiCall
-            }
-        });
-    }
-
-    // Step 2: Back button handler
-    const btnRegBack = document.getElementById('btn-reg-back');
-    if (btnRegBack) {
-        btnRegBack.addEventListener('click', () => {
-            document.getElementById('reg-step-1').classList.remove('hidden');
-            document.getElementById('reg-step-2').classList.add('hidden');
-            verifiedStudentName = '';
         });
     }
 
@@ -183,10 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const inputsToRestrict = [
-        'reg-student-id',
-        'reg-index-number',
-        'forgot-student-id',
-        'forgot-index-number',
         'user-form-student-id',
         'user-form-index-number'
     ];
@@ -240,18 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('admin-user-form').addEventListener('submit', handleAdminUserSubmit);
 
-    const userFormRole = document.getElementById('user-form-role');
-    const userFormUnivFields = document.getElementById('user-form-university-fields');
-    if (userFormRole && userFormUnivFields) {
-        userFormRole.addEventListener('change', (e) => {
-            if (e.target.value === 'member') {
-                userFormUnivFields.classList.remove('hidden');
-            } else {
-                userFormUnivFields.classList.add('hidden');
-            }
-        });
-    }
-
     document.getElementById('btn-logout').addEventListener('click', handleLogout);
 
     // CSV & JSON Exports
@@ -303,26 +199,7 @@ function switchView(viewId) {
     document.querySelector('.sidebar').classList.remove('open');
 }
 
-// Auth Views Toggles
-function showLoginView() {
-    document.getElementById('login-container').classList.remove('hidden');
-    document.getElementById('register-container').classList.add('hidden');
-    document.getElementById('app-container').classList.add('hidden');
-    
-    const regRole = document.getElementById('reg-role');
-    if (regRole) {
-        regRole.innerHTML = '<option value="member">Member (Student / Staff)</option>';
-    }
 
-    // Reset register wizard state
-    const step1 = document.getElementById('reg-step-1');
-    const step2 = document.getElementById('reg-step-2');
-    if (step1 && step2) {
-        step1.classList.remove('hidden');
-        step2.classList.add('hidden');
-    }
-    verifiedStudentName = '';
-}
 
 // Open / Close Modal Helpers
 function openModal(modalId) {
@@ -422,73 +299,8 @@ function loadViewData(viewId) {
 }
 
 // ==================================================
-// AUTHENTICATION LOGIC
+// PANEL USER CREATION
 // ==================================================
-
-async function handleLogin(e) {
-    e.preventDefault();
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-
-    try {
-        const data = await apiCall('/api/auth/login', 'POST', { username, password });
-        currentToken = data.token;
-        currentUser = data.user;
-
-        localStorage.setItem('smartlib_token', currentToken);
-        localStorage.setItem('smartlib_user', JSON.stringify(currentUser));
-
-        showToast('Login successful!');
-        setupDashboard(currentUser);
-        document.getElementById('login-form').reset();
-    } catch (err) {
-        // Handled by apiCall
-    }
-}
-
-let verifiedStudentName = '';
-
-async function handleRegister(e) {
-    e.preventDefault();
-    const role = document.getElementById('reg-role').value;
-    const email = document.getElementById('reg-email').value;
-    const username = document.getElementById('reg-username').value;
-    const password = document.getElementById('reg-password').value;
-    const student_id = role === 'member' ? document.getElementById('reg-student-id').value : null;
-    const index_number = role === 'member' ? document.getElementById('reg-index-number').value : null;
-
-    const name = role === 'member' ? verifiedStudentName : document.getElementById('reg-name').value;
-
-    if (!name) {
-        showToast('Identification verification is incomplete. Please do Step 1.', 'error');
-        return;
-    }
-    if (role !== 'member' && /\d/.test(name)) {
-        showToast('Full Name cannot contain numbers.', 'error');
-        return;
-    }
-
-    try {
-        const res = await apiCall('/api/auth/register', 'POST', { username, password, role, name, email, student_id, index_number });
-        showToast(res.message || 'Account registered successfully!');
-        
-        document.getElementById('register-form').reset();
-        document.getElementById('reg-step-2').classList.add('hidden');
-        document.getElementById('reg-step-1').classList.remove('hidden');
-        verifiedStudentName = '';
-        
-        // If logged in already as staff, return to dashboard
-        if (currentToken) {
-            document.getElementById('register-container').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            switchView('view-manage-users');
-        } else {
-            showLoginView();
-        }
-    } catch (err) {
-        // Handled by apiCall
-    }
-}
 
 async function handleAdminUserSubmit(e) {
     e.preventDefault();
@@ -524,12 +336,9 @@ async function handleLogout() {
     try {
         await apiCall('/api/auth/logout', 'POST');
     } catch (e) {}
-    currentToken = null;
-    currentUser = null;
     localStorage.removeItem('smartlib_token');
     localStorage.removeItem('smartlib_user');
-    showToast('Logged out successfully.');
-    showLoginView();
+    window.location.href = '/login';
 }
 
 

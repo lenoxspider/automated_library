@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLib - Automated Library System</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- App Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+
+
+    <!-- Main Dashboard Application -->
+    <div id="app-container" class="dashboard-wrapper hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>SmartLib</span>
+                </div>
+            </div>
+            
+            <div class="user-profile-summary">
+                <div class="avatar">
+                    <i class="fa-solid fa-user-circle"></i>
+                </div>
+                <div class="info">
+                    <h4 id="user-display-name">Loading...</h4>
+                    <span id="user-display-role" class="badge-role">Role</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <!-- Shared Catalog Route -->
+                <a href="#" class="menu-item active" data-view="view-catalog">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Book Catalog</span>
+                </a>
+
+                <!-- Member-Only Routes -->
+                <a href="#" class="menu-item member-only hidden" data-view="view-member-loans">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>My Borrowings</span>
+                </a>
+                <a href="#" class="menu-item member-only hidden" data-view="view-member-resv">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>My Reservations</span>
+                </a>
+                <a href="#" class="menu-item member-only hidden" data-view="view-member-fines">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>My Fines</span>
+                </a>
+
+                <!-- Librarian/Admin Routes -->
+                <a href="#" class="menu-item staff-only hidden" data-view="view-admin-dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard Stats</span>
+                </a>
+                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-books">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Manage Books</span>
+                </a>
+                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-borrowings">
+                    <i class="fa-solid fa-handshake"></i>
+                    <span>Issue & Returns</span>
+                </a>
+                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-reservations">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>Reservations Queue</span>
+                </a>
+                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-fines">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                    <span>Collect Fines</span>
+                </a>
+                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-users">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Member Registers</span>
+                </a>
+                <a href="#" class="menu-item staff-only hidden" data-view="view-reports-center">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Reports Center</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn btn-outline btn-block">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Log Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-nav">
+                <div class="top-nav-left">
+                    <button class="sidebar-toggle"><i class="fa-solid fa-bars"></i></button>
+                    <h1 id="page-title">Book Catalog</h1>
+                </div>
+                <div class="top-nav-right">
+                    <div id="theme-switch" class="theme-toggle">
+                        <i class="fa-solid fa-moon"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content Views -->
+            <div class="content-body">
+                
+                <!-- VIEW: CATALOG (Shared) -->
+                <section id="view-catalog" class="dashboard-view">
+                    <div class="search-bar-container">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="catalog-search-input" placeholder="Search books by title, author, genre, or ISBN...">
+                        </div>
+                    </div>
+                    
+                    <div class="book-grid" id="catalog-books-grid">
+                        <!-- Dynamic books card list -->
+                    </div>
+                </section>
+
+                <!-- VIEW: MEMBER MY BORROWINGS -->
+                <section id="view-member-loans" class="dashboard-view hidden">
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <h3>My Borrowing History</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Book Details</th>
+                                        <th>Borrow Date</th>
+                                        <th>Due Date</th>
+                                        <th>Return Date</th>
+                                        <th>Status</th>
+                                        <th>Fine</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="member-loans-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: MEMBER RESERVATIONS -->
+                <section id="view-member-resv" class="dashboard-view hidden">
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <h3>My Active Book Reservations</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Book Details</th>
+                                        <th>Reservation Date</th>
+                                        <th>Queue Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="member-resv-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: MEMBER FINES -->
+                <section id="view-member-fines" class="dashboard-view hidden">
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <h3>My Fines & Overdue Payments</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Book</th>
+                                        <th>Fine Owed</th>
+                                        <th>Payment Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="member-fines-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: ADMIN DASHBOARD (ANALYTICS) -->
+                <section id="view-admin-dashboard" class="dashboard-view hidden">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fa-solid fa-book"></i></div>
+                            <div class="stat-info">
+                                <h3>Total Books</h3>
+                                <p id="stat-total-books">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fa-solid fa-hand-holding-hand"></i></div>
+                            <div class="stat-info">
+                                <h3>Active Loans</h3>
+                                <p id="stat-active-loans">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div class="stat-info">
+                                <h3>Overdue Loans</h3>
+                                <p id="stat-overdue-loans">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success"><i class="fa-solid fa-dollar-sign"></i></div>
+                            <div class="stat-info">
+                                <h3>Fines Collected</h3>
+                                <p id="stat-fines-collected">$0.00</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-eye"></i></div>
+                            <div class="stat-info">
+                                <h3>Total Visits</h3>
+                                <p id="stat-total-visits">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Top Borrowed Books</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chart-top-books"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Monthly Borrowings Activity</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chart-trends"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row" style="grid-template-columns: 1fr; margin-top: 24px;">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Hourly Library System Attendance & Traffic</h3>
+                            </div>
+                            <div class="chart-container" style="height: 350px;">
+                                <canvas id="chart-attendance"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="report-controls">
+                        <button id="btn-export-csv" class="btn btn-primary">
+                            <i class="fa-solid fa-file-csv"></i> Export Activity CSV
+                        </button>
+                        <button id="btn-export-json" class="btn btn-secondary">
+                            <i class="fa-solid fa-file-code"></i> Export Activity JSON
+                        </button>
+                    </div>
+                </section>
+
+                <!-- VIEW: MANAGE BOOKS (Librarian/Admin) -->
+                <section id="view-manage-books" class="dashboard-view hidden">
+                    <div class="view-header">
+                        <h2>Book Inventory</h2>
+                        <button id="btn-add-book-modal" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i> Add New Book
+                        </button>
+                    </div>
+                    
+                    <div class="card table-card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Genre</th>
+                                        <th>ISBN</th>
+                                        <th>Total Copies</th>
+                                        <th>Available</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manage-books-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: MANAGE BORROWINGS (Librarian/Admin) -->
+                <section id="view-manage-borrowings" class="dashboard-view hidden">
+                    <div class="view-header">
+                        <h2>Checkout & Returns</h2>
+                        <button id="btn-issue-book-modal" class="btn btn-primary">
+                            <i class="fa-solid fa-cart-plus"></i> Issue New Book
+                        </button>
+                    </div>
+
+                    <div class="card table-card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Book Title</th>
+                                        <th>Member Name</th>
+                                        <th>Borrow Date</th>
+                                        <th>Due Date</th>
+                                        <th>Return Date</th>
+                                        <th>Status</th>
+                                        <th>Fines</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manage-borrowings-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: MANAGE RESERVATIONS (Librarian/Admin) -->
+                <section id="view-manage-reservations" class="dashboard-view hidden">
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <h3>Reservations Waitlist</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Book Title</th>
+                                        <th>Member Name</th>
+                                        <th>Reservation Date</th>
+                                        <th>Status</th>
+                                        <th>Availability</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manage-resv-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: MANAGE FINES (Librarian/Admin) -->
+                <section id="view-manage-fines" class="dashboard-view hidden">
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <h3>Unpaid Fines</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Member Details</th>
+                                        <th>Book Title</th>
+                                        <th>Fine Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manage-fines-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: MANAGE USERS (Librarian/Admin) -->
+                <section id="view-manage-users" class="dashboard-view hidden">
+                    <div class="view-header">
+                        <h2>Member Register</h2>
+                        <button id="btn-register-user-modal" class="btn btn-primary">
+                            <i class="fa-solid fa-user-plus"></i> Add New Member
+                        </button>
+                    </div>
+
+                    <div class="card table-card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Username</th>
+                                        <th>Role</th>
+                                        <th>Email</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manage-users-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: REPORTS CENTER (Librarian/Admin) -->
+                <section id="view-reports-center" class="dashboard-view hidden">
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                            <div>
+                                <h3>Report Options Center</h3>
+                                <p style="font-size: 13px; color: var(--text-secondary);">Select the type of report you want to view, print, or export.</p>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <select id="report-select-type" style="padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary); outline: none;">
+                                    <option value="active-loans">Active Borrowings Summary</option>
+                                    <option value="overdue-loans">Overdue Book Violations</option>
+                                    <option value="fines-ledger">Fines Ledger & Balances</option>
+                                    <option value="popularity">Book Popularity Metrics</option>
+                                </select>
+                                <button id="btn-print-report" class="btn btn-secondary btn-sm" onclick="window.print()">
+                                    <i class="fa-solid fa-print"></i> Print Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card table-card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 id="report-table-title">Active Borrowings Summary</h3>
+                            <span id="report-timestamp" style="font-size: 12px; color: var(--text-secondary);"></span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="report-data-table">
+                                <thead id="report-table-thead">
+                                    <!-- Dynamic headers -->
+                                </thead>
+                                <tbody id="report-table-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: ADD BOOK -->
+    <div id="modal-book" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="book-modal-title">Add New Book</h3>
+                <span class="close-modal" onclick="closeModal('modal-book')">&times;</span>
+            </div>
+            <form id="book-form">
+                <input type="hidden" id="book-form-id">
+                <div class="input-group">
+                    <label for="book-title">Title</label>
+                    <input type="text" id="book-title" required placeholder="e.g. Database System Concepts">
+                </div>
+                <div class="input-group">
+                    <label for="book-author">Author</label>
+                    <input type="text" id="book-author" required placeholder="e.g. Abraham Silberschatz">
+                </div>
+                <div class="input-group">
+                    <label for="book-genre">Genre</label>
+                    <input type="text" id="book-genre" required placeholder="e.g. Technology / Science">
+                </div>
+                <div class="input-group">
+                    <label for="book-isbn">ISBN</label>
+                    <input type="text" id="book-isbn" required placeholder="e.g. 978-0073523323">
+                </div>
+                <div class="input-group">
+                    <label for="book-total-copies">Total Copies Available</label>
+                    <input type="number" id="book-total-copies" min="1" required value="3">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-book')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Book</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ISSUE BOOK -->
+    <div id="modal-issue" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Issue Book Checkout</h3>
+                <span class="close-modal" onclick="closeModal('modal-issue')">&times;</span>
+            </div>
+            <form id="issue-form">
+                <div class="input-group">
+                    <label for="issue-book-select">Select Book</label>
+                    <select id="issue-book-select" required>
+                        <option value="">-- Choose Book --</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="issue-member-select">Select Member</label>
+                    <select id="issue-member-select" required>
+                        <option value="">-- Choose Member --</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="issue-due-date">Due Date</label>
+                    <input type="date" id="issue-due-date" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-issue')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Issue Book</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: VIEW MEMBER HISTORY -->
+    <div id="modal-history" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="history-modal-title">Member Borrowing History</h3>
+                <span class="close-modal" onclick="closeModal('modal-history')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Book Title</th>
+                                <th>Borrow Date</th>
+                                <th>Due Date</th>
+                                <th>Return Date</th>
+                                <th>Status</th>
+                                <th>Fine Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="member-history-tbody">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD MEMBER / USER -->
+    <div id="modal-user" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New System User</h3>
+                <span class="close-modal" onclick="closeModal('modal-user')">&times;</span>
+            </div>
+            <form id="admin-user-form">
+                <div class="input-group">
+                    <label for="user-form-name">Full Name</label>
+                    <input type="text" id="user-form-name" required placeholder="e.g. John Doe">
+                </div>
+                <div class="input-group">
+                    <label for="user-form-email">Email Address</label>
+                    <input type="email" id="user-form-email" required placeholder="e.g. john@example.com">
+                </div>
+                <div class="input-group">
+                    <label for="user-form-username">Username</label>
+                    <input type="text" id="user-form-username" required placeholder="Choose a username">
+                </div>
+                <div class="input-group">
+                    <label for="user-form-password">Password</label>
+                    <input type="password" id="user-form-password" required placeholder="Create a password">
+                </div>
+                <div class="input-group">
+                    <label for="user-form-role">Role</label>
+                    <select id="user-form-role" required>
+                        <option value="member">Member (Student / Staff)</option>
+                        <option value="librarian">Librarian (Staff)</option>
+                        <option value="admin">Administrator (Staff)</option>
+                    </select>
+                </div>
+                <!-- University Student fields for Admin panel entry -->
+                <div id="user-form-university-fields">
+                    <div class="input-group">
+                        <label for="user-form-student-id">Student ID</label>
+                        <input type="text" id="user-form-student-id" placeholder="Enter Student ID">
+                    </div>
+                    <div class="input-group">
+                        <label for="user-form-index-number">Index Number</label>
+                        <input type="text" id="user-form-index-number" placeholder="Enter Index Number">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-user')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Client-side script -->
+    <script src="common.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

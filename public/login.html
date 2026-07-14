@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - SmartLib</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .theme-toggle-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="theme-toggle-container">
+        <div id="theme-toggle" class="theme-toggle">
+            <i class="fa-solid fa-moon"></i>
+        </div>
+    </div>
+
+    <!-- Login Container -->
+    <div class="auth-wrapper">
+        <!-- SIGN IN CARD -->
+        <div id="login-card" class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>SmartLib</span>
+                </div>
+                <h2>Welcome Back</h2>
+                <p>Digital Library Management System</p>
+            </div>
+            <div class="auth-body">
+                <form id="login-form">
+                    <div class="input-group">
+                        <label for="login-username">Username</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="login-username" required placeholder="Enter username">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="login-password">Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="login-password" required placeholder="Enter password">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                </form>
+                <div class="auth-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                    <p><a href="/" class="link-text"><i class="fa-solid fa-arrow-left"></i> Home</a></p>
+                    <p><span id="toggle-forgot" class="link-text">Forgot Password?</span></p>
+                </div>
+                <div class="auth-footer" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <p>New Student? <a href="/register" class="link-text">Create Account</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORGOT PASSWORD CARD (Hidden by default) -->
+        <div id="forgot-card" class="auth-card hidden">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>SmartLib</span>
+                </div>
+                <h2>Recover Password</h2>
+                <p>Verify your details to get reset link</p>
+            </div>
+            <div class="auth-body">
+                <form id="forgot-form">
+                    <div class="input-group">
+                        <label for="forgot-student-id">Student ID</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                            <input type="text" id="forgot-student-id" required placeholder="Enter Student ID">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="forgot-index-number">Index Number</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-hashtag"></i>
+                            <input type="text" id="forgot-index-number" required placeholder="Enter Index Number">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Send Recovery Email</button>
+                </form>
+                <div class="auth-footer">
+                    <p><span id="toggle-login" class="link-text"><i class="fa-solid fa-arrow-left"></i> Back to Sign In</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="login.js"></script>
+</body>
+</html>

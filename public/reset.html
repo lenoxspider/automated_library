@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - SmartLib</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .theme-toggle-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="theme-toggle-container">
+        <div id="theme-toggle" class="theme-toggle">
+            <i class="fa-solid fa-moon"></i>
+        </div>
+    </div>
+
+    <!-- Password Reset Container -->
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>SmartLib</span>
+                </div>
+                <h2>Reset Password</h2>
+                <p>Choose a new secure password</p>
+            </div>
+            <div class="auth-body">
+                <!-- Validation Overlay / Message -->
+                <div id="reset-token-welcome" style="margin-bottom: 20px; padding: 12px; background-color: rgba(99,102,241,0.1); color: var(--accent-color); border-radius: 8px; font-size: 14px; text-align: center; border: 1px dashed var(--accent-color);">
+                    Verifying recovery link...
+                </div>
+
+                <form id="reset-form" class="hidden">
+                    <div class="input-group">
+                        <label for="reset-password">New Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="reset-password" required placeholder="Enter new password">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="reset-confirm-password">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <input type="password" id="reset-confirm-password" required placeholder="Confirm new password">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Update Password</button>
+                </form>
+
+                <div class="auth-footer" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <p><a href="/login" class="link-text"><i class="fa-solid fa-arrow-left"></i> Back to Sign In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="reset.js"></script>
+</body>
+</html>

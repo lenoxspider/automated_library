@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Account - SmartLib</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .theme-toggle-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="theme-toggle-container">
+        <div id="theme-toggle" class="theme-toggle">
+            <i class="fa-solid fa-moon"></i>
+        </div>
+    </div>
+
+    <!-- Registration Container -->
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>SmartLib</span>
+                </div>
+                <h2>Student Onboarding</h2>
+                <p>Register Your Library Account</p>
+            </div>
+            <div class="auth-body">
+                <form id="register-form">
+                    <!-- STEP 1: Student Verification -->
+                    <div id="reg-step-1">
+                        <div class="input-group">
+                            <label for="reg-student-id">Student ID</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <input type="text" id="reg-student-id" required placeholder="Enter Student ID">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-index-number">Index Number</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-hashtag"></i>
+                                <input type="text" id="reg-index-number" required placeholder="Enter Index Number">
+                            </div>
+                        </div>
+                        <button type="button" id="btn-reg-next" class="btn btn-primary btn-block" style="margin-top: 16px;">Verify Identity & Next</button>
+                    </div>
+
+                    <!-- STEP 2: Setup Credentials -->
+                    <div id="reg-step-2" class="hidden">
+                        <div id="reg-verified-welcome" style="margin-bottom: 20px; padding: 12px; background-color: rgba(16,185,129,0.1); color: #10b981; border-radius: 8px; font-size: 14px; text-align: center; border: 1px dashed #10b981;">
+                            <!-- Welcome student name goes here -->
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-email">Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-envelope"></i>
+                                <input type="email" id="reg-email" required placeholder="e.g. classmate@example.com">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-username">Username</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-user"></i>
+                                <input type="text" id="reg-username" required placeholder="Choose a username">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="reg-password">Password</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" id="reg-password" required placeholder="Create a password">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="button" id="btn-reg-back" class="btn btn-outline" style="flex: 1;">Back</button>
+                            <button type="submit" class="btn btn-primary" style="flex: 2;">Register Account</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="auth-footer" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <p>Already Registered? <a href="/login" class="link-text">Sign In Here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="register.js"></script>
+</body>
+</html>

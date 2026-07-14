@@ -60,7 +60,7 @@ function sendVerificationEmail(email, token, name) {
 }
 
 function sendResetEmail(email, token, name) {
-  const resetLink = `${APP_URL}/?reset_token=${token}`;
+  const resetLink = `${APP_URL}/reset?reset_token=${token}`;
   
   const mailOptions = {
     from: `"SmartLib Library" <${process.env.SMTP_USER}>`,
@@ -932,9 +932,30 @@ app.get('/api/reports/dashboard', authenticate, authorize(['admin', 'librarian']
 });
 
 
-// Fallback to serving front-end Single Page Application for all page routes
-app.use((req, res) => {
+// Serve Multi-Page Application routing structures
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/reset', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'reset.html'));
+});
+
+// Fallback redirect for other routes
+app.use((req, res) => {
+  res.redirect('/');
 });
 
 // Run server
