@@ -138,7 +138,11 @@ function initializeSchema() {
     // Create/Update the default administrator account, ensuring it is verified
     db.get("SELECT * FROM users WHERE username = 'admin'", (err, row) => {
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@smartlib.com';
-      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      if (!adminPassword) {
+        console.error("\x1b[31m%s\x1b[0m", "CRITICAL SECURITY ERROR: ADMIN_PASSWORD environment variable is not defined in your .env file!");
+        throw new Error("ADMIN_PASSWORD env not configured.");
+      }
       if (!row) {
         db.run(
           "INSERT INTO users (username, password, role, name, email, is_verified) VALUES (?, ?, ?, ?, ?, 1)",
