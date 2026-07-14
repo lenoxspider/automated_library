@@ -38,6 +38,14 @@ npm install
 
 This will install `express` and rebuild `sqlite3` for your local environment.
 
+### 2.5. Seed Student Roster (Required for Student Registration)
+To enable secure 2-step enrollment, you must import the student roster from a vCard (`.vcf`) file:
+```bash
+# Provide the direct path to your VCF contacts file
+node seed_roster.js "C:\path\to\your\combined_contacts.vcf"
+```
+*Note: If you copy your VCF file to the project root and name it `contacts.vcf`, you can simply run `node seed_roster.js` without any arguments.*
+
 ### 3. Launch the Application Server
 Run the Express server:
 ```bash
@@ -60,13 +68,19 @@ http://localhost:3000
 
 ---
 
-## 🔐 Default Accounts for Testing
+## 🔐 Accounts & Registration Flow
 
+### 1. Default Admin Entry
 Because the database initializes without mock content, a default administrator account is generated to provide a system entry point:
-
 - **Username**: `admin`
 - **Password**: `admin123`
 - **Role**: Administrator
+
+### 2. Student Self-Enrollment (2-Step Verification)
+Classmates register themselves using their pre-seeded university roster details:
+- **Step 1 (Roster Match)**: Student inputs their **Student ID** and **Index Number** (from the imported contacts roster).
+- **Step 2 (Onboarding)**: On a successful match, the system Welcomes them by name. They enter their chosen **Username**, **Password**, and **Email Address**.
+- **Activation**: A verification link is sent to the email they input. Clicking it activates the profile for library use.
 
 ---
 
