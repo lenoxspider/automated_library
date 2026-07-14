@@ -1250,6 +1250,53 @@ async function loadReportsCenter() {
                     </tr>
                 `;
             });
+        } else if (reportType === 'circulation-log') {
+            title.textContent = 'Shift Circulation Log Report';
+            thead.innerHTML = `
+                <tr>
+                    <th>Date / Time</th>
+                    <th>Book Details</th>
+                    <th>Member Details</th>
+                    <th>Activity Type</th>
+                    <th>Current Status</th>
+                </tr>
+            `;
+
+            const data = await apiCall('/api/reports/circulation-log');
+            
+            tbody.innerHTML = `
+                <tr style="background-color: var(--accent-light); font-weight: 600;">
+                    <td colspan="5" style="text-align: center; padding: 12px; color: var(--accent-color);">
+                        Shift Activity Summary 📊 Total: ${data.stats.total} | Checkouts today: ${data.stats.checkouts} | Returns today: ${data.stats.returns}
+                    </td>
+                </tr>
+            `;
+
+            if (data.log.length === 0) {
+                tbody.innerHTML += '<tr><td colspan="5" style="text-align: center;">No transactions processed on the current shift today.</td></tr>';
+                return;
+            }
+
+            data.log.forEach(l => {
+                const isReturn = l.return_date === data.stats.today;
+                const activityClass = isReturn ? 'returned' : 'borrowed';
+                const activityLabel = isReturn ? '<i class="fa-solid fa-arrow-left-long"></i> RETURN' : '<i class="fa-solid fa-arrow-right-long"></i> CHECKOUT';
+                const transDate = isReturn ? l.return_date : l.borrow_date;
+                
+                let statusLabelClass = 'borrowed';
+                if (l.status === 'returned') statusLabelClass = 'returned';
+                if (l.status === 'overdue') statusLabelClass = 'overdue';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${transDate}</strong></td>
+                        <td><strong>${l.book_title}</strong><br><span style="font-size:11px;">ISBN: ${l.isbn}</span></td>
+                        <td><strong>${l.member_name}</strong><br><span style="font-size:11px;">${l.member_email}</span></td>
+                        <td><span class="badge-status-item ${activityClass}">${activityLabel}</span></td>
+                        <td><span class="badge-status-item ${statusLabelClass}">${l.status}</span></td>
+                    </tr>
+                `;
+            });
         }
     } catch (err) {}
 }

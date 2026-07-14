@@ -929,6 +929,39 @@ app.get('/api/reports/roster-audit', authenticate, authorize(['admin', 'libraria
   });
 });
 
+// Get Daily Shift Circulation Log report
+app.get('/api/reports/circulation-log', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  db.all(
+    `SELECT b.id, b.borrow_date, b.due_date, b.return_date, b.status,
+            u.name as member_name, u.email as member_email,
+            bk.title as book_title, bk.isbn
+     FROM borrowings b
+     JOIN users u ON b.member_id = u.id
+     JOIN books bk ON b.book_id = bk.id
+     WHERE b.borrow_date = ? OR b.return_date = ?
+     ORDER BY b.id DESC`,
+    [today, today],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      
+      let checkouts = 0;
+      let returns = 0;
+      
+      rows.forEach(r => {
+        if (r.borrow_date === today) checkouts++;
+        if (r.return_date === today) returns++;
+      });
+      
+      res.json({
+        stats: { today, total: rows.length, checkouts, returns },
+        log: rows
+      });
+    }
+  );
+});
+
 // Get dashboard and analytics reports
 app.get('/api/reports/dashboard', authenticate, authorize(['admin', 'librarian']), (req, res) => {
   const stats = {};
