@@ -30,6 +30,20 @@ Ensure you have **Node.js** (v16+) installed. You can check your version using:
 node -v
 ```
 
+### 1.5. Configure Environment Variables
+Create a file named `.env` in the root directory of the project and specify your mailer credentials and app URL:
+```ini
+PORT=3000
+SMTP_HOST=smtp.netzero.net
+SMTP_PORT=587
+SMTP_USER=your_email@netzero.net
+SMTP_PASS=your_password
+ADMIN_EMAIL=your_admin_email@gmail.com
+# Use your VPS IP address or domain name here so verification emails link correctly
+APP_URL=http://your-vps-ip:3000
+```
+*If `APP_URL` is omitted, the system defaults to `http://localhost:3000`.*
+
 ### 2. Install Project Dependencies
 Navigate to the project root and run:
 ```bash

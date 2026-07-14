@@ -18,8 +18,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
 function sendVerificationEmail(email, token, name) {
-  const verificationLink = `http://localhost:3000/api/auth/verify?token=${token}`;
+  const verificationLink = `${APP_URL}/api/auth/verify?token=${token}`;
   
   const mailOptions = {
     from: `"SmartLib Library" <${process.env.SMTP_USER}>`,
@@ -58,7 +60,7 @@ function sendVerificationEmail(email, token, name) {
 }
 
 function sendResetEmail(email, token, name) {
-  const resetLink = `http://localhost:3000/?reset_token=${token}`;
+  const resetLink = `${APP_URL}/?reset_token=${token}`;
   
   const mailOptions = {
     from: `"SmartLib Library" <${process.env.SMTP_USER}>`,
