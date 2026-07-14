@@ -1,0 +1,214 @@
+Title | Author | Genre | ISBN | Total Copies
+Environmental Chemistry Essentials and Applications (Global Edition) | Richard Feynman | Chemistry | 978-3-31751-526-2 | 10
+The Art of Clinical Psychology (5th Edition) | Dr. Aris Thorne | Psychology | 978-1-97783-093-6 | 7
+Modern General Relativity: A Systems Approach | Robert Chen | Physics | 978-1-85725-616-8 | 8
+Handbook of African Historiography | Grace Hopper | History & Sociology | 978-0-36615-969-6 | 8
+A First Course in Complex Variables | James Carter | Mathematics | 978-7-10260-075-4 | 4
+Foundations of Cognitive Psychology (3rd Edition) | Albert Einstein | Psychology | 978-0-91230-821-5 | 6
+Modern Theoretical Chemistry: A Systems Approach | Lise Meitner | Chemistry | 978-4-47513-317-2 | 10
+Introduction to Developmental Psychology (4th Edition) | Marie Curie | Psychology | 978-3-30053-954-7 | 5
+Modern Nuclear Physics: A Systems Approach (Global Edition) | Thomas Wright | Physics | 978-3-51994-059-9 | 6
+Principles of Algorithms | Galileo Galilei | Computer Science | 978-0-20108-328-0 | 8
+The Art of Environmental Chemistry (2nd Edition) | Michael Novak | Chemistry | 978-5-39397-800-5 | 7
+Foundations of Political Sociology (2nd Edition) | David Miller | History & Sociology | 978-7-72961-843-8 | 6
+The Art of Artificial Intelligence (3rd Edition) | Maria Sanchez | Computer Science | 978-1-89012-838-6 | 5
+A First Course in Inorganic Chemistry (4th Edition) | Dorothy Hodgkin | Chemistry | 978-3-45352-377-4 | 8
+Handbook of Set Theory (2nd Edition) | Grace Hopper | Mathematics | 978-7-72568-385-8 | 8
+A First Course in Geophysics (4th Edition) | James Carter | Physics | 978-0-55915-484-3 | 6
+The Art of Neurobiology | Linus Torvalds | Biology | 978-0-00166-908-9 | 9
+Principles of Networks (4th Edition) | Albert Einstein | Computer Science | 978-5-07419-855-7 | 5
+Principles of African Historiography | Nancy Davis | History & Sociology | 978-4-78980-858-4 | 7
+Principles of Robotics and Control (4th Edition) | Katherine Johnson | Engineering | 978-4-67828-676-2 | 3
+Zoology Essentials and Applications (5th Edition) | Dorothy Hodgkin | Biology | 978-8-53662-580-0 | 7
+The Art of Linear Algebra | Robert Chen | Mathematics | 978-2-68802-760-0 | 8
+Handbook of General Relativity (4th Edition) | Elizabeth Brooks | Physics | 978-9-22962-496-7 | 10
+The Art of Structural Analysis | Donald Knuth | Engineering | 978-1-30725-083-4 | 4
+Compiler Design Essentials and Applications (5th Edition) | James Carter | Computer Science | 978-2-27449-474-7 | 9
+Advanced Clinical Psychology | Jane Goodall | Psychology | 978-4-53832-741-0 | 7
+Advanced Financial Accounting | Dennis Ritchie | Business & Economics | 978-5-96711-392-5 | 5
+Handbook of Aerospace Dynamics | Elizabeth Brooks | Engineering | 978-8-19326-061-9 | 3
+Advanced Databases | Richard Foster | Computer Science | 978-1-94900-221-1 | 10
+A First Course in Geophysics | Maria Sanchez | Physics | 978-5-62557-227-4 | 5
+Advanced Neuropsychology | Dorothy Hodgkin | Psychology | 978-5-58621-114-2 | 8
+Organizational Behavior for Scientists and Engineers | Nikola Tesla | Business & Economics | 978-6-97061-382-4 | 3
+The Art of Nuclear Physics (Global Edition) | Prof. Helen Vane | Physics | 978-1-84370-793-8 | 10
+Introduction to Analytical Chemistry | Linus Torvalds | Chemistry | 978-8-22251-670-6 | 6
+Handbook of Financial Accounting | Albert Einstein | Business & Economics | 978-4-78198-815-9 | 9
+Foundations of Comparative Literature | Prof. Helen Vane | Literature & Philosophy | 978-7-57190-181-8 | 3
+Introduction to Acoustics | Linus Torvalds | Physics | 978-5-08940-219-5 | 8
+Handbook of Signal Processing | Sarah Jenkins | Engineering | 978-8-68489-555-6 | 9
+Handbook of Geophysics (2nd Edition) | Ada Yonath | Physics | 978-7-90749-953-8 | 3
+Advanced Complex Variables | Ada Lovelace | Mathematics | 978-4-88972-247-6 | 7
+Modern Physiology: A Systems Approach | Chien-Shiung Wu | Biology | 978-1-82956-480-7 | 7
+Modern Literary Criticism: A Systems Approach (5th Edition) | Linus Torvalds | Literature & Philosophy | 978-0-21289-377-9 | 7
+Advanced Epistemology | Lise Meitner | Literature & Philosophy | 978-1-29186-312-7 | 7
+Modern History Essentials and Applications | Michael Novak | History & Sociology | 978-4-95526-474-9 | 6
+Modern Marketing Principles: A Systems Approach (2nd Edition) | Albert Einstein | Business & Economics | 978-7-90323-693-5 | 5
+Comparative Literature for Scientists and Engineers | Nikola Tesla | Literature & Philosophy | 978-0-83786-324-6 | 6
+Modern Educational Psychology: A Systems Approach (4th Edition) | Galileo Galilei | Psychology | 978-2-40568-337-2 | 4
+The Art of Physiology | Grace Hopper | Biology | 978-6-67722-962-9 | 8
+Foundations of Operations Management (Global Edition) | Ada Yonath | Business & Economics | 978-7-58944-917-6 | 4
+The Art of Mycology (5th Edition) | Prof. Helen Vane | Biology | 978-6-50914-677-8 | 9
+Modern Graph Theory: A Systems Approach (3rd Edition) | Ada Yonath | Mathematics | 978-6-56088-089-7 | 7
+Forensic Psychology Essentials and Applications | Richard Foster | Psychology | 978-4-41031-287-4 | 6
+Principles of Ethics | Richard Feynman | Literature & Philosophy | 978-7-36276-179-4 | 4
+Introduction to Medieval Europe | Prof. Helen Vane | History & Sociology | 978-8-30900-466-9 | 4
+Handbook of Probability and Statistics (5th Edition) | Rachel Carson | Mathematics | 978-1-82970-135-6 | 9
+The Art of Logic and Semantics | Margaret Hamilton | Literature & Philosophy | 978-5-04893-764-9 | 6
+Modern Cultural Anthropology: A Systems Approach (5th Edition) | Richard Feynman | History & Sociology | 978-4-66728-740-2 | 5
+A First Course in Compiler Design (4th Edition) | Charles Peterson | Computer Science | 978-0-43574-575-5 | 5
+Advanced Abnormal Psychology (Global Edition) | Emily Watson | Psychology | 978-6-56071-593-3 | 7
+Introduction to Corporate Finance | Nikola Tesla | Business & Economics | 978-7-61984-144-5 | 4
+Principles of Electrochemistry (3rd Edition) | Stephen Hawking | Chemistry | 978-1-45952-497-2 | 7
+Principles of Software Engineering (Global Edition) | Prof. Helen Vane | Computer Science | 978-9-08299-059-7 | 4
+Introduction to Microeconomics | Linus Torvalds | Business & Economics | 978-3-11072-088-3 | 3
+Principles of Medieval Europe | James Carter | History & Sociology | 978-2-94433-258-2 | 8
+Ancient Civilizations for Scientists and Engineers (4th Edition) | Galileo Galilei | History & Sociology | 978-8-51864-099-3 | 6
+Foundations of Thermodynamics | Ada Lovelace | Physics | 978-7-53700-023-1 | 9
+Introduction to Thermochemistry (Global Edition) | Chien-Shiung Wu | Chemistry | 978-1-07163-138-4 | 4
+Handbook of Geophysics | Rosalind Franklin | Physics | 978-3-04706-597-1 | 9
+Physiology for Scientists and Engineers | Marie Curie | Biology | 978-1-47266-879-7 | 7
+Foundations of Software Engineering (2nd Edition) | Rosalind Franklin | Computer Science | 978-1-09201-925-9 | 8
+Handbook of Particle Physics | Galileo Galilei | Physics | 978-6-18368-699-9 | 6
+Advanced Astrophysics | Nancy Davis | Physics | 978-4-15966-459-2 | 5
+Econometrics for Scientists and Engineers (2nd Edition) | Gerty Cori | Business & Economics | 978-9-70353-061-7 | 5
+Introduction to Creative Writing | Elizabeth Brooks | Literature & Philosophy | 978-3-71420-313-1 | 8
+Foundations of Investment Analysis | Michael Novak | Business & Economics | 978-1-49703-269-9 | 8
+Optimization Theory Essentials and Applications (3rd Edition) | Ada Yonath | Mathematics | 978-5-98308-660-4 | 4
+Introduction to Physical Chemistry (4th Edition) | Dennis Ritchie | Chemistry | 978-5-27513-711-9 | 8
+Advanced General Relativity (2nd Edition) | Rachel Carson | Physics | 978-3-65382-546-1 | 6
+Introduction to Set Theory | Dr. Aris Thorne | Mathematics | 978-9-12651-875-0 | 5
+Modern Econometrics: A Systems Approach (5th Edition) | Ada Lovelace | Business & Economics | 978-6-67208-430-1 | 3
+The Art of Particle Physics (4th Edition) | Donald Knuth | Physics | 978-0-07619-667-9 | 5
+Advanced Inorganic Chemistry | Charles Peterson | Chemistry | 978-2-03189-694-8 | 5
+Modern Quantum Mechanics: A Systems Approach | Emily Watson | Physics | 978-5-10855-580-3 | 5
+A First Course in Literary Criticism | Grace Hopper | Literature & Philosophy | 978-3-83503-735-0 | 5
+Environmental Chemistry for Scientists and Engineers (4th Edition) | Robert Chen | Chemistry | 978-5-81713-341-6 | 8
+The Art of Creative Writing (2nd Edition) | Barbara McClintock | Literature & Philosophy | 978-8-18914-945-4 | 3
+The Art of Literary Criticism (2nd Edition) | Michael Novak | Literature & Philosophy | 978-5-47187-045-8 | 3
+Sensation and Perception Essentials and Applications (2nd Edition) | Maria Sanchez | Psychology | 978-3-26306-941-8 | 4
+Global Studies for Scientists and Engineers | Katherine Johnson | History & Sociology | 978-2-46427-655-8 | 7
+Principles of Civil Infrastructure | Ada Yonath | Engineering | 978-7-55200-701-3 | 6
+Foundations of Poetics (3rd Edition) | Nancy Davis | Literature & Philosophy | 978-1-64813-596-8 | 5
+Social Theory Essentials and Applications (3rd Edition) | Charles Peterson | History & Sociology | 978-4-75981-932-9 | 7
+Modern Human-Computer Interaction: A Systems Approach (3rd Edition) | David Miller | Computer Science | 978-1-87379-873-4 | 7
+Introduction to Machine Learning (Global Edition) | Nikola Tesla | Computer Science | 978-8-20948-123-1 | 3
+A First Course in Global Studies | Richard Foster | History & Sociology | 978-7-92634-615-5 | 8
+Foundations of Structural Analysis (4th Edition) | Chien-Shiung Wu | Engineering | 978-7-52886-190-7 | 6
+The Art of Biochemistry (3rd Edition) | Michael Novak | Chemistry | 978-5-71728-255-2 | 7
+The Art of Real Analysis (4th Edition) | Marie Curie | Mathematics | 978-3-24929-410-8 | 9
+Modern Philosophy Essentials and Applications (Global Edition) | Grace Hopper | Literature & Philosophy | 978-0-87558-383-8 | 9
+Advanced Modern Philosophy | Maria Sanchez | Literature & Philosophy | 978-5-21903-584-2 | 8
+Neuropsychology Essentials and Applications (3rd Edition) | Albert Einstein | Psychology | 978-2-61166-741-2 | 6
+Introduction to Statistical Mechanics (5th Edition) | Dorothy Hodgkin | Physics | 978-6-67566-535-5 | 10
+Principles of Philosophy of History (2nd Edition) | Marie Curie | History & Sociology | 978-1-82612-068-2 | 10
+Modern Data Science: A Systems Approach (Global Edition) | Katherine Johnson | Computer Science | 978-0-91173-175-9 | 3
+Principles of Electromagnetism (4th Edition) | William Taylor | Physics | 978-8-14299-669-6 | 10
+Advanced Optics | Rosalind Franklin | Physics | 978-8-32715-878-5 | 9
+Principles of Marine Biology (5th Edition) | Albert Einstein | Biology | 978-7-39188-662-6 | 9
+Modern Metaphysics: A Systems Approach (5th Edition) | Michael Novak | Literature & Philosophy | 978-1-27299-362-4 | 8
+Introduction to World History (4th Edition) | Robert Chen | History & Sociology | 978-0-90207-873-2 | 9
+Advanced Physical Chemistry (2nd Edition) | Alan Turing | Chemistry | 978-0-08766-383-5 | 8
+Modern Mobile Programming: A Systems Approach (Global Edition) | Gerty Cori | Computer Science | 978-7-10398-341-3 | 8
+Handbook of Acoustics (3rd Edition) | Emily Watson | Physics | 978-7-98247-918-7 | 9
+Modern Econometrics: A Systems Approach | Gerty Cori | Business & Economics | 978-8-86595-292-2 | 5
+Principles of Robotics and Control | Albert Einstein | Engineering | 978-3-53938-084-4 | 4
+Foundations of International Trade | Ada Yonath | Business & Economics | 978-9-33549-248-4 | 6
+Principles of Organizational Behavior (3rd Edition) | Galileo Galilei | Business & Economics | 978-4-16169-422-9 | 7
+Modern Comparative Literature: A Systems Approach | Rachel Carson | Literature & Philosophy | 978-7-42595-548-0 | 7
+Advanced Thermochemistry (4th Edition) | Jane Goodall | Chemistry | 978-2-07635-576-3 | 4
+Handbook of Physical Chemistry | Ada Yonath | Chemistry | 978-2-73720-040-2 | 8
+Foundations of Global Studies (2nd Edition) | Alan Turing | History & Sociology | 978-1-42561-780-1 | 3
+Handbook of Asian Empires (4th Edition) | Galileo Galilei | History & Sociology | 978-5-28361-410-4 | 9
+A First Course in Poetics (3rd Edition) | Stephen Hawking | Literature & Philosophy | 978-8-33968-007-7 | 9
+Foundations of Cloud Computing | Ada Lovelace | Computer Science | 978-7-71846-256-2 | 6
+Foundations of Econometrics | Emily Watson | Business & Economics | 978-7-60519-995-3 | 8
+The Art of Optics (2nd Edition) | Charles Peterson | Physics | 978-5-22023-370-8 | 5
+Compiler Design Essentials and Applications (3rd Edition) | Sarah Jenkins | Computer Science | 978-9-31891-917-6 | 3
+Neuropsychology Essentials and Applications | Isaac Newton | Psychology | 978-0-87597-788-3 | 9
+Foundations of Electrochemistry | Michael Novak | Chemistry | 978-5-37230-234-2 | 8
+The Art of Networks (Global Edition) | Stephen Hawking | Computer Science | 978-3-19685-352-4 | 8
+A First Course in Analytical Chemistry | Richard Foster | Chemistry | 978-7-91739-672-9 | 7
+The Art of Nanochemistry (3rd Edition) | Sarah Jenkins | Chemistry | 978-2-28874-599-5 | 4
+Modern Metaphysics: A Systems Approach | Prof. Helen Vane | Literature & Philosophy | 978-8-06651-721-4 | 7
+Modern Sensation and Perception: A Systems Approach | Donald Knuth | Psychology | 978-0-32324-680-3 | 4
+Foundations of Materials Science (5th Edition) | Charles Peterson | Engineering | 978-5-09208-440-3 | 6
+Foundations of Compiler Design (3rd Edition) | Robert Chen | Computer Science | 978-3-88109-173-7 | 9
+The Art of Thermodynamics (Global Edition) | Rosalind Franklin | Physics | 978-6-51280-204-0 | 7
+Introduction to World History | Margaret Hamilton | History & Sociology | 978-8-65309-279-5 | 4
+A First Course in Machine Learning (5th Edition) | Emily Watson | Computer Science | 978-0-30210-253-5 | 7
+The Art of Social Theory (3rd Edition) | John McCarthy | History & Sociology | 978-6-40151-900-1 | 5
+Principles of Metaphysics | Sarah Jenkins | Literature & Philosophy | 978-2-05005-415-1 | 4
+Principles of Optimization Theory | James Carter | Mathematics | 978-3-20517-643-0 | 4
+Poetics for Scientists and Engineers (3rd Edition) | Stephen Hawking | Literature & Philosophy | 978-9-96821-791-9 | 9
+Principles of Abstract Algebra (Global Edition) | Maria Sanchez | Mathematics | 978-0-38109-409-1 | 7
+Advanced Mechanical Design | James Carter | Engineering | 978-0-07220-533-7 | 4
+Principles of Econometrics | Lise Meitner | Business & Economics | 978-5-28927-293-5 | 10
+Organizational Behavior for Scientists and Engineers (2nd Edition) | Grace Hopper | Business & Economics | 978-7-91347-815-3 | 9
+Introduction to Quantum Mechanics (Global Edition) | Rachel Carson | Physics | 978-4-11824-641-0 | 4
+The Art of Abnormal Psychology (Global Edition) | Donald Knuth | Psychology | 978-5-73574-210-6 | 7
+Ethics for Scientists and Engineers | Richard Feynman | Literature & Philosophy | 978-5-21042-810-4 | 4
+Handbook of Immunology (5th Edition) | Marie Curie | Biology | 978-0-97318-101-1 | 9
+Ecology Essentials and Applications (3rd Edition) | Albert Einstein | Biology | 978-6-31411-271-7 | 9
+Introduction to Compiler Design (3rd Edition) | Ada Lovelace | Computer Science | 978-6-93975-731-2 | 8
+Foundations of Neuropsychology (5th Edition) | William Taylor | Psychology | 978-5-51692-141-6 | 8
+Foundations of Classical Mythology (5th Edition) | William Taylor | Literature & Philosophy | 978-7-50083-263-4 | 9
+A First Course in Operations Management (4th Edition) | John McCarthy | Business & Economics | 978-7-61635-028-4 | 6
+A First Course in Philosophy of History (Global Edition) | James Carter | History & Sociology | 978-2-19681-439-4 | 4
+Principles of Comparative Literature (4th Edition) | Maria Sanchez | Literature & Philosophy | 978-7-75410-630-7 | 4
+Introduction to Theoretical Chemistry (3rd Edition) | Prof. Helen Vane | Chemistry | 978-1-98543-757-6 | 10
+Modern Clinical Psychology: A Systems Approach (5th Edition) | Donald Knuth | Psychology | 978-0-13523-644-8 | 10
+Modern Graph Theory: A Systems Approach (5th Edition) | Richard Feynman | Mathematics | 978-0-06661-880-8 | 6
+Civil Infrastructure Essentials and Applications | Michael Novak | Engineering | 978-2-26579-237-5 | 5
+Introduction to Literary Criticism (3rd Edition) | Dorothy Hodgkin | Literature & Philosophy | 978-9-49639-882-0 | 9
+Structural Analysis Essentials and Applications | David Miller | Engineering | 978-2-30286-220-6 | 3
+Foundations of Developmental Psychology (3rd Edition) | Alan Turing | Psychology | 978-3-31337-109-3 | 8
+Advanced Microbiology (5th Edition) | Nikola Tesla | Biology | 978-2-17625-433-5 | 10
+The Art of Sensation and Perception (2nd Edition) | Ada Yonath | Psychology | 978-3-60800-109-3 | 4
+Principles of Genetics | Ada Lovelace | Biology | 978-3-34840-059-8 | 8
+Principles of Compiler Design | Albert Einstein | Computer Science | 978-7-01222-555-1 | 7
+Ecology for Scientists and Engineers | Rosalind Franklin | Biology | 978-3-88178-141-2 | 10
+Principles of Logic and Semantics (5th Edition) | Donald Knuth | Literature & Philosophy | 978-1-07186-969-7 | 10
+Principles of Electrical Engineering (5th Edition) | Michael Novak | Engineering | 978-5-76458-851-1 | 8
+The Art of Social Theory (5th Edition) | Albert Einstein | History & Sociology | 978-5-63395-324-8 | 3
+Modern Artificial Intelligence: A Systems Approach | Richard Foster | Computer Science | 978-6-52837-436-3 | 7
+Developmental Psychology Essentials and Applications (4th Edition) | Maria Sanchez | Psychology | 978-4-72150-078-8 | 3
+Handbook of Nuclear Physics | Albert Einstein | Physics | 978-0-61594-016-4 | 10
+Foundations of Inorganic Chemistry (2nd Edition) | Richard Feynman | Chemistry | 978-6-64480-804-9 | 5
+Handbook of Thermochemistry | Robert Chen | Chemistry | 978-8-10914-368-6 | 3
+The Art of Quantum Mechanics (2nd Edition) | Thomas Wright | Physics | 978-9-77052-676-9 | 8
+Modern Inorganic Chemistry: A Systems Approach (4th Edition) | Robert Chen | Chemistry | 978-3-07826-704-6 | 6
+Marketing Principles Essentials and Applications (2nd Edition) | William Taylor | Business & Economics | 978-1-97234-606-5 | 10
+Foundations of Thermochemistry (3rd Edition) | John McCarthy | Chemistry | 978-6-65473-001-3 | 4
+A First Course in Ancient Civilizations (4th Edition) | Grace Hopper | History & Sociology | 978-4-21829-481-8 | 8
+Introduction to General Relativity (2nd Edition) | Isaac Newton | Physics | 978-1-63427-748-3 | 6
+Introduction to Classical Mythology | Richard Feynman | Literature & Philosophy | 978-6-87711-364-4 | 4
+Handbook of Entrepreneurship (4th Edition) | Isaac Newton | Business & Economics | 978-0-66541-262-2 | 10
+Classical Mechanics Essentials and Applications | Charles Peterson | Physics | 978-4-08024-007-4 | 7
+Introduction to Modern Philosophy (3rd Edition) | Emily Watson | Literature & Philosophy | 978-0-38468-623-6 | 10
+Social Theory for Scientists and Engineers (Global Edition) | Alan Turing | History & Sociology | 978-2-39935-705-2 | 6
+Principles of Asian Empires | Lise Meitner | History & Sociology | 978-3-71743-368-3 | 3
+Advanced Educational Psychology | Grace Hopper | Psychology | 978-4-46488-394-8 | 6
+Introduction to Ethics | Nancy Davis | Literature & Philosophy | 978-4-40919-076-6 | 9
+Foundations of Robotics and Control | Linus Torvalds | Engineering | 978-8-50649-913-5 | 4
+The Art of Logic and Semantics (2nd Edition) | Katherine Johnson | Literature & Philosophy | 978-9-87514-929-4 | 10
+Introduction to Modern History | Barbara McClintock | History & Sociology | 978-9-25998-090-4 | 5
+A First Course in Human-Computer Interaction (2nd Edition) | Emily Watson | Computer Science | 978-5-35513-948-1 | 5
+Physical Chemistry Essentials and Applications | Robert Chen | Chemistry | 978-2-05550-138-8 | 10
+A First Course in Complex Variables (Global Edition) | Dorothy Hodgkin | Mathematics | 978-8-16967-133-8 | 7
+Handbook of Marine Biology (5th Edition) | Isaac Newton | Biology | 978-1-75146-098-9 | 10
+Epistemology for Scientists and Engineers (2nd Edition) | Isaac Newton | Literature & Philosophy | 978-4-60435-547-4 | 5
+Introduction to Mobile Programming | William Taylor | Computer Science | 978-6-69130-163-2 | 7
+Genetics for Scientists and Engineers (2nd Edition) | Richard Feynman | Biology | 978-3-93997-481-3 | 8
+Foundations of Marine Biology | Ada Yonath | Biology | 978-2-61691-729-3 | 10
+Modern Strategic Management: A Systems Approach (2nd Edition) | Maria Sanchez | Business & Economics | 978-7-58441-436-5 | 5
+Principles of Fluid Dynamics (2nd Edition) | David Miller | Physics | 978-1-11442-379-7 | 9
+Introduction to Econometrics | Ada Yonath | Business & Economics | 978-6-36623-643-1 | 10
+The Art of Philosophy of History (Global Edition) | Grace Hopper | History & Sociology | 978-5-68321-902-9 | 6
+Modern Game Development: A Systems Approach (Global Edition) | Nancy Davis | Computer Science | 978-4-09801-169-0 | 4
+Virology for Scientists and Engineers (4th Edition) | Maria Sanchez | Biology | 978-0-74279-757-1 | 9
+Advanced Corporate Finance (3rd Edition) | Linus Torvalds | Business & Economics | 978-7-16610-491-6 | 4
+The Art of Poetics (Global Edition) | Isaac Newton | Literature & Philosophy | 978-8-00596-623-3 | 6
+The Art of Clinical Psychology | Donald Knuth | Psychology | 978-4-38014-432-3 | 3
+Handbook of Immunology | Gerty Cori | Biology | 978-1-30821-175-1 | 9
+Foundations of Nanochemistry | Richard Foster | Chemistry | 978-1-32500-743-7 | 10
