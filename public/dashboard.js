@@ -1200,6 +1200,50 @@ async function loadReportsCenter() {
                     </tr>
                 `;
             });
+        } else if (reportType === 'roster-audit') {
+            title.textContent = 'Classmate Enrollment Roster Audit Report';
+            thead.innerHTML = `
+                <tr>
+                    <th>Classmate Name</th>
+                    <th>Student ID</th>
+                    <th>Index Number</th>
+                    <th>Enrollment Status</th>
+                    <th>Account Details</th>
+                </tr>
+            `;
+
+            const data = await apiCall('/api/reports/roster-audit');
+            
+            tbody.innerHTML = `
+                <tr style="background-color: var(--accent-light); font-weight: 600;">
+                    <td colspan="5" style="text-align: center; padding: 12px; color: var(--accent-color);">
+                        Roster Summary 📊 Total: ${data.stats.total} | Registered: ${data.stats.registered} (${data.stats.percentage}%) | Unregistered: ${data.stats.unregistered}
+                    </td>
+                </tr>
+            `;
+
+            if (data.roster.length === 0) {
+                tbody.innerHTML += '<tr><td colspan="5" style="text-align: center;">Roster table is empty. Please run seed_roster.js first.</td></tr>';
+                return;
+            }
+
+            data.roster.forEach(r => {
+                const statusClass = r.status === 'registered' ? 'returned' : 'cancelled';
+                const statusLabel = r.status === 'registered' ? 'Registered' : 'Pending Sign-up';
+                const accountDetails = r.status === 'registered' 
+                    ? `<strong>${r.username}</strong><br><span style="font-size:11px;">${r.email}</span>` 
+                    : '<span style="color:var(--text-secondary); font-style:italic;">No account</span>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${r.name}</strong></td>
+                        <td>${r.student_id}</td>
+                        <td>${r.index_number}</td>
+                        <td><span class="badge-status-item ${statusClass}">${statusLabel}</span></td>
+                        <td>${accountDetails}</td>
+                    </tr>
+                `;
+            });
         }
     } catch (err) {}
 }

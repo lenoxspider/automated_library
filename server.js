@@ -865,6 +865,38 @@ app.post('/api/analytics/visit', (req, res) => {
   });
 });
 
+// Get classmate enrollment roster audit report
+app.get('/api/reports/roster-audit', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  db.get(`SELECT COUNT(*) as total FROM student_roster`, [], (err, totalRow) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const total = totalRow ? totalRow.total : 0;
+
+    db.get(`SELECT COUNT(*) as registered FROM users WHERE student_id IS NOT NULL`, [], (err, regRow) => {
+      if (err) return res.status(500).json({ error: err.message });
+      const registered = regRow ? regRow.registered : 0;
+      const unregistered = Math.max(0, total - registered);
+      const percentage = total > 0 ? ((registered / total) * 100).toFixed(1) : '0.0';
+
+      db.all(
+        `SELECT sr.name, sr.student_id, sr.index_number,
+                (CASE WHEN u.id IS NOT NULL THEN 'registered' ELSE 'unregistered' END) as status,
+                u.email, u.username
+         FROM student_roster sr
+         LEFT JOIN users u ON sr.student_id = u.student_id
+         ORDER BY sr.name ASC`,
+        [],
+        (err, roster) => {
+          if (err) return res.status(500).json({ error: err.message });
+          res.json({
+            stats: { total, registered, unregistered, percentage },
+            roster
+          });
+        }
+      );
+    });
+  });
+});
+
 // Get dashboard and analytics reports
 app.get('/api/reports/dashboard', authenticate, authorize(['admin', 'librarian']), (req, res) => {
   const stats = {};
