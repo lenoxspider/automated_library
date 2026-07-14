@@ -115,6 +115,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const rosterSearch = document.getElementById('roster-search-input');
+    if (rosterSearch) {
+        rosterSearch.addEventListener('input', (e) => {
+            filterRosterTable(e.target.value.trim());
+        });
+    }
+
     // Sidebar menu navigation
     const menuItems = document.querySelectorAll('.menu-item');
     menuItems.forEach(item => {
@@ -1363,6 +1370,8 @@ async function handlePolicySettingsSubmit(e) {
     }
 }
 
+let cachedRoster = [];
+
 async function loadRosterAuditPage() {
     try {
         const data = await apiCall('/api/reports/roster-audit');
@@ -1375,33 +1384,57 @@ async function loadRosterAuditPage() {
             <span class="badge-status-item overdue" style="font-weight:600; font-size:12px;">Pending Sign-up: ${data.stats.unregistered}</span>
         `;
 
-        const tbody = document.getElementById('roster-audit-tbody');
-        tbody.innerHTML = '';
+        cachedRoster = data.roster || [];
+        
+        // Clear search input on view refresh
+        const searchInput = document.getElementById('roster-search-input');
+        if (searchInput) searchInput.value = '';
 
-        if (data.roster.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Master roster database is currently empty.</td></tr>';
-            return;
-        }
-
-        data.roster.forEach(r => {
-            const isRegistered = r.status === 'registered';
-            const statusClass = isRegistered ? 'returned' : 'cancelled';
-            const statusLabel = isRegistered ? 'Registered' : 'Pending Sign-up';
-            const accountDetails = isRegistered 
-                ? `<strong>${r.username}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.email}</span>` 
-                : '<span style="color:var(--text-secondary); font-style:italic;">No account created</span>';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${r.name}</strong></td>
-                    <td><code>${r.student_id}</code></td>
-                    <td><code>${r.index_number}</code></td>
-                    <td><span class="badge-status-item ${statusClass}">${statusLabel}</span></td>
-                    <td>${accountDetails}</td>
-                </tr>
-            `;
-        });
+        renderRosterTable(cachedRoster);
     } catch (err) {
         showToast('Failed to load classmate enrollment roster.', 'error');
     }
+}
+
+function renderRosterTable(roster) {
+    const tbody = document.getElementById('roster-audit-tbody');
+    tbody.innerHTML = '';
+
+    if (roster.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No matching classmate roster records found.</td></tr>';
+        return;
+    }
+
+    roster.forEach(r => {
+        const isRegistered = r.status === 'registered';
+        const statusClass = isRegistered ? 'returned' : 'cancelled';
+        const statusLabel = isRegistered ? 'Registered' : 'Pending Sign-up';
+        const accountDetails = isRegistered 
+            ? `<strong>${r.username}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.email}</span>` 
+            : '<span style="color:var(--text-secondary); font-style:italic;">No account created</span>';
+
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${r.name}</strong></td>
+                <td><code>${r.student_id}</code></td>
+                <td><code>${r.index_number}</code></td>
+                <td><span class="badge-status-item ${statusClass}">${statusLabel}</span></td>
+                <td>${accountDetails}</td>
+            </tr>
+        `;
+    });
+}
+
+function filterRosterTable(query) {
+    if (!query) {
+        renderRosterTable(cachedRoster);
+        return;
+    }
+    const lowerQuery = query.toLowerCase();
+    const filtered = cachedRoster.filter(r => 
+        (r.name && r.name.toLowerCase().includes(lowerQuery)) ||
+        (r.student_id && r.student_id.toLowerCase().includes(lowerQuery)) ||
+        (r.index_number && r.index_number.toLowerCase().includes(lowerQuery))
+    );
+    renderRosterTable(filtered);
 }
