@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // Verify token on server
-        const res = await apiCall('/api/auth/verify-reset-token', 'POST', { token });
+        const res = await apiCall(`/api/auth/verify-reset-token?token=${encodeURIComponent(token)}`, 'GET');
         tokenWelcome.innerHTML = `
             <i class="fa-solid fa-circle-info"></i>
             Resetting password for: <strong>${res.email}</strong>

@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function trackSiteVisit() {
     try {
-        await fetch('/api/telemetry/visit', { method: 'POST' });
+        await fetch('/api/analytics/visit', { method: 'POST' });
     } catch (err) {
         console.error('Failed to log telemetry event:', err);
     }
