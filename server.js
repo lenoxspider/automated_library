@@ -468,7 +468,7 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 
 // Get all books with optional search query
 app.get('/api/books', (req, res) => {
-  const { search } = req.query;
+  const { search, random, limit } = req.query;
   let sql = 'SELECT * FROM books';
   let params = [];
 
@@ -476,6 +476,13 @@ app.get('/api/books', (req, res) => {
     sql += ' WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? OR isbn LIKE ?';
     const queryParam = `%${search}%`;
     params = [queryParam, queryParam, queryParam, queryParam];
+  } else if (random === 'true') {
+    sql += ' ORDER BY RANDOM()';
+  }
+
+  if (limit) {
+    sql += ' LIMIT ?';
+    params.push(parseInt(limit, 10));
   }
 
   db.all(sql, params, (err, rows) => {
@@ -925,6 +932,102 @@ app.get('/api/reports/roster-audit', authenticate, authorize(['admin', 'libraria
           });
         }
       );
+    });
+  });
+});
+
+// GET library policy settings
+app.get('/api/settings', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  db.all(`SELECT * FROM library_settings`, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const settings = {};
+    rows.forEach(r => { settings[r.key] = r.value; });
+    res.json(settings);
+  });
+});
+
+// PUT library policy settings
+app.put('/api/settings', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const { max_loans, block_fines, block_overdue } = req.body;
+  
+  db.serialize(() => {
+    if (max_loans !== undefined) {
+      db.run(`UPDATE library_settings SET value = ? WHERE key = 'max_loans'`, [max_loans.toString()]);
+    }
+    if (block_fines !== undefined) {
+      db.run(`UPDATE library_settings SET value = ? WHERE key = 'block_fines'`, [block_fines ? '1' : '0']);
+    }
+    if (block_overdue !== undefined) {
+      db.run(`UPDATE library_settings SET value = ? WHERE key = 'block_overdue'`, [block_overdue ? '1' : '0']);
+    }
+  });
+  
+  res.json({ message: 'Library policy settings saved successfully.' });
+});
+
+// GET currently blocked members report
+app.get('/api/reports/blocked-members', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  db.all(`SELECT * FROM library_settings`, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    
+    const config = {};
+    rows.forEach(r => { config[r.key] = r.value; });
+    
+    const maxLoansLimit = parseInt(config.max_loans || '3', 10);
+    const blockFinesEnabled = config.block_fines === '1';
+    const blockOverdueEnabled = config.block_overdue === '1';
+    
+    db.all(`SELECT id, name, email, student_id, index_number FROM users WHERE role = 'member'`, [], (err, members) => {
+      if (err) return res.status(500).json({ error: err.message });
+      
+      const blockedList = [];
+      let pendingChecks = members.length;
+      
+      if (pendingChecks === 0) {
+        return res.json([]);
+      }
+      
+      members.forEach(member => {
+        db.all(`SELECT status FROM borrowings WHERE member_id = ? AND status IN ('borrowed', 'overdue')`, [member.id], (err, loans) => {
+          if (err) return res.status(500).json({ error: err.message });
+          
+          const activeLoansCount = loans.length;
+          const hasOverdueLoans = loans.some(l => l.status === 'overdue');
+          
+          db.get(`SELECT SUM(amount) as total FROM fines WHERE member_id = ? AND status = 'unpaid'`, [member.id], (err, fineRow) => {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            const unpaidFinesTotal = fineRow && fineRow.total ? fineRow.total : 0;
+            const violations = [];
+            
+            if (activeLoansCount >= maxLoansLimit) {
+              violations.push(`Max borrowings reached (${activeLoansCount} of max ${maxLoansLimit})`);
+            }
+            if (blockOverdueEnabled && hasOverdueLoans) {
+              violations.push('Has active overdue books');
+            }
+            if (blockFinesEnabled && unpaidFinesTotal > 0) {
+              violations.push(`Has unpaid fines ($${unpaidFinesTotal.toFixed(2)})`);
+            }
+            
+            if (violations.length > 0) {
+              blockedList.push({
+                member_id: member.id,
+                name: member.name,
+                email: member.email,
+                student_id: member.student_id,
+                index_number: member.index_number,
+                violations
+              });
+            }
+            
+            pendingChecks--;
+            if (pendingChecks === 0) {
+              res.json(blockedList);
+            }
+          });
+        });
+      });
     });
   });
 });

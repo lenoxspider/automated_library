@@ -38,6 +38,8 @@ async function loadCatalog(searchQuery = '') {
     let url = '/api/books';
     if (searchQuery) {
         url += `?search=${encodeURIComponent(searchQuery)}`;
+    } else {
+        url += '?random=true&limit=6';
     }
 
     try {
