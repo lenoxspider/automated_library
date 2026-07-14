@@ -90,7 +90,7 @@ graph TD
 ```
 
 ### 4.2 Entity-Relationship Diagram (ERD)
-The SQLite relational schema models users, books, checkout logs, reservations, and fines.
+The SQLite relational schema models users, books, checkout logs, reservations, fines, and student roster matches.
 
 ```mermaid
 erDiagram
@@ -105,6 +105,8 @@ erDiagram
         TEXT verification_token
         TEXT student_id
         TEXT index_number
+        TEXT reset_token
+        TEXT reset_token_expiry
     }
     BOOKS {
         INTEGER id PK
@@ -138,12 +140,23 @@ erDiagram
         TEXT status
         TEXT payment_date
     }
+    STUDENT_ROSTER {
+        INTEGER id PK
+        TEXT name
+        TEXT student_id UNIQUE
+        TEXT index_number UNIQUE
+    }
+    SITE_VISITS {
+        INTEGER id PK
+        TEXT visit_time
+    }
 
     USERS ||--o{ BORROWINGS : "places"
     USERS ||--o{ RESERVATIONS : "requests"
     BOOKS ||--o{ BORROWINGS : "lent_in"
     BOOKS ||--o{ RESERVATIONS : "reserved_in"
     BORROWINGS ||--o| FINES : "generates"
+    STUDENT_ROSTER ||--o| USERS : "verifies"
 ```
 
 ---
@@ -154,9 +167,13 @@ The application uses standard REST APIs to interface between client views and th
 
 | Method | Endpoint | Description | Permitted Roles |
 | :--- | :--- | :--- | :--- |
+| **POST** | `/api/auth/verify-roster` | Match Student ID and Index Number against master roster | All |
 | **POST** | `/api/auth/register` | Register a new user profile & triggers activation email | All |
 | **POST** | `/api/auth/login` | Authenticate credentials & reject unverified accounts | All |
 | **GET** | `/api/auth/verify` | Verify token and activate user account | All |
+| **POST** | `/api/auth/forgot-password` | Generate reset token and email password recovery link | All |
+| **POST** | `/api/auth/verify-reset-token` | Confirm validity of email recovery token | All |
+| **POST** | `/api/auth/reset-password` | Set new password and clean recovery token fields | All |
 | **GET** | `/api/books` | Search catalog with title/author/ISBN filtering | All |
 | **POST** | `/api/books` | Add a new book to inventory | Admin, Librarian |
 | **PUT** | `/api/books/:id` | Update copies count or metadata of a book | Admin, Librarian |
