@@ -764,6 +764,57 @@
         </div>
     </div>
 
+    <!-- MODAL: ADD MEMBER / USER -->
+    <div id="modal-user" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New System User</h3>
+                <span class="close-modal" onclick="closeModal('modal-user')">&times;</span>
+            </div>
+            <form id="admin-user-form">
+                <div class="input-group">
+                    <label for="user-form-name">Full Name</label>
+                    <input type="text" id="user-form-name" required placeholder="e.g. John Doe">
+                </div>
+                <div class="input-group">
+                    <label for="user-form-email">Email Address</label>
+                    <input type="email" id="user-form-email" required placeholder="e.g. john@example.com">
+                </div>
+                <div class="input-group">
+                    <label for="user-form-username">Username</label>
+                    <input type="text" id="user-form-username" required placeholder="Choose a username">
+                </div>
+                <div class="input-group">
+                    <label for="user-form-password">Password</label>
+                    <input type="password" id="user-form-password" required placeholder="Create a password">
+                </div>
+                <div class="input-group">
+                    <label for="user-form-role">Role</label>
+                    <select id="user-form-role" required>
+                        <option value="member">Member (Student / Staff)</option>
+                        <option value="librarian">Librarian (Staff)</option>
+                        <option value="admin">Administrator (Staff)</option>
+                    </select>
+                </div>
+                <!-- University Student fields for Admin panel entry -->
+                <div id="user-form-university-fields">
+                    <div class="input-group">
+                        <label for="user-form-student-id">Student ID</label>
+                        <input type="text" id="user-form-student-id" placeholder="Enter Student ID">
+                    </div>
+                    <div class="input-group">
+                        <label for="user-form-index-number">Index Number</label>
+                        <input type="text" id="user-form-index-number" placeholder="Enter Index Number">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-user')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Client-side script -->
     <script src="app.js"></script>
 </body>

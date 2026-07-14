@@ -186,7 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
         'reg-student-id',
         'reg-index-number',
         'forgot-student-id',
-        'forgot-index-number'
+        'forgot-index-number',
+        'user-form-student-id',
+        'user-form-index-number'
     ];
 
     inputsToRestrict.forEach(id => {
@@ -231,10 +233,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-register-user-modal').addEventListener('click', () => {
-        document.getElementById('register-container').classList.remove('hidden');
-        document.getElementById('app-container').classList.add('hidden');
-        document.getElementById('reg-role').value = 'member';
+        document.getElementById('admin-user-form').reset();
+        document.getElementById('user-form-university-fields').classList.remove('hidden');
+        openModal('modal-user');
     });
+
+    document.getElementById('admin-user-form').addEventListener('submit', handleAdminUserSubmit);
+
+    const userFormRole = document.getElementById('user-form-role');
+    const userFormUnivFields = document.getElementById('user-form-university-fields');
+    if (userFormRole && userFormUnivFields) {
+        userFormRole.addEventListener('change', (e) => {
+            if (e.target.value === 'member') {
+                userFormUnivFields.classList.remove('hidden');
+            } else {
+                userFormUnivFields.classList.add('hidden');
+            }
+        });
+    }
 
     document.getElementById('btn-logout').addEventListener('click', handleLogout);
 
@@ -469,6 +485,36 @@ async function handleRegister(e) {
         } else {
             showLoginView();
         }
+    } catch (err) {
+        // Handled by apiCall
+    }
+}
+
+async function handleAdminUserSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('user-form-name').value;
+    const email = document.getElementById('user-form-email').value;
+    const username = document.getElementById('user-form-username').value;
+    const password = document.getElementById('user-form-password').value;
+    const role = document.getElementById('user-form-role').value;
+    
+    const student_id = role === 'member' ? document.getElementById('user-form-student-id').value : null;
+    const index_number = role === 'member' ? document.getElementById('user-form-index-number').value : null;
+
+    if (role !== 'member' && /\d/.test(name)) {
+        showToast('Full Name cannot contain numbers.', 'error');
+        return;
+    }
+    if (role === 'member' && (!student_id || !index_number)) {
+        showToast('Student ID and Index Number are required for students.', 'error');
+        return;
+    }
+
+    try {
+        const res = await apiCall('/api/auth/register', 'POST', { username, password, role, name, email, student_id, index_number });
+        showToast(res.message || 'Account created successfully!');
+        closeModal('modal-user');
+        loadManageUsers();
     } catch (err) {
         // Handled by apiCall
     }
