@@ -299,6 +299,8 @@ function loadViewData(viewId) {
         loadReportsCenter();
     } else if (viewId === 'view-borrowing-rules') {
         loadBorrowingRules();
+    } else if (viewId === 'view-roster-audit') {
+        loadRosterAuditPage();
     }
 }
 
@@ -1358,5 +1360,48 @@ async function handlePolicySettingsSubmit(e) {
         loadBorrowingRules();
     } catch (err) {
         // Handled by apiCall
+    }
+}
+
+async function loadRosterAuditPage() {
+    try {
+        const data = await apiCall('/api/reports/roster-audit');
+        
+        // Populate stats badges
+        const badgesContainer = document.getElementById('roster-audit-stats-badges');
+        badgesContainer.innerHTML = `
+            <span class="badge-status-item available" style="font-weight:600; font-size:12px;">Total Classmates: ${data.stats.total}</span>
+            <span class="badge-status-item returned" style="font-weight:600; font-size:12px;">Registered: ${data.stats.registered} (${data.stats.percentage}%)</span>
+            <span class="badge-status-item overdue" style="font-weight:600; font-size:12px;">Pending Sign-up: ${data.stats.unregistered}</span>
+        `;
+
+        const tbody = document.getElementById('roster-audit-tbody');
+        tbody.innerHTML = '';
+
+        if (data.roster.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Master roster database is currently empty.</td></tr>';
+            return;
+        }
+
+        data.roster.forEach(r => {
+            const isRegistered = r.status === 'registered';
+            const statusClass = isRegistered ? 'returned' : 'cancelled';
+            const statusLabel = isRegistered ? 'Registered' : 'Pending Sign-up';
+            const accountDetails = isRegistered 
+                ? `<strong>${r.username}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.email}</span>` 
+                : '<span style="color:var(--text-secondary); font-style:italic;">No account created</span>';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${r.name}</strong></td>
+                    <td><code>${r.student_id}</code></td>
+                    <td><code>${r.index_number}</code></td>
+                    <td><span class="badge-status-item ${statusClass}">${statusLabel}</span></td>
+                    <td>${accountDetails}</td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        showToast('Failed to load classmate enrollment roster.', 'error');
     }
 }

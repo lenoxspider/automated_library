@@ -93,6 +93,10 @@
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Borrowing Policies</span>
                 </a>
+                <a href="#" class="menu-item staff-only hidden" data-view="view-roster-audit">
+                    <i class="fa-solid fa-clipboard-user"></i>
+                    <span>Enrollment Roster</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -558,6 +562,37 @@
                                     </tr>
                                 </thead>
                                 <tbody id="policy-blocked-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: ROSTER AUDIT (Staff) -->
+                <section id="view-roster-audit" class="dashboard-view hidden">
+                    <div class="card table-card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h3>Classmate Enrollment Roster Audit</h3>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Audits registered profiles against imported VCF classmates.</p>
+                            </div>
+                            <div id="roster-audit-stats-badges" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <!-- Dynamic stats badges -->
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Classmate Name</th>
+                                        <th>Student ID</th>
+                                        <th>Index Number</th>
+                                        <th>Enrollment Status</th>
+                                        <th>Account Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roster-audit-tbody">
                                     <!-- Dynamic rows -->
                                 </tbody>
                             </table>
