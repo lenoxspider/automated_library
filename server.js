@@ -669,8 +669,14 @@ app.post('/api/borrowings', authenticate, authorize(['admin', 'librarian']), (re
             return res.status(400).json({ error: 'Checkout blocked: Member has overdue books that must be returned first.' });
           }
 
-          db.get(`SELECT SUM(amount) as total FROM fines WHERE member_id = ? AND status = 'unpaid'`, [member_id], (err, fineRow) => {
-            if (err) return res.status(500).json({ error: err.message });
+          db.get(
+            `SELECT SUM(f.amount) as total 
+             FROM fines f
+             JOIN borrowings b ON f.borrowing_id = b.id
+             WHERE b.member_id = ? AND f.status = 'unpaid'`,
+            [member_id],
+            (err, fineRow) => {
+              if (err) return res.status(500).json({ error: err.message });
 
             const unpaidFinesTotal = fineRow && fineRow.total ? fineRow.total : 0;
             if (blockFinesEnabled && unpaidFinesTotal > 0) {
@@ -982,6 +988,7 @@ app.get('/api/reports/blocked-members', authenticate, authorize(['admin', 'libra
       
       const blockedList = [];
       let pendingChecks = members.length;
+      let hasErrored = false;
       
       if (pendingChecks === 0) {
         return res.json([]);
@@ -989,43 +996,58 @@ app.get('/api/reports/blocked-members', authenticate, authorize(['admin', 'libra
       
       members.forEach(member => {
         db.all(`SELECT status FROM borrowings WHERE member_id = ? AND status IN ('borrowed', 'overdue')`, [member.id], (err, loans) => {
-          if (err) return res.status(500).json({ error: err.message });
+          if (hasErrored) return;
+          if (err) {
+            hasErrored = true;
+            return res.status(500).json({ error: err.message });
+          }
           
           const activeLoansCount = loans.length;
           const hasOverdueLoans = loans.some(l => l.status === 'overdue');
           
-          db.get(`SELECT SUM(amount) as total FROM fines WHERE member_id = ? AND status = 'unpaid'`, [member.id], (err, fineRow) => {
-            if (err) return res.status(500).json({ error: err.message });
-            
-            const unpaidFinesTotal = fineRow && fineRow.total ? fineRow.total : 0;
-            const violations = [];
-            
-            if (activeLoansCount >= maxLoansLimit) {
-              violations.push(`Max borrowings reached (${activeLoansCount} of max ${maxLoansLimit})`);
+          db.get(
+            `SELECT SUM(f.amount) as total 
+             FROM fines f
+             JOIN borrowings b ON f.borrowing_id = b.id
+             WHERE b.member_id = ? AND f.status = 'unpaid'`,
+            [member.id],
+            (err, fineRow) => {
+              if (hasErrored) return;
+              if (err) {
+                hasErrored = true;
+                return res.status(500).json({ error: err.message });
+              }
+              
+              const unpaidFinesTotal = fineRow && fineRow.total ? fineRow.total : 0;
+              const violations = [];
+              
+              if (activeLoansCount >= maxLoansLimit) {
+                violations.push(`Max borrowings reached (${activeLoansCount} of max ${maxLoansLimit})`);
+              }
+              if (blockOverdueEnabled && hasOverdueLoans) {
+                violations.push('Has active overdue books');
+              }
+              if (blockFinesEnabled && unpaidFinesTotal > 0) {
+                violations.push(`Has unpaid fines ($${unpaidFinesTotal.toFixed(2)})`);
+              }
+              
+              if (violations.length > 0) {
+                blockedList.push({
+                  member_id: member.id,
+                  name: member.name,
+                  email: member.email,
+                  student_id: member.student_id,
+                  index_number: member.index_number,
+                  violations
+                });
+              }
+              
+              pendingChecks--;
+              if (pendingChecks === 0) {
+                res.json(blockedList);
+              }
             }
-            if (blockOverdueEnabled && hasOverdueLoans) {
-              violations.push('Has active overdue books');
-            }
-            if (blockFinesEnabled && unpaidFinesTotal > 0) {
-              violations.push(`Has unpaid fines ($${unpaidFinesTotal.toFixed(2)})`);
-            }
-            
-            if (violations.length > 0) {
-              blockedList.push({
-                member_id: member.id,
-                name: member.name,
-                email: member.email,
-                student_id: member.student_id,
-                index_number: member.index_number,
-                violations
-              });
-            }
-            
-            pendingChecks--;
-            if (pendingChecks === 0) {
-              res.json(blockedList);
-            }
-          });
+          );
         });
       });
     });
