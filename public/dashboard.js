@@ -216,8 +216,6 @@ function closeModal(modalId) {
 
 // Setup User Role Context & Layout
 function setupDashboard(user) {
-    document.getElementById('login-container').classList.add('hidden');
-    document.getElementById('register-container').classList.add('hidden');
     document.getElementById('app-container').classList.remove('hidden');
 
     document.getElementById('user-display-name').textContent = user.name;
