@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Center - SmartLib</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .query-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            align-items: end;
+            margin-top: 15px;
+        }
+        .report-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+        .btn-query-group {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+        .stats-badge-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        @media print {
+            aside.sidebar, .query-panel, .btn-query-group, .sidebar-footer, header, .stats-badge-container {
+                display: none !important;
+            }
+            main.main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                color: black !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: none !important;
+                background: transparent !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-graduation-cap logo-icon"></i>
+                <span class="logo-text">SmartLib</span>
+            </div>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <div class="user-info">
+                    <h4 id="user-display-name">Loading...</h4>
+                    <span id="user-display-role" class="badge-role">ROLE</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="/dashboard" class="menu-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard Panel</span>
+                </a>
+                <a href="/reports" class="menu-item active">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span>Query Reports</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn btn-outline btn-block">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Log Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header>
+                <div class="header-title">
+                    <h2>SmartLib Query Center</h2>
+                    <p>Generate, filter, print, and export real-time library reports.</p>
+                </div>
+                <div class="header-actions">
+                    <div id="theme-switch" class="theme-toggle">
+                        <i class="fa-solid fa-moon"></i>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- Query Filters Panel -->
+                <div class="card query-panel">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-filter"></i> Report Query Parameters</h3>
+                        <p style="font-size: 13px; color: var(--text-secondary);">Set parameters below to fetch custom data from the database.</p>
+                    </div>
+                    <div class="card-body" style="padding: 20px 0 0 0;">
+                        <div class="query-grid">
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label for="query-report-type">Report Category</label>
+                                <select id="query-report-type" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline:none;">
+                                    <option value="active-loans">Active Borrowings Summary</option>
+                                    <option value="overdue-loans">Overdue Book Violations</option>
+                                    <option value="fines-ledger">Fines Ledger & Balances</option>
+                                    <option value="roster-audit">Classmate Enrollment Roster</option>
+                                    <option value="circulation-log">Circulation History Log</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-group" style="margin-bottom: 0;" id="group-start-date">
+                                <label for="query-start-date">Start Date</label>
+                                <input type="date" id="query-start-date" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline:none;">
+                            </div>
+
+                            <div class="input-group" style="margin-bottom: 0;" id="group-end-date">
+                                <label for="query-end-date">End Date</label>
+                                <input type="date" id="query-end-date" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline:none;">
+                            </div>
+
+                            <div class="input-group" style="margin-bottom: 0;" id="group-status">
+                                <label for="query-status">Status</label>
+                                <select id="query-status" style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline:none;">
+                                    <!-- Dynamic -->
+                                </select>
+                            </div>
+
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label for="query-search">Search Keyword</label>
+                                <input type="text" id="query-search" placeholder="Type student, book, ID..." style="width:100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); outline:none;">
+                            </div>
+                        </div>
+
+                        <div class="query-grid" style="grid-template-columns: 1fr; margin-top: 15px;">
+                            <div class="btn-query-group">
+                                <button id="btn-run-query" class="btn btn-primary" style="flex: 2; height: 42px;">
+                                    <i class="fa-solid fa-magnifying-glass"></i> Run Query
+                                </button>
+                                <button id="btn-export-csv" class="btn btn-outline" style="flex: 1; height: 42px;">
+                                    <i class="fa-solid fa-file-csv"></i> Export CSV
+                                </button>
+                                <button id="btn-print" class="btn btn-secondary" style="flex: 1; height: 42px;">
+                                    <i class="fa-solid fa-print"></i> Print PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Results Card -->
+                <div class="card table-card">
+                    <div class="card-header report-header-flex">
+                        <div>
+                            <h3 id="report-title-display">Active Borrowings Summary</h3>
+                            <p id="report-meta-display" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Loading data...</p>
+                        </div>
+                        <div id="report-stats-container" class="stats-badge-container">
+                            <!-- Dynamic Stats Badges -->
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead id="report-thead">
+                                <!-- Dynamic headers -->
+                            </thead>
+                            <tbody id="report-tbody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Core Common Utilities & Javascript Controllers -->
+    <script src="common.js"></script>
+    <script>
+        let currentQueryResults = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Session Check
+            if (!currentToken || !currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'librarian')) {
+                localStorage.removeItem('smartlib_token');
+                localStorage.removeItem('smartlib_user');
+                window.location.href = '/login';
+                return;
+            }
+
+            // Bind User profile
+            document.getElementById('user-display-name').textContent = currentUser.name;
+            document.getElementById('user-display-role').textContent = currentUser.role === 'admin' ? 'Administrator' : 'Librarian';
+
+            // Theme setup
+            applyTheme(currentTheme);
+            document.getElementById('theme-switch').addEventListener('click', () => {
+                const nextTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                applyTheme(nextTheme);
+            });
+
+            // Form bindings
+            const reportTypeSelect = document.getElementById('query-report-type');
+            reportTypeSelect.addEventListener('change', updateFilterControls);
+            
+            document.getElementById('btn-run-query').addEventListener('click', runReportQuery);
+            document.getElementById('btn-export-csv').addEventListener('click', exportToCSV);
+            document.getElementById('btn-print').addEventListener('click', () => window.print());
+
+            document.getElementById('btn-logout').addEventListener('click', async () => {
+                try {
+                    await apiCall('/api/auth/logout', 'POST');
+                } catch(e) {}
+                localStorage.clear();
+                window.location.href = '/login';
+            });
+
+            // Initial view setup
+            updateFilterControls();
+            runReportQuery();
+        });
+
+        // Adapts filter parameters according to selected report type
+        function updateFilterControls() {
+            const type = document.getElementById('query-report-type').value;
+            const statusSelect = document.getElementById('query-status');
+            const statusGroup = document.getElementById('group-status');
+            const startDateGroup = document.getElementById('group-start-date');
+            const endDateGroup = document.getElementById('group-end-date');
+
+            // Reset visibilities
+            statusGroup.style.display = 'block';
+            startDateGroup.style.display = 'block';
+            endDateGroup.style.display = 'block';
+
+            if (type === 'active-loans') {
+                statusSelect.innerHTML = `
+                    <option value="all">All Active</option>
+                    <option value="borrowed">Borrowed</option>
+                    <option value="overdue">Overdue</option>
+                `;
+            } else if (type === 'overdue-loans') {
+                statusGroup.style.display = 'none'; // Overdue query is inherently overdue status
+            } else if (type === 'fines-ledger') {
+                statusSelect.innerHTML = `
+                    <option value="all">All Fines</option>
+                    <option value="unpaid">Unpaid Only</option>
+                    <option value="paid">Paid Only</option>
+                `;
+            } else if (type === 'roster-audit') {
+                statusSelect.innerHTML = `
+                    <option value="all">All Classmates</option>
+                    <option value="registered">Registered</option>
+                    <option value="unregistered">Pending Onboarding</option>
+                `;
+                startDateGroup.style.display = 'none';
+                endDateGroup.style.display = 'none';
+            } else if (type === 'circulation-log') {
+                statusSelect.innerHTML = `
+                    <option value="all">All Transactions</option>
+                    <option value="checkouts">Checkouts only</option>
+                    <option value="returns">Returns only</option>
+                `;
+            }
+        }
+
+        // Fetches queried dataset and updates visual tables
+        async function runReportQuery() {
+            const type = document.getElementById('query-report-type').value;
+            const startDate = document.getElementById('query-start-date').value;
+            const endDate = document.getElementById('query-end-date').value;
+            const status = document.getElementById('query-status').value;
+            const search = document.getElementById('query-search').value.trim();
+
+            const tbody = document.getElementById('report-tbody');
+            const thead = document.getElementById('report-thead');
+            const titleDisplay = document.getElementById('report-title-display');
+            const metaDisplay = document.getElementById('report-meta-display');
+            const statsContainer = document.getElementById('report-stats-container');
+
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Querying database records...</td></tr>';
+            statsContainer.innerHTML = '';
+
+            // Construct url with parameters
+            let url = `/api/reports/query?type=${type}`;
+            if (startDate) url += `&startDate=${startDate}`;
+            if (endDate) url += `&endDate=${endDate}`;
+            if (status) url += `&status=${status}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+
+            try {
+                const results = await apiCall(url);
+                currentQueryResults = results;
+
+                metaDisplay.textContent = `Generated: ${new Date().toLocaleString()} | Parameters: Range [${startDate || 'Any'} to ${endDate || 'Any'}] | Found ${results.length} matching rows`;
+
+                // Layout depending on type
+                if (type === 'active-loans') {
+                    titleDisplay.textContent = 'Active Borrowings Summary';
+                    thead.innerHTML = `
+                        <tr>
+                            <th>Book Details</th>
+                            <th>Member Details</th>
+                            <th>Student ID</th>
+                            <th>Borrow Date</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                        </tr>
+                    `;
+
+                    tbody.innerHTML = '';
+                    if (results.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No active checkouts matching query parameters.</td></tr>';
+                        return;
+                    }
+
+                    results.forEach(r => {
+                        const statusClass = r.status === 'overdue' ? 'overdue' : 'borrowed';
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${r.title}</strong><br><span style="font-size:11px; color:var(--text-secondary);">ISBN: ${r.isbn}</span></td>
+                                <td><strong>${r.member_name}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.member_email}</span></td>
+                                <td><code>${r.student_id || '—'}</code></td>
+                                <td>${r.borrow_date}</td>
+                                <td>${r.due_date}</td>
+                                <td><span class="badge-status-item ${statusClass}">${r.status}</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    // Add dynamic quick stats
+                    const overdues = results.filter(r => r.status === 'overdue').length;
+                    statsContainer.innerHTML = `
+                        <span class="badge-status-item available">Total Checked Out: ${results.length}</span>
+                        <span class="badge-status-item overdue">Overdue Violation: ${overdues}</span>
+                    `;
+
+                } else if (type === 'overdue-loans') {
+                    titleDisplay.textContent = 'Overdue Book Violations Report';
+                    thead.innerHTML = `
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Member Name</th>
+                            <th>Student ID</th>
+                            <th>Due Date</th>
+                            <th>Outstanding Fine</th>
+                            <th>Status</th>
+                        </tr>
+                    `;
+
+                    tbody.innerHTML = '';
+                    if (results.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Hooray! No overdue books match the query parameters.</td></tr>';
+                        return;
+                    }
+
+                    let fineSum = 0;
+                    results.forEach(r => {
+                        const fineVal = r.fine_amount || 0;
+                        fineSum += fineVal;
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${r.title}</strong><br><span style="font-size:11px; color:var(--text-secondary);">ISBN: ${r.isbn}</span></td>
+                                <td><strong>${r.member_name}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.member_email}</span></td>
+                                <td><code>${r.student_id || '—'}</code></td>
+                                <td>${r.due_date}</td>
+                                <td style="color: var(--danger-color); font-weight: bold;">$${fineVal.toFixed(2)}</td>
+                                <td><span class="badge-status-item overdue">Overdue</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    statsContainer.innerHTML = `
+                        <span class="badge-status-item overdue">Overdue Count: ${results.length}</span>
+                        <span class="badge-status-item cancelled">Accumulated Fines: $${fineSum.toFixed(2)}</span>
+                    `;
+
+                } else if (type === 'fines-ledger') {
+                    titleDisplay.textContent = 'Fines Ledger & Balances Statement';
+                    thead.innerHTML = `
+                        <tr>
+                            <th>Member Details</th>
+                            <th>Student ID</th>
+                            <th>Book Title</th>
+                            <th>Fine Amount</th>
+                            <th>Status</th>
+                            <th>Payment Date</th>
+                        </tr>
+                    `;
+
+                    tbody.innerHTML = '';
+                    if (results.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No fine details matching query parameters.</td></tr>';
+                        return;
+                    }
+
+                    let totalFineValue = 0;
+                    let unpaidFineValue = 0;
+
+                    results.forEach(r => {
+                        totalFineValue += r.amount;
+                        if (r.status === 'unpaid') unpaidFineValue += r.amount;
+                        
+                        const statusClass = r.status === 'paid' ? 'returned' : 'overdue';
+                        const colorClass = r.status === 'unpaid' ? 'var(--danger-color)' : 'var(--success-color)';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${r.member_name}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.member_email}</span></td>
+                                <td><code>${r.student_id || '—'}</code></td>
+                                <td>${r.title}</td>
+                                <td style="font-weight: bold; color: ${colorClass}">$${r.amount.toFixed(2)}</td>
+                                <td><span class="badge-status-item ${statusClass}">${r.status}</span></td>
+                                <td>${r.payment_date || '—'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    statsContainer.innerHTML = `
+                        <span class="badge-status-item available">Total Fines: $${totalFineValue.toFixed(2)}</span>
+                        <span class="badge-status-item overdue">Total Unpaid: $${unpaidFineValue.toFixed(2)}</span>
+                    `;
+
+                } else if (type === 'roster-audit') {
+                    titleDisplay.textContent = 'Classmate Enrollment Roster Audit';
+                    thead.innerHTML = `
+                        <tr>
+                            <th>Classmate Name</th>
+                            <th>Student ID</th>
+                            <th>Index Number</th>
+                            <th>Status</th>
+                            <th>Account username & email</th>
+                        </tr>
+                    `;
+
+                    tbody.innerHTML = '';
+                    if (results.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No classmates match search query.</td></tr>';
+                        return;
+                    }
+
+                    const regCount = results.filter(r => r.status === 'registered').length;
+                    const unregCount = results.length - regCount;
+
+                    results.forEach(r => {
+                        const isRegistered = r.status === 'registered';
+                        const statusClass = isRegistered ? 'returned' : 'cancelled';
+                        const statusLabel = isRegistered ? 'Registered' : 'Pending Onboarding';
+                        const details = isRegistered 
+                            ? `<strong>${r.username}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.email}</span>` 
+                            : '<span style="font-style:italic; color:var(--text-secondary);">No account</span>';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${r.name}</strong></td>
+                                <td><code>${r.student_id}</code></td>
+                                <td><code>${r.index_number}</code></td>
+                                <td><span class="badge-status-item ${statusClass}">${statusLabel}</span></td>
+                                <td>${details}</td>
+                            </tr>
+                        `;
+                    });
+
+                    statsContainer.innerHTML = `
+                        <span class="badge-status-item available">Registered Classmates: ${regCount}</span>
+                        <span class="badge-status-item overdue">Unregistered Roster: ${unregCount}</span>
+                    `;
+
+                } else if (type === 'circulation-log') {
+                    titleDisplay.textContent = 'Circulation Transaction History Log';
+                    thead.innerHTML = `
+                        <tr>
+                            <th>Activity Type</th>
+                            <th>Date</th>
+                            <th>Book Details</th>
+                            <th>Member Details</th>
+                            <th>Student ID</th>
+                            <th>Current Status</th>
+                        </tr>
+                    `;
+
+                    tbody.innerHTML = '';
+                    if (results.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No transactions found matching criteria.</td></tr>';
+                        return;
+                    }
+
+                    let checkouts = 0;
+                    let returns = 0;
+
+                    results.forEach(r => {
+                        const hasReturned = r.status === 'returned';
+                        
+                        if (hasReturned) {
+                            returns++;
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td><span class="badge-status-item returned"><i class="fa-solid fa-arrow-left"></i> RETURN</span></td>
+                                    <td>${r.return_date}</td>
+                                    <td><strong>${r.book_title}</strong><br><span style="font-size:11px; color:var(--text-secondary);">ISBN: ${r.isbn}</span></td>
+                                    <td><strong>${r.member_name}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.member_email}</span></td>
+                                    <td><code>${r.student_id || '—'}</code></td>
+                                    <td><span class="badge-status-item returned">returned</span></td>
+                                </tr>
+                            `;
+                        } else {
+                            checkouts++;
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td><span class="badge-status-item borrowed"><i class="fa-solid fa-arrow-right"></i> CHECKOUT</span></td>
+                                    <td>${r.borrow_date}</td>
+                                    <td><strong>${r.book_title}</strong><br><span style="font-size:11px; color:var(--text-secondary);">ISBN: ${r.isbn}</span></td>
+                                    <td><strong>${r.member_name}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.member_email}</span></td>
+                                    <td><code>${r.student_id || '—'}</code></td>
+                                    <td><span class="badge-status-item ${r.status === 'overdue' ? 'overdue' : 'borrowed'}">${r.status}</span></td>
+                                </tr>
+                            `;
+                        }
+                    });
+
+                    statsContainer.innerHTML = `
+                        <span class="badge-status-item borrowed">Checkouts: ${checkouts}</span>
+                        <span class="badge-status-item returned">Returns: ${returns}</span>
+                    `;
+                }
+
+            } catch (err) {
+                showToast('Failed to load report from server.', 'error');
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color:var(--danger-color);">Error fetching queried parameters. Check server logs.</td></tr>';
+            }
+        }
+
+        // Exports active query table dataset to a CSV file
+        function exportToCSV() {
+            if (currentQueryResults.length === 0) {
+                showToast('No query data available to export.', 'warning');
+                return;
+            }
+
+            const type = document.getElementById('query-report-type').value;
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Generate headers & rows based on keys
+            const headers = Object.keys(currentQueryResults[0]).join(",");
+            csvContent += headers + "\r\n";
+
+            currentQueryResults.forEach(row => {
+                const rowValues = Object.values(row).map(value => {
+                    const str = value ? value.toString() : '';
+                    return `"${str.replace(/"/g, '""')}"`;
+                }).join(",");
+                csvContent += rowValues + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `SmartLib_${type}_Report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('CSV report downloaded successfully!');
+        }
+    </script>
+</body>
+</html>

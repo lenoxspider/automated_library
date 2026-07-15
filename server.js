@@ -1156,6 +1156,167 @@ app.get('/api/reports/dashboard', authenticate, authorize(['admin', 'librarian']
   });
 });
 
+// Dynamic Reports querying engine
+app.get('/api/reports/query', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  const { type, startDate, endDate, status, search } = req.query;
+  
+  if (!type) {
+    return res.status(400).json({ error: 'Report type parameter is required.' });
+  }
+
+  let sql = '';
+  let params = [];
+
+  if (type === 'active-loans') {
+    sql = `SELECT b.id, b.borrow_date, b.due_date, b.status,
+                  bk.title, bk.author, bk.isbn,
+                  u.name as member_name, u.email as member_email, u.student_id
+           FROM borrowings b
+           JOIN books bk ON b.book_id = bk.id
+           JOIN users u ON b.member_id = u.id
+           WHERE b.status IN ('borrowed', 'overdue')`;
+    
+    if (startDate) {
+      sql += ' AND b.borrow_date >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      sql += ' AND b.borrow_date <= ?';
+      params.push(endDate);
+    }
+    if (status && status !== 'all') {
+      sql += ' AND b.status = ?';
+      params.push(status);
+    }
+    if (search) {
+      sql += ' AND (bk.title LIKE ? OR u.name LIKE ? OR u.student_id LIKE ? OR bk.isbn LIKE ?)';
+      const s = `%${search}%`;
+      params.push(s, s, s, s);
+    }
+    sql += ' ORDER BY b.borrow_date DESC';
+
+  } else if (type === 'overdue-loans') {
+    sql = `SELECT b.id, b.borrow_date, b.due_date, b.status,
+                  bk.title, bk.author, bk.isbn,
+                  u.name as member_name, u.email as member_email, u.student_id,
+                  f.amount as fine_amount
+           FROM borrowings b
+           JOIN books bk ON b.book_id = bk.id
+           JOIN users u ON b.member_id = u.id
+           LEFT JOIN fines f ON b.id = f.borrowing_id
+           WHERE b.status = 'overdue'`;
+    
+    if (startDate) {
+      sql += ' AND b.due_date >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      sql += ' AND b.due_date <= ?';
+      params.push(endDate);
+    }
+    if (search) {
+      sql += ' AND (bk.title LIKE ? OR u.name LIKE ? OR u.student_id LIKE ? OR bk.isbn LIKE ?)';
+      const s = `%${search}%`;
+      params.push(s, s, s, s);
+    }
+    sql += ' ORDER BY b.due_date ASC';
+
+  } else if (type === 'fines-ledger') {
+    sql = `SELECT f.id, f.amount, f.status, f.payment_date,
+                  b.borrow_date, b.due_date,
+                  bk.title, bk.isbn,
+                  u.name as member_name, u.email as member_email, u.student_id
+           FROM fines f
+           JOIN borrowings b ON f.borrowing_id = b.id
+           JOIN books bk ON b.book_id = bk.id
+           JOIN users u ON b.member_id = u.id
+           WHERE 1=1`;
+    
+    if (startDate) {
+      sql += ' AND (f.payment_date >= ? OR b.borrow_date >= ?)';
+      params.push(startDate, startDate);
+    }
+    if (endDate) {
+      sql += ' AND (f.payment_date <= ? OR b.borrow_date <= ?)';
+      params.push(endDate, endDate);
+    }
+    if (status && status !== 'all') {
+      sql += ' AND f.status = ?';
+      params.push(status);
+    }
+    if (search) {
+      sql += ' AND (bk.title LIKE ? OR u.name LIKE ? OR u.student_id LIKE ? OR bk.isbn LIKE ?)';
+      const s = `%${search}%`;
+      params.push(s, s, s, s);
+    }
+    sql += ' ORDER BY f.id DESC';
+
+  } else if (type === 'roster-audit') {
+    sql = `SELECT sr.name, sr.student_id, sr.index_number,
+                  (CASE WHEN u.id IS NOT NULL THEN 'registered' ELSE 'unregistered' END) as status,
+                  u.email, u.username
+           FROM student_roster sr
+           LEFT JOIN users u ON sr.student_id = u.student_id
+           WHERE 1=1`;
+    
+    if (status && status !== 'all') {
+      if (status === 'registered') {
+        sql += ' AND u.id IS NOT NULL';
+      } else {
+        sql += ' AND u.id IS NULL';
+      }
+    }
+    if (search) {
+      sql += ' AND (sr.name LIKE ? OR sr.student_id LIKE ? OR sr.index_number LIKE ?)';
+      const s = `%${search}%`;
+      params.push(s, s, s);
+    }
+    sql += ' ORDER BY sr.name ASC';
+
+  } else if (type === 'circulation-log') {
+    sql = `SELECT b.id, b.borrow_date, b.due_date, b.return_date, b.status,
+                  u.name as member_name, u.email as member_email, u.student_id,
+                  bk.title as book_title, bk.isbn
+           FROM borrowings b
+           JOIN users u ON b.member_id = u.id
+           JOIN books bk ON b.book_id = bk.id
+           WHERE 1=1`;
+    
+    if (startDate) {
+      sql += ' AND (b.borrow_date >= ? OR b.return_date >= ?)';
+      params.push(startDate, startDate);
+    }
+    if (endDate) {
+      sql += ' AND (b.borrow_date <= ? OR b.return_date <= ?)';
+      params.push(endDate, endDate);
+    }
+    if (status && status !== 'all') {
+      if (status === 'checkouts') {
+        sql += " AND b.borrow_date IS NOT NULL";
+      } else if (status === 'returns') {
+        sql += " AND b.return_date IS NOT NULL AND b.status = 'returned'";
+      } else {
+        sql += ' AND b.status = ?';
+        params.push(status);
+      }
+    }
+    if (search) {
+      sql += ' AND (bk.title LIKE ? OR u.name LIKE ? OR u.student_id LIKE ? OR bk.isbn LIKE ?)';
+      const s = `%${search}%`;
+      params.push(s, s, s, s);
+    }
+    sql += ' ORDER BY b.id DESC';
+
+  } else {
+    return res.status(400).json({ error: 'Unsupported or invalid report type.' });
+  }
+
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
 
 // Serve Multi-Page Application routing structures
 app.get('/', (req, res) => {
@@ -1172,6 +1333,10 @@ app.get('/register', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/reports', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'reports.html'));
 });
 
 app.get('/reset', (req, res) => {

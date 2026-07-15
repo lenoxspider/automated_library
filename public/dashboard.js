@@ -126,6 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuItems = document.querySelectorAll('.menu-item');
     menuItems.forEach(item => {
         item.addEventListener('click', (e) => {
+            const href = item.getAttribute('href');
+            if (href && href.startsWith('/')) {
+                return; // Let native navigation handle the link redirect
+            }
             e.preventDefault();
             const viewId = item.getAttribute('data-view');
             switchView(viewId);
