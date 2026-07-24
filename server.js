@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 const db = require('./database');
 
@@ -234,11 +235,12 @@ app.post('/api/auth/register', (req, res) => {
   }
 
   // Helper function to proceed with user insertion
-  const proceedWithRegister = (finalName) => {
+  const proceedWithRegister = async (finalName) => {
     const verificationToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const hashedPassword = await bcrypt.hash(password, 10);
     db.run(
       `INSERT INTO users (username, password, role, name, email, verification_token, is_verified, student_id, index_number) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`,
-      [username, password, role, finalName, email, verificationToken, student_id || null, index_number || null],
+      [username, hashedPassword, role, finalName, email, verificationToken, student_id || null, index_number || null],
       async function (err) {
         if (err) {
           if (err.message.includes('UNIQUE constraint failed')) {
@@ -293,13 +295,13 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   db.get(
-    `SELECT * FROM users WHERE username = ? AND password = ?`,
-    [username, password],
-    (err, user) => {
+    `SELECT * FROM users WHERE username = ?`,
+    [username],
+    async (err, user) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      if (!user) {
+      if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(400).json({ error: 'Invalid username or password.' });
       }
       if (user.is_verified === 0) {
@@ -398,13 +400,14 @@ app.post('/api/auth/reset-password', (req, res) => {
   db.get(
     `SELECT id FROM users WHERE reset_token = ? AND reset_token_expiry > ?`,
     [token, now],
-    (err, user) => {
+    async (err, user) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!user) return res.status(400).json({ error: 'Reset link is invalid or has expired.' });
 
+      const hashedPassword = await bcrypt.hash(password, 10);
       db.run(
         `UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?`,
-        [password, user.id],
+        [hashedPassword, user.id],
         (updateErr) => {
           if (updateErr) return res.status(500).json({ error: updateErr.message });
           res.json({ message: 'Password has been reset successfully.' });
