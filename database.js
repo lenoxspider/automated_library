@@ -1,4 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcryptjs');
 const path = require('path');
 require('dotenv').config();
 
@@ -144,9 +145,10 @@ function initializeSchema() {
         throw new Error("ADMIN_PASSWORD env not configured.");
       }
       if (!row) {
+        const hashedPassword = bcrypt.hashSync(adminPassword, 10);
         db.run(
           "INSERT INTO users (username, password, role, name, email, is_verified) VALUES (?, ?, ?, ?, ?, 1)",
-          ["admin", adminPassword, "admin", "System Administrator", adminEmail],
+          ["admin", hashedPassword, "admin", "System Administrator", adminEmail],
           (err) => {
             if (err) {
               console.error("Error creating default admin:", err.message);
@@ -167,6 +169,14 @@ function initializeSchema() {
             }
           }
         );
+        // Migrate legacy plaintext password to a bcrypt hash if needed
+        if (row.password && !row.password.startsWith('$2')) {
+          const hashedPassword = bcrypt.hashSync(row.password, 10);
+          db.run("UPDATE users SET password = ? WHERE username = 'admin'", [hashedPassword], (err) => {
+            if (err) console.error("Error migrating admin password hash:", err.message);
+            else console.log("Migrated admin password to a bcrypt hash.");
+          });
+        }
       }
     });
 
