@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartLib - Automated Library System</title>
+    <!-- Apply saved theme before first paint to avoid a light-mode flash -->
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('smartlib_theme') || 'light');</script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -87,7 +89,7 @@
                 </a>
                 <a href="/reports" class="menu-item staff-only hidden">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
-                    <span>Query Reports</span>
+                    <span>Reports</span>
                 </a>
                 <a href="#" class="menu-item staff-only hidden" data-view="view-borrowing-rules">
                     <i class="fa-solid fa-shield-halved"></i>
@@ -592,7 +594,7 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Classmate Name</th>
+                                        <th>Name</th>
                                         <th>Student ID</th>
                                         <th>Index Number</th>
                                         <th>Enrollment Status</th>

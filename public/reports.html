@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Query Center - SmartLib</title>
+    <!-- Apply saved theme before first paint to avoid a light-mode flash -->
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('smartlib_theme') || 'light');</script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -59,32 +61,66 @@
 <body>
     <div id="toast-container" class="toast-container"></div>
 
-    <div class="app-layout">
+    <div class="dashboard-wrapper">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <i class="fa-solid fa-graduation-cap logo-icon"></i>
-                <span class="logo-text">SmartLib</span>
+                <div class="logo">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>SmartLib</span>
+                </div>
             </div>
 
-            <div class="user-profile">
+            <div class="user-profile-summary">
                 <div class="avatar">
-                    <i class="fa-solid fa-user-tie"></i>
+                    <i class="fa-solid fa-user-circle"></i>
                 </div>
-                <div class="user-info">
+                <div class="info">
                     <h4 id="user-display-name">Loading...</h4>
-                    <span id="user-display-role" class="badge-role">ROLE</span>
+                    <span id="user-display-role" class="badge-role">Role</span>
                 </div>
             </div>
 
             <nav class="sidebar-menu">
-                <a href="/dashboard" class="menu-item">
+                <a href="/dashboard#view-catalog" class="menu-item">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Book Catalog</span>
+                </a>
+                <a href="/dashboard#view-admin-dashboard" class="menu-item">
                     <i class="fa-solid fa-chart-pie"></i>
-                    <span>Dashboard Panel</span>
+                    <span>Dashboard Stats</span>
+                </a>
+                <a href="/dashboard#view-manage-books" class="menu-item">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Manage Books</span>
+                </a>
+                <a href="/dashboard#view-manage-borrowings" class="menu-item">
+                    <i class="fa-solid fa-handshake"></i>
+                    <span>Issue & Returns</span>
+                </a>
+                <a href="/dashboard#view-manage-reservations" class="menu-item">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>Reservations Queue</span>
+                </a>
+                <a href="/dashboard#view-manage-fines" class="menu-item">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                    <span>Collect Fines</span>
+                </a>
+                <a href="/dashboard#view-manage-users" class="menu-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Member Registers</span>
                 </a>
                 <a href="/reports" class="menu-item active">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
-                    <span>Query Reports</span>
+                    <span>Reports</span>
+                </a>
+                <a href="/dashboard#view-borrowing-rules" class="menu-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Borrowing Policies</span>
+                </a>
+                <a href="/dashboard#view-roster-audit" class="menu-item">
+                    <i class="fa-solid fa-clipboard-user"></i>
+                    <span>Enrollment Roster</span>
                 </a>
             </nav>
 
@@ -98,12 +134,11 @@
 
         <!-- Main Workspace -->
         <main class="main-content">
-            <header>
-                <div class="header-title">
-                    <h2>SmartLib Query Center</h2>
-                    <p>Generate, filter, print, and export real-time library reports.</p>
+            <header class="top-nav">
+                <div class="top-nav-left">
+                    <h1>Reports</h1>
                 </div>
-                <div class="header-actions">
+                <div class="top-nav-right">
                     <div id="theme-switch" class="theme-toggle">
                         <i class="fa-solid fa-moon"></i>
                     </div>
@@ -200,6 +235,20 @@
     <script>
         let currentQueryResults = [];
 
+        // Shared session/theme state (mirrors dashboard.js, since this page doesn't load it)
+        const currentToken = localStorage.getItem('smartlib_token');
+        const currentUser = JSON.parse(localStorage.getItem('smartlib_user') || 'null');
+        const currentTheme = localStorage.getItem('smartlib_theme') || 'light';
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const themeIcon = document.querySelector('#theme-switch i');
+            if (themeIcon) {
+                themeIcon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            }
+            localStorage.setItem('smartlib_theme', theme);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // Session Check
             if (!currentToken || !currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'librarian')) {
@@ -211,7 +260,7 @@
 
             // Bind User profile
             document.getElementById('user-display-name').textContent = currentUser.name;
-            document.getElementById('user-display-role').textContent = currentUser.role === 'admin' ? 'Administrator' : 'Librarian';
+            document.getElementById('user-display-role').textContent = currentUser.role;
 
             // Theme setup
             applyTheme(currentTheme);
@@ -446,7 +495,7 @@
                     titleDisplay.textContent = 'Classmate Enrollment Roster Audit';
                     thead.innerHTML = `
                         <tr>
-                            <th>Classmate Name</th>
+                            <th>Name</th>
                             <th>Student ID</th>
                             <th>Index Number</th>
                             <th>Status</th>
@@ -463,15 +512,15 @@
                     const regCount = results.filter(r => r.status === 'registered').length;
                     const unregCount = results.length - regCount;
 
-                    results.forEach(r => {
+                    const rosterRowsHtml = results.map(r => {
                         const isRegistered = r.status === 'registered';
                         const statusClass = isRegistered ? 'returned' : 'cancelled';
                         const statusLabel = isRegistered ? 'Registered' : 'Pending Onboarding';
-                        const details = isRegistered 
-                            ? `<strong>${r.username}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.email}</span>` 
+                        const details = isRegistered
+                            ? `<strong>${r.username}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.email}</span>`
                             : '<span style="font-style:italic; color:var(--text-secondary);">No account</span>';
 
-                        tbody.innerHTML += `
+                        return `
                             <tr>
                                 <td><strong>${r.name}</strong></td>
                                 <td><code>${r.student_id}</code></td>
@@ -481,6 +530,7 @@
                             </tr>
                         `;
                     });
+                    tbody.innerHTML += rosterRowsHtml.join('');
 
                     statsContainer.innerHTML = `
                         <span class="badge-status-item available">Registered Classmates: ${regCount}</span>
