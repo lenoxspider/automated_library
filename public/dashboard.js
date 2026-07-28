@@ -254,11 +254,22 @@ function setupDashboard(user) {
 
     if (user.role === 'member') {
         document.querySelectorAll('.member-only').forEach(el => el.classList.remove('hidden'));
-        switchView('view-catalog');
+        switchView(getInitialView('view-catalog'));
     } else if (user.role === 'librarian' || user.role === 'admin') {
         document.querySelectorAll('.staff-only').forEach(el => el.classList.remove('hidden'));
-        switchView('view-admin-dashboard');
+        switchView(getInitialView('view-admin-dashboard'));
     }
+}
+
+// Allows deep-linking straight to a sidebar view via URL hash (e.g. /dashboard#view-manage-books),
+// so links from other pages can land on the right section instead of always the role default.
+function getInitialView(defaultView) {
+    const hash = window.location.hash.replace('#', '');
+    const menuLink = document.querySelector(`.menu-item[data-view="${hash}"]`);
+    if (hash && document.getElementById(hash) && menuLink && !menuLink.closest('.hidden')) {
+        return hash;
+    }
+    return defaultView;
 }
 
 // Fetch API Helper
@@ -1225,7 +1236,7 @@ async function loadReportsCenter() {
             title.textContent = 'Classmate Enrollment Roster Audit Report';
             thead.innerHTML = `
                 <tr>
-                    <th>Classmate Name</th>
+                    <th>Name</th>
                     <th>Student ID</th>
                     <th>Index Number</th>
                     <th>Enrollment Status</th>
@@ -1248,14 +1259,14 @@ async function loadReportsCenter() {
                 return;
             }
 
-            data.roster.forEach(r => {
+            const rosterRowsHtml = data.roster.map(r => {
                 const statusClass = r.status === 'registered' ? 'returned' : 'cancelled';
                 const statusLabel = r.status === 'registered' ? 'Registered' : 'Pending Sign-up';
-                const accountDetails = r.status === 'registered' 
-                    ? `<strong>${r.username}</strong><br><span style="font-size:11px;">${r.email}</span>` 
+                const accountDetails = r.status === 'registered'
+                    ? `<strong>${r.username}</strong><br><span style="font-size:11px;">${r.email}</span>`
                     : '<span style="color:var(--text-secondary); font-style:italic;">No account</span>';
 
-                tbody.innerHTML += `
+                return `
                     <tr>
                         <td><strong>${r.name}</strong></td>
                         <td>${r.student_id}</td>
@@ -1265,6 +1276,7 @@ async function loadReportsCenter() {
                     </tr>
                 `;
             });
+            tbody.innerHTML += rosterRowsHtml.join('');
         } else if (reportType === 'circulation-log') {
             title.textContent = 'Shift Circulation Log Report';
             thead.innerHTML = `
@@ -1413,15 +1425,15 @@ function renderRosterTable(roster) {
         return;
     }
 
-    roster.forEach(r => {
+    const rowsHtml = roster.map(r => {
         const isRegistered = r.status === 'registered';
         const statusClass = isRegistered ? 'returned' : 'cancelled';
         const statusLabel = isRegistered ? 'Registered' : 'Pending Sign-up';
-        const accountDetails = isRegistered 
-            ? `<strong>${r.username}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.email}</span>` 
+        const accountDetails = isRegistered
+            ? `<strong>${r.username}</strong><br><span style="font-size:11px; color:var(--text-secondary);">${r.email}</span>`
             : '<span style="color:var(--text-secondary); font-style:italic;">No account created</span>';
 
-        tbody.innerHTML += `
+        return `
             <tr>
                 <td><strong>${r.name}</strong></td>
                 <td><code>${r.student_id}</code></td>
@@ -1431,6 +1443,7 @@ function renderRosterTable(roster) {
             </tr>
         `;
     });
+    tbody.innerHTML = rowsHtml.join('');
 }
 
 function filterRosterTable(query) {
