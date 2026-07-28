@@ -138,6 +138,8 @@
                     <div class="book-grid" id="catalog-books-grid">
                         <!-- Dynamic books card list -->
                     </div>
+                    
+                    <div class="pagination-controls" id="catalog-pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px; align-items: center;"></div>
                 </section>
 
                 <!-- VIEW: MEMBER MY BORROWINGS -->
@@ -330,6 +332,7 @@
                             </table>
                         </div>
                     </div>
+                    <div class="pagination-controls" id="manage-books-pagination" style="margin-top: 15px; display: flex; justify-content: center; gap: 10px; align-items: center;"></div>
                 </section>
 
                 <!-- VIEW: MANAGE BORROWINGS (Librarian/Admin) -->
@@ -337,7 +340,10 @@
                     <div class="view-header">
                         <h2>Checkout & Returns</h2>
                         <button id="btn-issue-book-modal" class="btn btn-primary">
-                            <i class="fa-solid fa-cart-plus"></i> Issue New Book
+                            <i class="fa-solid fa-cart-plus"></i> Issue Book
+                        </button>
+                        <button id="btn-return-book-modal" class="btn btn-secondary">
+                            <i class="fa-solid fa-rotate-left"></i> Return Book
                         </button>
                     </div>
 
@@ -449,6 +455,7 @@
                             </table>
                         </div>
                     </div>
+                    <div class="pagination-controls" id="manage-users-pagination" style="margin-top: 15px; display: flex; justify-content: center; gap: 10px; align-items: center;"></div>
                 </section>
 
                 <!-- VIEW: REPORTS CENTER (Librarian/Admin) -->
@@ -672,10 +679,8 @@
             </div>
             <form id="issue-form">
                 <div class="input-group">
-                    <label for="issue-book-select">Select Book</label>
-                    <select id="issue-book-select" required>
-                        <option value="">-- Choose Book --</option>
-                    </select>
+                    <label for="issue-barcode">Scan Book Barcode</label>
+                    <input type="text" id="issue-barcode" placeholder="Scan or type barcode (e.g., LIB-0001-01)" required autofocus>
                 </div>
                 <div class="input-group">
                     <label for="issue-member-select">Select Member</label>
@@ -769,9 +774,62 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modal-user')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add User</button>
+                    <button type="submit" class="btn btn-primary">Save Member</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: RETURN BOOK -->
+    <div id="modal-return" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Return Book</h3>
+                <span class="close-modal" onclick="closeModal('modal-return')">&times;</span>
+            </div>
+            <form id="return-form">
+                <div class="input-group">
+                    <label for="return-barcode">Scan Book Barcode to Return</label>
+                    <input type="text" id="return-barcode" placeholder="Scan or type barcode..." required autofocus>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-return')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Process Return</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: MANAGE COPIES -->
+    <div id="modal-manage-copies" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="manage-copies-title">Manage Physical Copies</h3>
+                <span class="close-modal" onclick="closeModal('modal-manage-copies')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Barcode</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manage-copies-tbody">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--border-color);">
+                <form id="add-copy-form" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div class="input-group" style="margin-bottom: 0; flex: 1;">
+                        <label for="new-copy-barcode">Register New Barcode</label>
+                        <input type="text" id="new-copy-barcode" placeholder="Enter new barcode" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Copy</button>
+                </form>
+            </div>
         </div>
     </div>
 

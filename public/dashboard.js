@@ -74,6 +74,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Form Event Listeners
     document.getElementById('book-form').addEventListener('submit', handleBookSubmit);
     document.getElementById('issue-form').addEventListener('submit', handleIssueSubmit);
+    
+    const returnForm = document.getElementById('return-form');
+    if (returnForm) returnForm.addEventListener('submit', handleReturnSubmit);
+    
+    const addCopyForm = document.getElementById('add-copy-form');
+    if (addCopyForm) addCopyForm.addEventListener('submit', handleAddCopySubmit);
+
+    // Modal triggers for Issue and Return
+    const btnIssueModal = document.getElementById('btn-issue-book-modal');
+    if (btnIssueModal) {
+        btnIssueModal.addEventListener('click', () => {
+            openModal('modal-issue');
+            loadIssueDropdowns();
+        });
+    }
+
+    const btnReturnModal = document.getElementById('btn-return-book-modal');
+    if (btnReturnModal) {
+        btnReturnModal.addEventListener('click', () => {
+            openModal('modal-return');
+        });
+    }
     document.getElementById('admin-user-form').addEventListener('submit', handleAdminUserSubmit);
     const policyForm = document.getElementById('policy-settings-form');
     if (policyForm) {
@@ -147,12 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('book-form').reset();
         document.getElementById('book-modal-title').textContent = 'Add New Book';
         openModal('modal-book');
-    });
-
-    document.getElementById('btn-issue-book-modal').addEventListener('click', () => {
-        document.getElementById('issue-form').reset();
-        loadIssueDropdowns();
-        openModal('modal-issue');
     });
 
     document.getElementById('btn-register-user-modal').addEventListener('click', () => {
@@ -383,6 +399,41 @@ async function handleLogout() {
 
 
 // ==================================================
+// PAGINATION HELPER
+// ==================================================
+function renderPagination(containerId, currentPage, totalPages, fetchFunctionName, searchQuery) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    const safeQuery = searchQuery ? `'${searchQuery.replace(/'/g, "\\'")}'` : 'undefined';
+    
+    // Previous Button
+    if (currentPage > 1) {
+        html += `<button class="btn btn-secondary btn-sm" onclick="${fetchFunctionName}(${safeQuery}, ${currentPage - 1})">Previous</button>`;
+    } else {
+        html += `<button class="btn btn-secondary btn-sm" disabled>Previous</button>`;
+    }
+    
+    html += `<span style="font-size: 14px;">Page ${currentPage} of ${totalPages}</span>`;
+    
+    // Next Button
+    if (currentPage < totalPages) {
+        html += `<button class="btn btn-secondary btn-sm" onclick="${fetchFunctionName}(${safeQuery}, ${currentPage + 1})">Next</button>`;
+    } else {
+        html += `<button class="btn btn-secondary btn-sm" disabled>Next</button>`;
+    }
+    
+    container.innerHTML = html;
+}
+
+
+// ==================================================
 // SHARED CATALOG LOGIC
 // ==================================================
 
@@ -395,7 +446,7 @@ document.getElementById('catalog-search-input').addEventListener('input', (e) =>
     }, 400);
 });
 
-async function loadCatalogBooks(searchQuery) {
+async function loadCatalogBooks(searchQuery, page = 1) {
     if (searchQuery === undefined) {
         const searchInput = document.getElementById('catalog-search-input');
         searchQuery = searchInput ? searchInput.value.trim() : '';
@@ -404,7 +455,8 @@ async function loadCatalogBooks(searchQuery) {
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center;">Loading books...</div>';
 
     try {
-        const books = await apiCall(`/api/books?search=${encodeURIComponent(searchQuery)}`);
+        const response = await apiCall(`/api/books?search=${encodeURIComponent(searchQuery)}&page=${page}`);
+        const books = response.data || [];
         
         if (books.length === 0) {
             if (!searchQuery) {
@@ -412,9 +464,11 @@ async function loadCatalogBooks(searchQuery) {
             } else {
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center;">No books found matching your criteria.</div>';
             }
+            renderPagination('catalog-pagination', 1, 0, 'loadCatalogBooks', searchQuery);
             return;
         }
 
+        renderPagination('catalog-pagination', response.page, response.totalPages, 'loadCatalogBooks', searchQuery);
         grid.innerHTML = '';
         books.forEach(book => {
             const isAvailable = book.available_copies > 0;
@@ -748,25 +802,30 @@ function downloadFile(content, mimeType, filename) {
 // STAFF PORTAL: MANAGE BOOKS
 // ==================================================
 
-async function loadManageBooks() {
+async function loadManageBooks(searchQuery, page = 1) {
+    if (searchQuery === undefined) {
+        const searchInput = document.getElementById('manage-books-search');
+        searchQuery = searchInput ? searchInput.value.trim() : '';
+    }
     const tbody = document.getElementById('manage-books-tbody');
-    const searchInput = document.getElementById('manage-books-search');
-    const searchQuery = searchInput ? searchInput.value.trim() : '';
-
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Loading inventory...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Loading books...</td></tr>';
     
     try {
-        const books = await apiCall(`/api/books?search=${encodeURIComponent(searchQuery)}`);
-        tbody.innerHTML = '';
+        const response = await apiCall(`/api/books?search=${encodeURIComponent(searchQuery)}&page=${page}`);
+        const books = response.data || [];
+        
         if (books.length === 0) {
             if (!searchQuery) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);"><i class="fa-solid fa-search" style="font-size: 1.5rem; margin-bottom: 10px; display:block;"></i>Enter a search query to find books.</td></tr>`;
             } else {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No books found matching "${searchQuery}".</td></tr>`;
             }
+            renderPagination('manage-books-pagination', 1, 0, 'loadManageBooks', searchQuery);
             return;
         }
 
+        renderPagination('manage-books-pagination', response.page, response.totalPages, 'loadManageBooks', searchQuery);
+        tbody.innerHTML = '';
         books.forEach(b => {
             tbody.innerHTML += `
                 <tr>
@@ -777,6 +836,7 @@ async function loadManageBooks() {
                     <td>${b.total_copies}</td>
                     <td>${b.available_copies}</td>
                     <td>
+                        <button class="btn btn-secondary btn-sm" onclick="openManageCopiesModal(${b.id})">Copies</button>
                         <button class="btn btn-outline btn-sm" onclick="editBookModal(${JSON.stringify(b).replace(/"/g, '&quot;')})">Edit</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id})">Delete</button>
                     </td>
@@ -871,20 +931,12 @@ async function loadManageBorrowings() {
 }
 
 async function loadIssueDropdowns() {
-    const bookSelect = document.getElementById('issue-book-select');
     const memberSelect = document.getElementById('issue-member-select');
-
-    bookSelect.innerHTML = '<option value="">-- Choose Book --</option>';
     memberSelect.innerHTML = '<option value="">-- Choose Member --</option>';
 
     try {
-        // Load available books
-        const books = await apiCall('/api/books');
-        books.forEach(b => {
-            if (b.available_copies > 0) {
-                bookSelect.innerHTML += `<option value="${b.id}">${b.title} (${b.available_copies} available)</option>`;
-            }
-        });
+    try {
+        // We no longer load a books dropdown. Barcode scanning handles the book selection.
 
         // Load users to filter by Member role
         const users = await apiCall('/api/users');
@@ -905,7 +957,7 @@ async function loadIssueDropdowns() {
 async function handleIssueSubmit(e) {
     e.preventDefault();
     const issueData = {
-        book_id: parseInt(document.getElementById('issue-book-select').value),
+        barcode: document.getElementById('issue-barcode').value.trim(),
         member_id: parseInt(document.getElementById('issue-member-select').value),
         due_date: document.getElementById('issue-due-date').value
     };
@@ -915,14 +967,59 @@ async function handleIssueSubmit(e) {
         showToast('Book issued successfully!');
         closeModal('modal-issue');
         loadManageBorrowings();
+        document.getElementById('issue-barcode').value = '';
     } catch (e) {}
 }
 
-async function returnBook(borrowingId) {
+async function handleReturnSubmit(e) {
+    e.preventDefault();
+    const barcode = document.getElementById('return-barcode').value.trim();
+    if (!barcode) return;
+
     try {
-        const response = await apiCall(`/api/borrowings/${borrowingId}/return`, 'POST');
+        const response = await apiCall(`/api/borrowings/return`, 'POST', { barcode });
         showToast(response.message);
+        closeModal('modal-return');
         loadManageBorrowings();
+        document.getElementById('return-barcode').value = '';
+    } catch (e) {}
+}
+
+let activeManageCopiesBookId = null;
+async function openManageCopiesModal(bookId) {
+    activeManageCopiesBookId = bookId;
+    document.getElementById('manage-copies-tbody').innerHTML = '<tr><td colspan="2">Loading...</td></tr>';
+    openModal('modal-manage-copies');
+    
+    try {
+        const copies = await apiCall(`/api/books/${bookId}/copies`);
+        const tbody = document.getElementById('manage-copies-tbody');
+        tbody.innerHTML = '';
+        if (copies.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="2">No copies found.</td></tr>';
+            return;
+        }
+        copies.forEach(copy => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><code>${copy.barcode}</code></td>
+                    <td><span class="badge-status-item ${copy.status.toLowerCase().replace(' ', '-')}">${copy.status}</span></td>
+                </tr>
+            `;
+        });
+    } catch (e) {}
+}
+
+async function handleAddCopySubmit(e) {
+    e.preventDefault();
+    if (!activeManageCopiesBookId) return;
+    const barcode = document.getElementById('new-copy-barcode').value.trim();
+    
+    try {
+        await apiCall(`/api/books/${activeManageCopiesBookId}/copies`, 'POST', { barcode });
+        showToast('Copy added successfully');
+        document.getElementById('new-copy-barcode').value = '';
+        openManageCopiesModal(activeManageCopiesBookId); // refresh list
     } catch (e) {}
 }
 
@@ -1035,26 +1132,31 @@ async function collectFine(fineId) {
 // STAFF PORTAL: USER ADMINISTRATION REGISTERS
 // ==================================================
 
-async function loadManageUsers() {
-    const tbody = document.getElementById('manage-users-tbody');
-    const searchInput = document.getElementById('manage-users-search');
-    const searchQuery = searchInput ? searchInput.value.trim() : '';
-
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Loading members register...</td></tr>`;
+async function loadManageUsers(searchQuery, page = 1) {
+    if (searchQuery === undefined) {
+        const searchInput = document.getElementById('manage-users-search');
+        searchQuery = searchInput ? searchInput.value.trim() : '';
+    }
     
+    const tbody = document.getElementById('manage-users-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading users...</td></tr>';
+
     try {
-        const users = await apiCall(`/api/users?search=${encodeURIComponent(searchQuery)}`);
-        tbody.innerHTML = '';
+        const response = await apiCall(`/api/users?search=${encodeURIComponent(searchQuery)}&page=${page}`);
+        const users = response.data || [];
         
         if (users.length === 0) {
             if (!searchQuery) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);"><i class="fa-solid fa-search" style="font-size: 1.5rem; margin-bottom: 10px; display:block;"></i>Enter a search query to find members.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Enter a search query to view members.</td></tr>';
             } else {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No members found matching "${searchQuery}".</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No users found matching your query.</td></tr>';
             }
+            renderPagination('manage-users-pagination', 1, 0, 'loadManageUsers', searchQuery);
             return;
         }
 
+        renderPagination('manage-users-pagination', response.page, response.totalPages, 'loadManageUsers', searchQuery);
+        tbody.innerHTML = '';
         users.forEach(u => {
             let actions = '';
             

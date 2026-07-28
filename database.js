@@ -29,7 +29,8 @@ function initializeSchema() {
         student_id TEXT,
         index_number TEXT,
         reset_token TEXT,
-        reset_token_expiry TEXT
+        reset_token_expiry TEXT,
+        account_status TEXT DEFAULT 'active'
       )
     `);
 
@@ -40,6 +41,7 @@ function initializeSchema() {
     db.run("ALTER TABLE users ADD COLUMN index_number TEXT", (err) => {});
     db.run("ALTER TABLE users ADD COLUMN reset_token TEXT", (err) => {});
     db.run("ALTER TABLE users ADD COLUMN reset_token_expiry TEXT", (err) => {});
+    db.run("ALTER TABLE users ADD COLUMN account_status TEXT DEFAULT 'active'", (err) => {});
 
     // 2. Books Table
     db.run(`
@@ -54,17 +56,28 @@ function initializeSchema() {
       )
     `);
 
+    // 2a. Book Copies Table (Item-Level Tracking)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS book_copies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        book_id INTEGER NOT NULL,
+        barcode TEXT UNIQUE NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Available', -- 'Available', 'Checked Out', 'Lost', 'Damaged', 'Reserved'
+        FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE
+      )
+    `);
+
     // 3. Borrowings Table
     db.run(`
       CREATE TABLE IF NOT EXISTS borrowings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        book_id INTEGER NOT NULL,
+        copy_id INTEGER NOT NULL,
         member_id INTEGER NOT NULL,
         borrow_date TEXT NOT NULL,
         due_date TEXT NOT NULL,
         return_date TEXT,
         status TEXT NOT NULL DEFAULT 'borrowed', -- 'borrowed', 'returned', 'overdue'
-        FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
+        FOREIGN KEY (copy_id) REFERENCES book_copies (id) ON DELETE CASCADE,
         FOREIGN KEY (member_id) REFERENCES users (id) ON DELETE CASCADE
       )
     `);

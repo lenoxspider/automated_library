@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 const db = require('./database');
+const { initCronJobs, processOverdueAccounts } = require('./cronJobs');
 
 // Configure Nodemailer transporter using private env credentials
 const transporter = nodemailer.createTransport({
@@ -133,59 +134,6 @@ function authorize(roles) {
     next();
   };
 }
-
-// Helper to check and update overdue status
-function checkAndUpdateOverdue() {
-  const today = new Date().toISOString().split('T')[0];
-  db.serialize(() => {
-    // Select all borrowed items that are overdue and update status
-    db.run(
-      `UPDATE borrowings 
-       SET status = 'overdue' 
-       WHERE status = 'borrowed' AND due_date < ?`,
-      [today],
-      function (err) {
-        if (err) {
-          if (!err.message.includes('no such table')) {
-            console.error("Error updating overdue status:", err);
-          }
-        }
-      }
-    );
-
-    // Auto-create unpaid fines for overdue books
-    db.all(
-      `SELECT b.id, b.due_date 
-       FROM borrowings b
-       LEFT JOIN fines f ON b.id = f.borrowing_id
-       WHERE b.status = 'overdue' AND f.id IS NULL`,
-      [],
-      (err, rows) => {
-        if (err) {
-          if (!err.message.includes('no such table')) {
-            console.error("Error selecting outstanding fines:", err);
-          }
-          return;
-        }
-        rows.forEach((row) => {
-          const due = new Date(row.due_date);
-          const now = new Date();
-          const diffDays = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
-          const fineAmount = Math.max(0, diffDays * 1.0);
-          if (fineAmount > 0) {
-            db.run(
-              `INSERT OR IGNORE INTO fines (borrowing_id, amount, status) VALUES (?, ?, 'unpaid')`,
-              [row.id, fineAmount]
-            );
-          }
-        });
-      }
-    );
-  });
-}
-
-// Regularly check for overdue borrowings
-setInterval(checkAndUpdateOverdue, 30000); // every 30 seconds
 
 
 // ==========================================
@@ -474,30 +422,48 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 
 // Get all books with optional search query
 app.get('/api/books', (req, res) => {
-  const { search, random, limit } = req.query;
+  const { search, random, limit, page } = req.query;
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 12;
+  const offsetNum = (pageNum - 1) * limitNum;
+  
+  if (!search && random !== 'true') {
+    return res.json({ data: [], totalCount: 0, page: pageNum, totalPages: 0, limit: limitNum });
+  }
+
+  let countSql = 'SELECT COUNT(*) as total FROM books';
   let sql = 'SELECT * FROM books';
   let params = [];
 
-  if (!search && random !== 'true') {
-    return res.json([]);
-  }
-
   if (search) {
-    sql += ' WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? OR isbn LIKE ?';
+    const whereClause = ' WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? OR isbn LIKE ?';
+    countSql += whereClause;
+    sql += whereClause;
     const queryParam = `%${search}%`;
     params = [queryParam, queryParam, queryParam, queryParam];
   } else if (random === 'true') {
     sql += ' ORDER BY RANDOM()';
   }
 
-  if (limit) {
-    sql += ' LIMIT ?';
-    params.push(parseInt(limit, 10));
-  }
-
-  db.all(sql, params, (err, rows) => {
+  db.get(countSql, params, (err, countRow) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
+    
+    const totalCount = random === 'true' ? limitNum : countRow.total;
+    const totalPages = Math.ceil(totalCount / limitNum);
+
+    sql += ' LIMIT ? OFFSET ?';
+    const queryParams = [...params, limitNum, offsetNum];
+
+    db.all(sql, queryParams, (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({
+        data: rows,
+        totalCount,
+        page: pageNum,
+        totalPages,
+        limit: limitNum
+      });
+    });
   });
 });
 
@@ -563,27 +529,93 @@ app.delete('/api/books/:id', authenticate, authorize(['librarian']), (req, res) 
 
 
 // ==========================================
+// BOOK COPIES API (BARCODES)
+// ==========================================
+
+// Get all copies of a book (Librarian, Admin)
+app.get('/api/books/:id/copies', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+  db.all(`SELECT * FROM book_copies WHERE book_id = ? ORDER BY id ASC`, [req.params.id], (err, copies) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(copies);
+  });
+});
+
+// Add a new copy (barcode) to a book (Librarian, Admin)
+app.post('/api/books/:id/copies', authenticate, authorize(['librarian']), (req, res) => {
+  const bookId = req.params.id;
+  const { barcode } = req.body;
+  if (!barcode) return res.status(400).json({ error: 'Barcode is required.' });
+
+  db.serialize(() => {
+    db.run(
+      `INSERT INTO book_copies (book_id, barcode, status) VALUES (?, ?, 'Available')`,
+      [bookId, barcode],
+      function (err) {
+        if (err) {
+          if (err.message.includes('UNIQUE')) {
+            return res.status(400).json({ error: 'Barcode already exists in the system.' });
+          }
+          return res.status(500).json({ error: err.message });
+        }
+        
+        // Increment book availability and total copies
+        db.run(
+          `UPDATE books SET total_copies = total_copies + 1, available_copies = available_copies + 1 WHERE id = ?`,
+          [bookId]
+        );
+
+        res.json({ message: 'Copy added successfully.', copyId: this.lastID });
+      }
+    );
+  });
+});
+
+// ==========================================
 // MEMBER & USER MANAGEMENT API
 // ==========================================
 
-// Get all users (Admin, Librarian)
+// Test endpoint for cron job
+app.post('/api/admin/force-cron', authenticate, authorize(['admin']), (req, res) => {
+  processOverdueAccounts();
+  res.json({ message: 'Overdue processor triggered successfully in the background.' });
+});
+
+// Run reports query (Admin, Librarian)
 app.get('/api/users', authenticate, authorize(['admin', 'librarian']), (req, res) => {
-  const { search } = req.query;
+  const { search, limit, page } = req.query;
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 12;
+  const offsetNum = (pageNum - 1) * limitNum;
   
   if (!search || search.trim().length === 0) {
-    return res.json([]);
+    return res.json({ data: [], totalCount: 0, page: pageNum, totalPages: 0, limit: limitNum });
   }
 
   const query = `%${search}%`;
-  db.all(
-    `SELECT id, username, role, name, email, student_id, index_number FROM users 
-     WHERE name LIKE ? OR username LIKE ? OR student_id LIKE ? OR index_number LIKE ? OR email LIKE ?`, 
-    [query, query, query, query, query], 
-    (err, rows) => {
+  const countSql = `SELECT COUNT(*) as total FROM users WHERE name LIKE ? OR username LIKE ? OR student_id LIKE ? OR index_number LIKE ? OR email LIKE ?`;
+  const sql = `SELECT id, username, role, name, email, student_id, index_number FROM users 
+               WHERE name LIKE ? OR username LIKE ? OR student_id LIKE ? OR index_number LIKE ? OR email LIKE ? 
+               LIMIT ? OFFSET ?`;
+               
+  const params = [query, query, query, query, query];
+
+  db.get(countSql, params, (err, countRow) => {
+    if (err) return res.status(500).json({ error: err.message });
+    
+    const totalCount = countRow.total;
+    const totalPages = Math.ceil(totalCount / limitNum);
+
+    db.all(sql, [...params, limitNum, offsetNum], (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
-    }
-  );
+      res.json({
+        data: rows,
+        totalCount,
+        page: pageNum,
+        totalPages,
+        limit: limitNum
+      });
+    });
+  });
 });
 
 // View a member's full borrowing history
@@ -650,23 +682,27 @@ app.get('/api/borrowings', authenticate, authorize(['admin', 'librarian']), (req
   );
 });
 
-// Issue a book (Librarian, Admin)
+// Issue a book via barcode (Librarian, Admin)
 app.post('/api/borrowings', authenticate, authorize(['librarian']), (req, res) => {
-  const { book_id, member_id, due_date } = req.body;
-  if (!book_id || !member_id || !due_date) {
-    return res.status(400).json({ error: 'Book, Member, and Due Date are required.' });
+  const { barcode, member_id, due_date } = req.body;
+  if (!barcode || !member_id || !due_date) {
+    return res.status(400).json({ error: 'Barcode, Member, and Due Date are required.' });
   }
 
-  db.get(`SELECT * FROM books WHERE id = ?`, [book_id], (err, book) => {
+  db.get(`SELECT bc.id as copy_id, bc.status as copy_status, b.id as book_id FROM book_copies bc JOIN books b ON bc.book_id = b.id WHERE bc.barcode = ?`, [barcode], (err, copyInfo) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!book) return res.status(404).json({ error: 'Book not found.' });
-    if (book.available_copies <= 0) {
-      return res.status(400).json({ error: 'No copies of this book are currently available.' });
+    if (!copyInfo) return res.status(404).json({ error: 'Barcode not found.' });
+    if (copyInfo.copy_status !== 'Available') {
+      return res.status(400).json({ error: 'This specific copy is not available for checkout.' });
     }
 
     db.get(`SELECT * FROM users WHERE id = ? AND role = 'member'`, [member_id], (err, member) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!member) return res.status(404).json({ error: 'Member not found.' });
+
+      if (member.account_status === 'locked') {
+        return res.status(403).json({ error: 'Account is locked due to overdue books. Please resolve them to restore borrowing privileges.' });
+      }
 
       // Enforce borrowing policy rules
       db.all(`SELECT * FROM library_settings`, [], (err, settingsRows) => {
@@ -709,24 +745,26 @@ app.post('/api/borrowings', authenticate, authorize(['librarian']), (req, res) =
             const today = new Date().toISOString().split('T')[0];
             db.serialize(() => {
               db.run(
-                `INSERT INTO borrowings (book_id, member_id, borrow_date, due_date, status) VALUES (?, ?, ?, ?, 'borrowed')`,
-                [book_id, member_id, today, due_date],
+                `INSERT INTO borrowings (copy_id, member_id, borrow_date, due_date, status) VALUES (?, ?, ?, ?, 'borrowed')`,
+                [copyInfo.copy_id, member_id, today, due_date],
                 function (err) {
                   if (err) return res.status(500).json({ error: err.message });
 
                   db.run(
+                    `UPDATE book_copies SET status = 'Checked Out' WHERE id = ?`,
+                    [copyInfo.copy_id]
+                  );
+
+                  db.run(
                     `UPDATE books SET available_copies = available_copies - 1 WHERE id = ?`,
-                    [book_id],
-                    (err) => {
-                      if (err) console.error("Error decrementing book availability:", err);
-                    }
+                    [copyInfo.book_id]
                   );
 
                   db.run(
                     `UPDATE reservations 
                      SET status = 'fulfilled' 
                      WHERE book_id = ? AND member_id = ? AND status = 'pending'`,
-                    [book_id, member_id]
+                    [copyInfo.book_id, member_id]
                   );
 
                   res.json({ message: 'Book issued successfully.', borrowingId: this.lastID });
@@ -741,51 +779,63 @@ app.post('/api/borrowings', authenticate, authorize(['librarian']), (req, res) =
 });
 
 // Return a book (Librarian, Admin)
-app.post('/api/borrowings/:id/return', authenticate, authorize(['librarian']), (req, res) => {
-  const borrowingId = req.params.id;
+app.post('/api/borrowings/return', authenticate, authorize(['librarian']), (req, res) => {
+  const { barcode } = req.body;
+  if (!barcode) return res.status(400).json({ error: 'Barcode is required.' });
+  
   const today = new Date().toISOString().split('T')[0];
 
-  db.get(`SELECT * FROM borrowings WHERE id = ?`, [borrowingId], (err, borrowing) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!borrowing) return res.status(404).json({ error: 'Borrowing transaction not found.' });
-    if (borrowing.return_date) return res.status(400).json({ error: 'Book already returned.' });
+  // Find the active borrowing for this barcode
+  db.get(
+    `SELECT b.*, bc.book_id 
+     FROM borrowings b 
+     JOIN book_copies bc ON b.copy_id = bc.id 
+     WHERE bc.barcode = ? AND b.status IN ('borrowed', 'overdue') AND b.return_date IS NULL`,
+    [barcode],
+    (err, borrowing) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!borrowing) return res.status(404).json({ error: 'No active checkout found for this barcode.' });
 
-    const due = new Date(borrowing.due_date);
-    const now = new Date();
-    const diffDays = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
-    const fineAmount = Math.max(0, diffDays * 1.0);
+      const due = new Date(borrowing.due_date);
+      const now = new Date();
+      const diffDays = Math.ceil((now - due) / (1000 * 60 * 60 * 24));
+      const fineAmount = Math.max(0, diffDays * 1.0);
 
-    db.serialize(() => {
-      // Update borrowing record
-      db.run(
-        `UPDATE borrowings SET return_date = ?, status = 'returned' WHERE id = ?`,
-        [today, borrowingId],
-        (err) => {
-          if (err) return res.status(500).json({ error: err.message });
+      db.serialize(() => {
+        // Update borrowing record
+        db.run(
+          `UPDATE borrowings SET return_date = ?, status = 'returned' WHERE id = ?`,
+          [today, borrowing.id],
+          (err) => {
+            if (err) return res.status(500).json({ error: err.message });
 
-          // Increment book availability
-          db.run(
-            `UPDATE books SET available_copies = available_copies + 1 WHERE id = ?`,
-            [borrowing.book_id]
-          );
+            // Mark the copy as available again
+            db.run(`UPDATE book_copies SET status = 'Available' WHERE id = ?`, [borrowing.copy_id]);
 
-          // Calculate fine and create fine record if overdue
-          if (fineAmount > 0) {
+            // Increment book availability
             db.run(
-              `INSERT OR REPLACE INTO fines (borrowing_id, amount, status) VALUES (?, ?, 'unpaid')`,
-              [borrowingId, fineAmount],
-              (err) => {
-                if (err) console.error("Error creating fine:", err);
-              }
+              `UPDATE books SET available_copies = available_copies + 1 WHERE id = ?`,
+              [borrowing.book_id]
             );
-            res.json({ message: 'Book returned with a late fine.', fineAmount });
-          } else {
-            res.json({ message: 'Book returned successfully. No fine.' });
+
+            // Calculate fine and create fine record if overdue
+            if (fineAmount > 0) {
+              db.run(
+                `INSERT OR REPLACE INTO fines (borrowing_id, amount, status) VALUES (?, ?, 'unpaid')`,
+                [borrowing.id, fineAmount],
+                (err) => {
+                  if (err) console.error("Error creating fine:", err);
+                }
+              );
+              res.json({ message: 'Book returned with a late fine.', fineAmount });
+            } else {
+              res.json({ message: 'Book returned successfully. No fine.' });
+            }
           }
-        }
-      );
-    });
-  });
+        );
+      });
+    }
+  );
 });
 
 
@@ -1370,5 +1420,5 @@ app.use((req, res) => {
 // Run server
 app.listen(PORT, () => {
   console.log(`SmartLib server is running on http://localhost:${PORT}`);
-  checkAndUpdateOverdue(); // Run initial status check
+  initCronJobs();
 });
