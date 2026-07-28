@@ -212,3 +212,38 @@ The Art of Poetics (Global Edition) | Isaac Newton | Literature & Philosophy | 9
 The Art of Clinical Psychology | Donald Knuth | Psychology | 978-4-38014-432-3 | 3
 Handbook of Immunology | Gerty Cori | Biology | 978-1-30821-175-1 | 9
 Foundations of Nanochemistry | Richard Foster | Chemistry | 978-1-32500-743-7 | 10
+Introduction to Algorithms (3rd Edition) | Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein | Computer Science | 978-0-262-03384-8 | 8
+Structure and Interpretation of Computer Programs (2nd Edition) | Harold Abelson, Gerald Jay Sussman | Computer Science | 978-0-262-51087-5 | 5
+Clean Code: A Handbook of Agile Software Craftsmanship | Robert C. Martin | Computer Science | 978-0-13-235088-4 | 6
+Design Patterns: Elements of Reusable Object-Oriented Software | Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides | Computer Science | 978-0-201-63361-0 | 5
+Computer Networking: A Top-Down Approach (7th Edition) | James F. Kurose, Keith W. Ross | Computer Science | 978-0-13-359414-0 | 7
+Operating System Concepts (10th Edition) | Abraham Silberschatz, Peter B. Galvin, Greg Gagne | Computer Science | 978-1-119-32091-3 | 7
+Database System Concepts (7th Edition) | Abraham Silberschatz, Henry F. Korth, S. Sudarshan | Computer Science | 978-0-07-802215-9 | 6
+Artificial Intelligence: A Modern Approach (4th Edition) | Stuart Russell, Peter Norvig | Computer Science | 978-0-13-461099-3 | 6
+The Pragmatic Programmer: Your Journey to Mastery | David Thomas, Andrew Hunt | Computer Science | 978-0-13-595705-9 | 5
+Deep Learning | Ian Goodfellow, Yoshua Bengio, Aaron Courville | Computer Science | 978-0-262-03561-3 | 4
+Fundamentals of Physics (10th Edition) | David Halliday, Robert Resnick, Jearl Walker | Physics | 978-1-118-23072-5 | 8
+University Physics with Modern Physics (14th Edition) | Hugh D. Young, Roger A. Freedman | Physics | 978-0-321-97361-0 | 7
+Introduction to Electrodynamics (4th Edition) | David J. Griffiths | Physics | 978-1-108-42041-9 | 6
+Classical Mechanics (3rd Edition) | Herbert Goldstein, Charles Poole, John Safko | Physics | 978-0-201-65702-9 | 5
+Quantum Mechanics: Concepts and Applications (2nd Edition) | Nouredine Zettili | Physics | 978-0-470-02679-3 | 5
+The Feynman Lectures on Physics, Vol. I | Richard P. Feynman, Robert B. Leighton, Matthew Sands | Physics | 978-0-465-02414-8 | 6
+Thermal Physics (2nd Edition) | Charles Kittel, Herbert Kroemer | Physics | 978-0-7167-1088-2 | 4
+An Introduction to Thermal Physics | Daniel V. Schroeder | Physics | 978-0-201-38027-9 | 4
+Principles of Economics (8th Edition) | N. Gregory Mankiw | Business & Economics | 978-1-305-58512-6 | 8
+Financial Accounting | Jerry J. Weygandt, Paul D. Kimmel, Donald E. Kieso | Business & Economics | 978-1-119-44491-6 | 6
+Marketing Management (15th Edition) | Philip Kotler, Kevin Lane Keller | Business & Economics | 978-0-13-385646-0 | 6
+The Intelligent Investor | Benjamin Graham | Business & Economics | 978-0-06-055566-5 | 5
+Principles of Corporate Finance (12th Edition) | Richard A. Brealey, Stewart C. Myers, Franklin Allen | Business & Economics | 978-1-259-14438-7 | 5
+Good to Great: Why Some Companies Make the Leap | Jim Collins | Business & Economics | 978-0-06-662099-2 | 4
+Freakonomics: A Rogue Economist Explores the Hidden Side of Everything | Steven D. Levitt, Stephen J. Dubner | Business & Economics | 978-0-06-089637-9 | 5
+The Lean Startup | Eric Ries | Business & Economics | 978-0-307-88789-4 | 4
+Calculus (8th Edition) | James Stewart | Mathematics | 978-1-285-74062-1 | 7
+Linear Algebra and Its Applications (5th Edition) | David C. Lay, Steven R. Lay, Judi J. McDonald | Mathematics | 978-0-321-98238-4 | 6
+Introduction to Probability (2nd Edition) | Dimitri P. Bertsekas, John N. Tsitsiklis | Mathematics | 978-1-886529-23-6 | 4
+Fundamentals of Engineering Thermodynamics (8th Edition) | Michael J. Moran, Howard N. Shapiro | Engineering | 978-1-118-41293-0 | 5
+Mechanics of Materials (10th Edition) | Russell C. Hibbeler | Engineering | 978-0-134-31965-0 | 5
+Campbell Biology (11th Edition) | Lisa A. Urry, Michael L. Cain, Steven A. Wasserman | Biology | 978-0-134-09341-3 | 6
+Molecular Biology of the Cell (6th Edition) | Bruce Alberts, Alexander Johnson, Julian Lewis | Biology | 978-0-8153-4432-2 | 4
+Chemistry: The Central Science (14th Edition) | Theodore E. Brown, H. Eugene LeMay, Bruce E. Bursten | Chemistry | 978-0-134-41423-2 | 6
+Organic Chemistry (8th Edition) | Paula Yurkanis Bruice | Chemistry | 978-0-13-404228-2 | 5
