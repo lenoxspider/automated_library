@@ -63,39 +63,39 @@
                 </a>
 
                 <!-- Librarian/Admin Routes -->
-                <a href="#" class="menu-item staff-only hidden" data-view="view-admin-dashboard">
+                <a href="#" class="menu-item admin-only hidden" data-view="view-admin-dashboard">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>Dashboard Stats</span>
                 </a>
-                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-books">
+                <a href="#" class="menu-item librarian-only hidden" data-view="view-manage-books">
                     <i class="fa-solid fa-pen-to-square"></i>
                     <span>Manage Books</span>
                 </a>
-                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-borrowings">
+                <a href="#" class="menu-item librarian-only hidden" data-view="view-manage-borrowings">
                     <i class="fa-solid fa-handshake"></i>
                     <span>Issue & Returns</span>
                 </a>
-                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-reservations">
+                <a href="#" class="menu-item librarian-only hidden" data-view="view-manage-reservations">
                     <i class="fa-solid fa-clock"></i>
                     <span>Reservations Queue</span>
                 </a>
-                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-fines">
+                <a href="#" class="menu-item librarian-only hidden" data-view="view-manage-fines">
                     <i class="fa-solid fa-money-bill-wave"></i>
                     <span>Collect Fines</span>
                 </a>
-                <a href="#" class="menu-item staff-only hidden" data-view="view-manage-users">
+                <a href="#" class="menu-item admin-only librarian-only hidden" data-view="view-manage-users">
                     <i class="fa-solid fa-users"></i>
                     <span>Member Registers</span>
                 </a>
-                <a href="/reports" class="menu-item staff-only hidden">
+                <a href="/reports" class="menu-item admin-only librarian-only hidden">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                     <span>Reports</span>
                 </a>
-                <a href="#" class="menu-item staff-only hidden" data-view="view-borrowing-rules">
+                <a href="#" class="menu-item admin-only hidden" data-view="view-borrowing-rules">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Borrowing Policies</span>
                 </a>
-                <a href="#" class="menu-item staff-only hidden" data-view="view-roster-audit">
+                <a href="#" class="menu-item admin-only hidden" data-view="view-roster-audit">
                     <i class="fa-solid fa-clipboard-user"></i>
                     <span>Enrollment Roster</span>
                 </a>
@@ -296,11 +296,18 @@
 
                 <!-- VIEW: MANAGE BOOKS (Librarian/Admin) -->
                 <section id="view-manage-books" class="dashboard-view hidden">
-                    <div class="view-header">
-                        <h2>Book Inventory</h2>
-                        <button id="btn-add-book-modal" class="btn btn-primary">
-                            <i class="fa-solid fa-plus"></i> Add New Book
-                        </button>
+                    <div class="view-header" style="flex-direction: column; align-items: stretch; gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h2>Book Inventory</h2>
+                            <button id="btn-add-book-modal" class="btn btn-primary">
+                                <i class="fa-solid fa-plus"></i> Add New Book
+                            </button>
+                        </div>
+                        <div class="search-bar" style="max-width: 100%;">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="manage-books-search" placeholder="Search by title, author, genre, or ISBN...">
+                            <button class="btn btn-primary" onclick="loadManageBooks()">Search</button>
+                        </div>
                     </div>
                     
                     <div class="card table-card">
@@ -410,11 +417,18 @@
 
                 <!-- VIEW: MANAGE USERS (Librarian/Admin) -->
                 <section id="view-manage-users" class="dashboard-view hidden">
-                    <div class="view-header">
-                        <h2>Member Register</h2>
-                        <button id="btn-register-user-modal" class="btn btn-primary">
-                            <i class="fa-solid fa-user-plus"></i> Add New Member
-                        </button>
+                    <div class="view-header" style="flex-direction: column; align-items: stretch; gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h2>Member Register</h2>
+                            <button id="btn-register-user-modal" class="btn btn-primary">
+                                <i class="fa-solid fa-user-plus"></i> Add New Member
+                            </button>
+                        </div>
+                        <div class="search-bar" style="max-width: 100%;">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="manage-users-search" placeholder="Search by name, student ID, index number, email...">
+                            <button class="btn btn-primary" onclick="loadManageUsers()">Search</button>
+                        </div>
                     </div>
 
                     <div class="card table-card">

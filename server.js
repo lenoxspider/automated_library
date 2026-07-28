@@ -478,6 +478,10 @@ app.get('/api/books', (req, res) => {
   let sql = 'SELECT * FROM books';
   let params = [];
 
+  if (!search && random !== 'true') {
+    return res.json([]);
+  }
+
   if (search) {
     sql += ' WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? OR isbn LIKE ?';
     const queryParam = `%${search}%`;
@@ -498,7 +502,7 @@ app.get('/api/books', (req, res) => {
 });
 
 // Add a book (Librarian, Admin)
-app.post('/api/books', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+app.post('/api/books', authenticate, authorize(['librarian']), (req, res) => {
   const { title, author, genre, isbn, total_copies } = req.body;
   if (!title || !author || !genre || !isbn || total_copies === undefined) {
     return res.status(400).json({ error: 'All book details are required.' });
@@ -520,7 +524,7 @@ app.post('/api/books', authenticate, authorize(['admin', 'librarian']), (req, re
 });
 
 // Update a book (Librarian, Admin)
-app.put('/api/books/:id', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+app.put('/api/books/:id', authenticate, authorize(['librarian']), (req, res) => {
   const { title, author, genre, isbn, total_copies } = req.body;
   const bookId = req.params.id;
 
@@ -550,7 +554,7 @@ app.put('/api/books/:id', authenticate, authorize(['admin', 'librarian']), (req,
 });
 
 // Remove a book (Librarian, Admin)
-app.delete('/api/books/:id', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+app.delete('/api/books/:id', authenticate, authorize(['librarian']), (req, res) => {
   db.run(`DELETE FROM books WHERE id = ?`, [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: 'Book deleted successfully.' });
@@ -564,10 +568,22 @@ app.delete('/api/books/:id', authenticate, authorize(['admin', 'librarian']), (r
 
 // Get all users (Admin, Librarian)
 app.get('/api/users', authenticate, authorize(['admin', 'librarian']), (req, res) => {
-  db.all(`SELECT id, username, role, name, email, student_id, index_number FROM users`, [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+  const { search } = req.query;
+  
+  if (!search || search.trim().length === 0) {
+    return res.json([]);
+  }
+
+  const query = `%${search}%`;
+  db.all(
+    `SELECT id, username, role, name, email, student_id, index_number FROM users 
+     WHERE name LIKE ? OR username LIKE ? OR student_id LIKE ? OR index_number LIKE ? OR email LIKE ?`, 
+    [query, query, query, query, query], 
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
 });
 
 // View a member's full borrowing history
@@ -635,7 +651,7 @@ app.get('/api/borrowings', authenticate, authorize(['admin', 'librarian']), (req
 });
 
 // Issue a book (Librarian, Admin)
-app.post('/api/borrowings', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+app.post('/api/borrowings', authenticate, authorize(['librarian']), (req, res) => {
   const { book_id, member_id, due_date } = req.body;
   if (!book_id || !member_id || !due_date) {
     return res.status(400).json({ error: 'Book, Member, and Due Date are required.' });
@@ -725,7 +741,7 @@ app.post('/api/borrowings', authenticate, authorize(['admin', 'librarian']), (re
 });
 
 // Return a book (Librarian, Admin)
-app.post('/api/borrowings/:id/return', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+app.post('/api/borrowings/:id/return', authenticate, authorize(['librarian']), (req, res) => {
   const borrowingId = req.params.id;
   const today = new Date().toISOString().split('T')[0];
 
@@ -888,7 +904,7 @@ app.get('/api/fines', authenticate, (req, res) => {
 });
 
 // Record fine payment (Librarian, Admin)
-app.post('/api/fines/:id/pay', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+app.post('/api/fines/:id/pay', authenticate, authorize(['librarian']), (req, res) => {
   const fineId = req.params.id;
   const today = new Date().toISOString().split('T')[0];
 
@@ -959,7 +975,7 @@ app.get('/api/settings', authenticate, authorize(['admin', 'librarian']), (req, 
 });
 
 // PUT library policy settings
-app.put('/api/settings', authenticate, authorize(['admin', 'librarian']), (req, res) => {
+app.put('/api/settings', authenticate, authorize(['admin']), (req, res) => {
   const { max_loans, block_fines, block_overdue } = req.body;
   
   db.serialize(() => {

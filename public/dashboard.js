@@ -250,24 +250,32 @@ function setupDashboard(user) {
 
     // Adjust sidebar display according to roles
     document.querySelectorAll('.member-only').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.staff-only').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.librarian-only').forEach(el => el.classList.add('hidden'));
 
     if (user.role === 'member') {
         document.querySelectorAll('.member-only').forEach(el => el.classList.remove('hidden'));
         switchView(getInitialView('view-catalog'));
-    } else if (user.role === 'librarian' || user.role === 'admin') {
-        document.querySelectorAll('.staff-only').forEach(el => el.classList.remove('hidden'));
-        switchView(getInitialView('view-admin-dashboard'));
+    } else if (user.role === 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        switchView(getInitialView('view-manage-users'));
+    } else if (user.role === 'librarian') {
+        document.querySelectorAll('.librarian-only').forEach(el => el.classList.remove('hidden'));
+        switchView(getInitialView('view-manage-books'));
     }
 }
 
-// Allows deep-linking straight to a sidebar view via URL hash (e.g. /dashboard#view-manage-books),
+// Allows deep-linking straight to a sidebar view via URL hash or query param (e.g. /dashboard?view=view-manage-books),
 // so links from other pages can land on the right section instead of always the role default.
 function getInitialView(defaultView) {
+    const params = new URLSearchParams(window.location.search);
+    const viewParam = params.get('view');
     const hash = window.location.hash.replace('#', '');
-    const menuLink = document.querySelector(`.menu-item[data-view="${hash}"]`);
-    if (hash && document.getElementById(hash) && menuLink && !menuLink.closest('.hidden')) {
-        return hash;
+    const viewId = viewParam || hash;
+    
+    const menuLink = document.querySelector(`.menu-item[data-view="${viewId}"]`);
+    if (viewId && document.getElementById(viewId) && menuLink && !menuLink.closest('.hidden')) {
+        return viewId;
     }
     return defaultView;
 }
@@ -387,7 +395,11 @@ document.getElementById('catalog-search-input').addEventListener('input', (e) =>
     }, 400);
 });
 
-async function loadCatalogBooks(searchQuery = '') {
+async function loadCatalogBooks(searchQuery) {
+    if (searchQuery === undefined) {
+        const searchInput = document.getElementById('catalog-search-input');
+        searchQuery = searchInput ? searchInput.value.trim() : '';
+    }
     const grid = document.getElementById('catalog-books-grid');
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center;">Loading books...</div>';
 
@@ -395,7 +407,11 @@ async function loadCatalogBooks(searchQuery = '') {
         const books = await apiCall(`/api/books?search=${encodeURIComponent(searchQuery)}`);
         
         if (books.length === 0) {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center;">No books found in the catalog.</div>';
+            if (!searchQuery) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);"><i class="fa-solid fa-search" style="font-size: 2rem; margin-bottom: 15px; display:block;"></i>Enter a search query to find books.</div>';
+            } else {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center;">No books found matching your criteria.</div>';
+            }
             return;
         }
 
@@ -734,13 +750,20 @@ function downloadFile(content, mimeType, filename) {
 
 async function loadManageBooks() {
     const tbody = document.getElementById('manage-books-tbody');
+    const searchInput = document.getElementById('manage-books-search');
+    const searchQuery = searchInput ? searchInput.value.trim() : '';
+
     tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Loading inventory...</td></tr>';
     
     try {
-        const books = await apiCall('/api/books');
+        const books = await apiCall(`/api/books?search=${encodeURIComponent(searchQuery)}`);
         tbody.innerHTML = '';
         if (books.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Inventory is empty. Add your first book above!</td></tr>';
+            if (!searchQuery) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);"><i class="fa-solid fa-search" style="font-size: 1.5rem; margin-bottom: 10px; display:block;"></i>Enter a search query to find books.</td></tr>`;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No books found matching "${searchQuery}".</td></tr>`;
+            }
             return;
         }
 
@@ -1014,11 +1037,24 @@ async function collectFine(fineId) {
 
 async function loadManageUsers() {
     const tbody = document.getElementById('manage-users-tbody');
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading members register...</td></tr>';
+    const searchInput = document.getElementById('manage-users-search');
+    const searchQuery = searchInput ? searchInput.value.trim() : '';
+
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Loading members register...</td></tr>`;
     
     try {
-        const users = await apiCall('/api/users');
+        const users = await apiCall(`/api/users?search=${encodeURIComponent(searchQuery)}`);
         tbody.innerHTML = '';
+        
+        if (users.length === 0) {
+            if (!searchQuery) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);"><i class="fa-solid fa-search" style="font-size: 1.5rem; margin-bottom: 10px; display:block;"></i>Enter a search query to find members.</td></tr>`;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No members found matching "${searchQuery}".</td></tr>`;
+            }
+            return;
+        }
+
         users.forEach(u => {
             let actions = '';
             
