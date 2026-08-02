@@ -54,7 +54,8 @@ function processOverdueAccounts() {
   const sql = `
     SELECT b.id as borrowing_id, b.due_date, bk.title, u.id as user_id, u.email, u.name, u.account_status
     FROM borrowings b
-    JOIN books bk ON b.book_id = bk.id
+    JOIN book_copies bc ON b.copy_id = bc.id
+    JOIN books bk ON bc.book_id = bk.id
     JOIN users u ON b.member_id = u.id
     WHERE b.status = 'borrowed' AND b.due_date < ?
   `;
