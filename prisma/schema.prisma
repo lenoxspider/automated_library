@@ -23,6 +23,7 @@ model books {
   isbn             String         @unique(map: "sqlite_autoindex_books_1")
   total_copies     Int            @default(1)
   available_copies Int            @default(1)
+  cover_path       String?
   book_copies      book_copies[]
   reservations     reservations[]
 }

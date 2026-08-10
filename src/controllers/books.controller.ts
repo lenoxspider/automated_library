@@ -4,6 +4,8 @@ import { BookRepository } from '../repositories/book.repo';
 import { z } from 'zod';
 import asyncHandler from 'express-async-handler';
 import crypto from 'crypto';
+import { getOrFetchCoverPath } from '../services/bookCover.service';
+import logger from '../config/logger';
 
 const bookRepo = container.resolve(BookRepository);
 
@@ -32,10 +34,21 @@ export const getBooks = asyncHandler(async (req: Request, res: Response) => {
 export const createBook = asyncHandler(async (req: Request, res: Response) => {
   const validatedData = createBookSchema.parse(req.body);
 
+  // Cover fetch/cache must never fail book creation - swallow any error and
+  // fall back to null, which the frontend renders as a generated
+  // placeholder (see client/src/components/ui/BookCover.tsx).
+  let coverPath: string | null = null;
+  try {
+    coverPath = await getOrFetchCoverPath(validatedData.isbn);
+  } catch (err) {
+    logger.warn({ err, isbn: validatedData.isbn }, 'Cover lookup failed during book creation');
+  }
+
   // Note: In a real scenario, check for unique ISBN here or handle Prisma unique constraint error
   const newBook = await bookRepo.create({
     ...validatedData,
-    available_copies: validatedData.total_copies
+    available_copies: validatedData.total_copies,
+    cover_path: coverPath
   });
 
   res.status(201).json(newBook);
@@ -57,7 +70,21 @@ export const updateBook = asyncHandler(async (req: Request, res: Response) => {
   const id = parseInt(req.params.id as string);
   const validatedData = updateBookSchema.parse(req.body);
 
-  const updatedBook = await bookRepo.update(id, validatedData);
+  const existing = await bookRepo.findById(id);
+  const updateData: typeof validatedData & { cover_path?: string | null } = { ...validatedData };
+
+  // Only refetch the cover when the ISBN actually changed (or no cover is
+  // cached yet) - editing title/author/copies on every save shouldn't
+  // re-hit the network. Never fails the update itself if the fetch fails.
+  if (validatedData.isbn && (!existing?.cover_path || validatedData.isbn !== existing.isbn)) {
+    try {
+      updateData.cover_path = await getOrFetchCoverPath(validatedData.isbn);
+    } catch (err) {
+      logger.warn({ err, isbn: validatedData.isbn }, 'Cover lookup failed during book update');
+    }
+  }
+
+  const updatedBook = await bookRepo.update(id, updateData);
   res.json(updatedBook);
 });
 
