@@ -18,6 +18,16 @@ export const createReservation = asyncHandler(async (req: Request, res: Response
     return;
   }
 
+  // Prevent the same member from reserving the same book twice while a
+  // reservation is still pending
+  const existingReservation = await prisma.reservations.findFirst({
+    where: { book_id, member_id, status: 'pending' }
+  });
+  if (existingReservation) {
+    res.status(409).json({ error: 'You already have a pending reservation for this book' });
+    return;
+  }
+
   const reservationDate = new Date().toISOString();
 
   const newReservation = await prisma.reservations.create({
