@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
@@ -63,12 +63,3 @@ jobs:
     - name: Build Next.js app
       working-directory: client
       run: npm run build
-
-  deploy:
-    needs: [test, frontend]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-    - name: Deploy to Production
-      run: echo "Deploying to production server..."
-      # Add your actual deployment script here (e.g., SSH to VPS, pull docker image, etc.)
