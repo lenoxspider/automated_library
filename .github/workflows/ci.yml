@@ -35,7 +35,6 @@ jobs:
 
     - name: Lint Code
       run: npm run lint
-      continue-on-error: true
 
     - name: Build TypeScript
       run: npx tsc --noEmit
