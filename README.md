@@ -79,11 +79,14 @@ cp .env.example .env
 Ensure that `DATABASE_FILE=library.db` is set correctly.
 
 ### 4. Database Setup
-Generate the Prisma client and push the schema to the database (if not already synced):
+Generate the Prisma client and apply migrations:
 ```bash
 npx prisma generate
-npx prisma db push
+npx prisma migrate deploy
 ```
+
+(For local development, `npx prisma migrate dev` will additionally create a new
+migration if you've changed `prisma/schema.prisma`.)
 
 ### 5. Running the Backend Application
 
