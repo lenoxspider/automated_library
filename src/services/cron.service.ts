@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { injectable } from 'tsyringe';
 import { prisma } from '../config/prisma';
+import logger from '../config/logger';
 
 @injectable()
 export class CronService {
@@ -9,21 +10,21 @@ export class CronService {
   }
 
   startJobs() {
-    console.log('Initializing cron jobs...');
+    logger.info('Initializing cron jobs...');
 
     // Process overdue accounts every day at midnight
     cron.schedule('0 0 * * *', async () => {
-      console.log('Running scheduled overdue account processing...');
+      logger.info('Running scheduled overdue account processing...');
       try {
         await this.processOverdueAccounts();
       } catch (error) {
-        console.error('Error during overdue processing:', error);
+        logger.error({ err: error }, 'Error during overdue processing');
       }
     });
   }
 
   async processOverdueAccounts() {
-    console.log('Running processOverdueAccounts...');
+    logger.info('Running processOverdueAccounts...');
 
     // Find all overdue loans that haven't been returned
     const overdueLoans = await prisma.borrowings.findMany({
@@ -34,7 +35,7 @@ export class CronService {
     });
 
     if (overdueLoans.length === 0) {
-      console.log('No overdue accounts to process.');
+      logger.info('No overdue accounts to process.');
       return;
     }
 
@@ -61,6 +62,6 @@ export class CronService {
       });
     }
 
-    console.log(`Processed fines for ${overdueLoans.length} overdue accounts.`);
+    logger.info(`Processed fines for ${overdueLoans.length} overdue accounts.`);
   }
 }
