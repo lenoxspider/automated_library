@@ -3,6 +3,7 @@ import { container } from 'tsyringe';
 import { BookRepository } from '../repositories/book.repo';
 import { z } from 'zod';
 import asyncHandler from 'express-async-handler';
+import crypto from 'crypto';
 
 const bookRepo = container.resolve(BookRepository);
 
@@ -30,32 +31,32 @@ export const getBooks = asyncHandler(async (req: Request, res: Response) => {
 
 export const createBook = asyncHandler(async (req: Request, res: Response) => {
   const validatedData = createBookSchema.parse(req.body);
-  
+
   // Note: In a real scenario, check for unique ISBN here or handle Prisma unique constraint error
   const newBook = await bookRepo.create({
     ...validatedData,
     available_copies: validatedData.total_copies
   });
-  
+
   res.status(201).json(newBook);
 });
 
 export const getBookById = asyncHandler(async (req: Request, res: Response) => {
   const id = parseInt(req.params.id as string);
   const book = await bookRepo.findById(id);
-  
+
   if (!book) {
     res.status(404).json({ error: 'Book not found' });
     return;
   }
-  
+
   res.json(book);
 });
 
 export const updateBook = asyncHandler(async (req: Request, res: Response) => {
   const id = parseInt(req.params.id as string);
   const validatedData = updateBookSchema.parse(req.body);
-  
+
   const updatedBook = await bookRepo.update(id, validatedData);
   res.json(updatedBook);
 });
@@ -74,16 +75,15 @@ export const getBookCopies = asyncHandler(async (req: Request, res: Response) =>
 
 export const addBookCopy = asyncHandler(async (req: Request, res: Response) => {
   const bookId = parseInt(req.params.id as string);
-  
+
   // Either accept a barcode from the request, or generate one if not provided
   let barcode = req.body.barcode;
   if (!barcode) {
-    const crypto = require('crypto');
     barcode = crypto.randomUUID();
   }
 
   const copy = await bookRepo.addCopy(bookId, barcode);
-  
+
   // Increment total_copies and available_copies for the book
   const book = await bookRepo.findById(bookId);
   if (book) {

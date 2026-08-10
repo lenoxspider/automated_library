@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { injectable } from 'tsyringe';
+import { prisma } from '../config/prisma';
 
 @injectable()
 export class CronService {
@@ -9,7 +10,7 @@ export class CronService {
 
   startJobs() {
     console.log('Initializing cron jobs...');
-    
+
     // Process overdue accounts every day at midnight
     cron.schedule('0 0 * * *', async () => {
       console.log('Running scheduled overdue account processing...');
@@ -23,13 +24,12 @@ export class CronService {
 
   async processOverdueAccounts() {
     console.log('Running processOverdueAccounts...');
-    const { prisma } = require('../config/prisma');
-    
+
     // Find all overdue loans that haven't been returned
     const overdueLoans = await prisma.borrowings.findMany({
-      where: { 
-        due_date: { lt: new Date().toISOString() }, 
-        return_date: null 
+      where: {
+        due_date: { lt: new Date().toISOString() },
+        return_date: null
       }
     });
 
@@ -39,7 +39,9 @@ export class CronService {
     }
 
     // Get the fine rate
-    const fineRateSetting = await prisma.library_settings.findUnique({ where: { key: 'fine_rate' } });
+    const fineRateSetting = await prisma.library_settings.findUnique({
+      where: { key: 'fine_rate' }
+    });
     const fineRate = fineRateSetting ? parseFloat(fineRateSetting.value) : 1.0;
 
     for (const loan of overdueLoans) {
@@ -58,7 +60,7 @@ export class CronService {
         }
       });
     }
-    
+
     console.log(`Processed fines for ${overdueLoans.length} overdue accounts.`);
   }
 }

@@ -8,7 +8,8 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "npx tsc",
     "lint": "eslint 'src/**/*.{js,ts}'",
-    "test": "jest"
+    "test": "jest",
+    "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
   "type": "commonjs",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
