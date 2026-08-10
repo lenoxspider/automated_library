@@ -22,9 +22,6 @@ export default function LoginPage() {
 
     try {
       const response = await api.post('/auth/login', { username: email, password });
-      // The backend returns { message, user, token }
-      login(response.data.accessToken, { email: email, role: 'admin' }); // Hacky workaround for now, ideally backend returns user info
-      
       // We need to decode JWT to get role since backend only returns tokens
       const tokenPayload = JSON.parse(atob(response.data.accessToken.split('.')[1]));
       login(response.data.accessToken, { id: tokenPayload.sub, email: email, role: tokenPayload.role });
