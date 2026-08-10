@@ -16,7 +16,12 @@ const router = Router();
  *       200:
  *         description: A list of borrowings
  */
-router.get('/', authenticate, authorize(['admin', 'librarian']), borrowingsController.getBorrowings);
+router.get(
+  '/',
+  authenticate,
+  authorize(['admin', 'librarian']),
+  borrowingsController.getBorrowings
+);
 
 /**
  * @swagger
@@ -61,6 +66,11 @@ router.post('/', authenticate, authorize(['librarian']), borrowingsController.cr
  *       200:
  *         description: Confirmation of return
  */
-router.post('/return/:id', authenticate, authorize(['librarian']), borrowingsController.returnBorrowing);
+router.post(
+  '/return/:id',
+  authenticate,
+  authorize(['librarian']),
+  borrowingsController.returnBorrowing
+);
 
 export default router;

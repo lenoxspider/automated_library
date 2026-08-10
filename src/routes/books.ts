@@ -123,7 +123,12 @@ router.delete('/:id', authenticate, authorize(['admin']), bookController.deleteB
  *       200:
  *         description: List of copies
  */
-router.get('/:id/copies', authenticate, authorize(['admin', 'librarian']), bookController.getBookCopies);
+router.get(
+  '/:id/copies',
+  authenticate,
+  authorize(['admin', 'librarian']),
+  bookController.getBookCopies
+);
 
 /**
  * @swagger
@@ -152,6 +157,11 @@ router.get('/:id/copies', authenticate, authorize(['admin', 'librarian']), bookC
  *       201:
  *         description: Created book copy
  */
-router.post('/:id/copies', authenticate, authorize(['librarian', 'admin']), bookController.addBookCopy);
+router.post(
+  '/:id/copies',
+  authenticate,
+  authorize(['librarian', 'admin']),
+  bookController.addBookCopy
+);
 
 export default router;

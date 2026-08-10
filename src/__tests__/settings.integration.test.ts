@@ -7,7 +7,10 @@ app.use(express.json());
 
 // Mock auth middleware for testing
 jest.mock('../middlewares/auth', () => ({
-  authenticate: (req: any, res: any, next: any) => { req.user = { id: 1, role: 'admin' }; next(); },
+  authenticate: (req: any, res: any, next: any) => {
+    req.user = { id: 1, role: 'admin' };
+    next();
+  },
   authorize: () => (req: any, res: any, next: any) => next()
 }));
 
@@ -32,22 +35,18 @@ describe('Settings API Integration', () => {
   });
 
   it('PUT /api/settings/:key should update a setting', async () => {
-    const res = await request(app)
-      .put('/api/settings/max_loans')
-      .send({ value: '10' });
-    
+    const res = await request(app).put('/api/settings/max_loans').send({ value: '10' });
+
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ key: 'max_loans', value: '10' });
   });
 
   it('PUT /api/settings/:key should reject invalid payload (zod validation)', async () => {
-    const res = await request(app)
-      .put('/api/settings/max_loans')
-      .send({ wrongKey: '10' });
-    
+    const res = await request(app).put('/api/settings/max_loans').send({ wrongKey: '10' });
+
     // Zod throws an error which is caught by express-async-handler and passed to next()
     // Ideally, there should be an error handler middleware returning 400.
     // If not, it returns 500 in standard express when exception occurs.
-    expect(res.status).toBeGreaterThanOrEqual(400); 
+    expect(res.status).toBeGreaterThanOrEqual(400);
   });
 });

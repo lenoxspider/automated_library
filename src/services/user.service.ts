@@ -10,7 +10,7 @@ export class UserService {
     const student = await prisma.student_roster.findUnique({
       where: { student_id: studentId }
     });
-    
+
     if (student && student.index_number === indexNumber) {
       return true;
     }

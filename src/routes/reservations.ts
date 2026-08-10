@@ -27,7 +27,12 @@ const router = Router();
  *       201:
  *         description: The created reservation
  */
-router.post('/', authenticate, authorize(['member', 'librarian']), reservationsController.createReservation);
+router.post(
+  '/',
+  authenticate,
+  authorize(['member', 'librarian']),
+  reservationsController.createReservation
+);
 
 /**
  * @swagger
@@ -47,6 +52,11 @@ router.post('/', authenticate, authorize(['member', 'librarian']), reservationsC
  *       200:
  *         description: Reservation cancelled successfully
  */
-router.delete('/:id', authenticate, authorize(['member', 'librarian']), reservationsController.cancelReservation);
+router.delete(
+  '/:id',
+  authenticate,
+  authorize(['member', 'librarian']),
+  reservationsController.cancelReservation
+);
 
 export default router;

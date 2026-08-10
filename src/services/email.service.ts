@@ -36,19 +36,23 @@ export class EmailService {
     this.emailQueue = new Queue('email-queue', { connection: redisClient as any });
 
     // Create a Worker to process jobs
-    new Worker('email-queue', async job => {
-      if (job.name === 'sendVerification') {
-        const { email, name, token } = job.data;
-        const verificationLink = `${process.env.APP_URL}/api/auth/verify?token=${token}`;
-        
-        await this.transporter.sendMail({
-          from: `"SmartLib" <${process.env.SMTP_USER}>`,
-          to: email,
-          subject: 'Activate Your SmartLib Account',
-          html: verificationTemplate({ name, verificationLink })
-        });
-      }
-    }, { connection: redisClient as any });
+    new Worker(
+      'email-queue',
+      async (job) => {
+        if (job.name === 'sendVerification') {
+          const { email, name, token } = job.data;
+          const verificationLink = `${process.env.APP_URL}/api/auth/verify?token=${token}`;
+
+          await this.transporter.sendMail({
+            from: `"SmartLib" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: 'Activate Your SmartLib Account',
+            html: verificationTemplate({ name, verificationLink })
+          });
+        }
+      },
+      { connection: redisClient as any }
+    );
   }
 
   async queueVerificationEmail(email: string, name: string, token: string) {

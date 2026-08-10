@@ -17,7 +17,7 @@ export class BorrowingRepository {
   async create(data: Omit<borrowings, 'id'>): Promise<borrowings> {
     return this.prisma.borrowings.create({ data });
   }
-  
+
   async findById(id: number): Promise<borrowings | null> {
     return this.prisma.borrowings.findUnique({ where: { id } });
   }

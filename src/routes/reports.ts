@@ -16,7 +16,12 @@ const router = Router();
  *       200:
  *         description: Circulation logs
  */
-router.get('/circulation', authenticate, authorize(['admin', 'librarian']), reportsController.getCirculationLog);
+router.get(
+  '/circulation',
+  authenticate,
+  authorize(['admin', 'librarian']),
+  reportsController.getCirculationLog
+);
 
 /**
  * @swagger
@@ -30,7 +35,12 @@ router.get('/circulation', authenticate, authorize(['admin', 'librarian']), repo
  *       200:
  *         description: Blocked members
  */
-router.get('/blocked', authenticate, authorize(['admin', 'librarian']), reportsController.getBlockedMembers);
+router.get(
+  '/blocked',
+  authenticate,
+  authorize(['admin', 'librarian']),
+  reportsController.getBlockedMembers
+);
 
 /**
  * @swagger

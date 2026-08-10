@@ -17,7 +17,7 @@ export class BookRepository {
   async create(data: Omit<books, 'id'>): Promise<books> {
     return this.prisma.books.create({ data });
   }
-  
+
   async findById(id: number): Promise<books | null> {
     return this.prisma.books.findUnique({ where: { id } });
   }

@@ -16,11 +16,11 @@ const loginSchema = z.object({
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { username, password } = loginSchema.parse(req.body);
-  
+
   // NOTE: For full implementation, we'd add `findByUsername` to UserRepository.
   // We'll simulate checking the DB.
   const users = await userRepo.findAll();
-  const user = users.find(u => u.username === username);
+  const user = users.find((u) => u.username === username);
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     res.status(401).json({ error: 'Invalid username or password' });
@@ -54,7 +54,7 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
     // Blacklist access token for 15 mins
     await redisClient.set(`bl_${token}`, 'true', 'EX', 15 * 60);
   }
-  
+
   const userId = (req as any).user?.id;
   if (userId) {
     // Invalidate refresh token
@@ -87,7 +87,9 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
   const isValidStudent = await userService.verifyRoster(data.studentId, data.indexNumber);
   if (!isValidStudent) {
-    res.status(400).json({ error: 'Roster verification failed. Invalid Student ID or Index Number.' });
+    res
+      .status(400)
+      .json({ error: 'Roster verification failed. Invalid Student ID or Index Number.' });
     return;
   }
 
@@ -110,12 +112,14 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
   await emailService.queueVerificationEmail(newUser.email, newUser.name, verifyToken);
 
-  res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.' });
+  res
+    .status(201)
+    .json({ message: 'Registration successful. Please check your email to verify your account.' });
 });
 
 export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   const token = req.params.token as string;
-  
+
   const user = await prisma.users.findFirst({
     where: { verification_token: token }
   });
@@ -135,7 +139,7 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
 
 export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
   const { email } = z.object({ email: z.string().email() }).parse(req.body);
-  
+
   const user = await prisma.users.findFirst({ where: { email } });
   if (!user) {
     // Return same message to prevent email enumeration

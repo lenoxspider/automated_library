@@ -11,7 +11,9 @@ export class CirculationService {
     }
 
     // 2. Check unpaid fines
-    const blockFinesSetting = await prisma.library_settings.findUnique({ where: { key: 'block_fines' } });
+    const blockFinesSetting = await prisma.library_settings.findUnique({
+      where: { key: 'block_fines' }
+    });
     if (blockFinesSetting?.value === 'true') {
       const unpaidFines = await prisma.fines.count({
         where: { status: 'unpaid', borrowings: { member_id: memberId } }
@@ -22,7 +24,9 @@ export class CirculationService {
     }
 
     // 3. Check max loans
-    const maxLoansSetting = await prisma.library_settings.findUnique({ where: { key: 'max_loans' } });
+    const maxLoansSetting = await prisma.library_settings.findUnique({
+      where: { key: 'max_loans' }
+    });
     const maxLoans = maxLoansSetting ? parseInt(maxLoansSetting.value) : 3;
     const currentLoans = await prisma.borrowings.count({
       where: { member_id: memberId, return_date: null }
@@ -74,8 +78,12 @@ export class CirculationService {
     let fine = null;
 
     if (returnDate > dueDate) {
-      const daysOverdue = Math.ceil((returnDate.getTime() - dueDate.getTime()) / (1000 * 3600 * 24));
-      const fineRateSetting = await prisma.library_settings.findUnique({ where: { key: 'fine_rate' } });
+      const daysOverdue = Math.ceil(
+        (returnDate.getTime() - dueDate.getTime()) / (1000 * 3600 * 24)
+      );
+      const fineRateSetting = await prisma.library_settings.findUnique({
+        where: { key: 'fine_rate' }
+      });
       const fineRate = fineRateSetting ? parseFloat(fineRateSetting.value) : 1.0;
       fineAmount = daysOverdue * fineRate;
 

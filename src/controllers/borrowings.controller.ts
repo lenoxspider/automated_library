@@ -10,7 +10,7 @@ const circulationService = container.resolve(CirculationService);
 
 const createBorrowingSchema = z.object({
   copy_id: z.number().int(),
-  member_id: z.number().int(),
+  member_id: z.number().int()
 });
 
 export const getBorrowings = asyncHandler(async (req: Request, res: Response) => {

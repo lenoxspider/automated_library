@@ -3,7 +3,12 @@ import asyncHandler from 'express-async-handler';
 import prisma from '../config/prisma';
 import { Parser } from 'json2csv';
 
-const sendReportResponse = (res: Response, data: any[], format: string | undefined, filename: string) => {
+const sendReportResponse = (
+  res: Response,
+  data: any[],
+  format: string | undefined,
+  filename: string
+) => {
   if (format === 'csv') {
     if (data.length === 0) {
       res.header('Content-Type', 'text/csv');
@@ -21,10 +26,10 @@ const sendReportResponse = (res: Response, data: any[], format: string | undefin
 
 export const getCirculationLog = asyncHandler(async (req: Request, res: Response) => {
   const { format, startDate, endDate, memberId } = req.query;
-  
+
   const where: any = {};
   if (memberId) where.member_id = parseInt(memberId as string);
-  
+
   const logs = await prisma.borrowings.findMany({
     where,
     include: {
@@ -37,7 +42,7 @@ export const getCirculationLog = asyncHandler(async (req: Request, res: Response
   });
 
   // Flatten for CSV
-  const flattenedData = logs.map(l => ({
+  const flattenedData = logs.map((l) => ({
     id: l.id,
     member: l.users.name,
     book: l.book_copies.books.title,
@@ -76,8 +81,8 @@ export const getBlockedMembers = asyncHandler(async (req: Request, res: Response
   });
 
   const merged = new Map();
-  
-  blockedStatusUsers.forEach(u => {
+
+  blockedStatusUsers.forEach((u) => {
     merged.set(u.id, {
       id: u.id,
       name: u.name,
@@ -87,11 +92,11 @@ export const getBlockedMembers = asyncHandler(async (req: Request, res: Response
     });
   });
 
-  usersWithFines.forEach(u => {
+  usersWithFines.forEach((u) => {
     const totalFines = u.borrowings.reduce((sum, b) => {
       return sum + (b.fines && b.fines.status === 'unpaid' ? b.fines.amount : 0);
     }, 0);
-    
+
     if (merged.has(u.id)) {
       merged.get(u.id).unpaid_fines = totalFines;
       merged.get(u.id).reason += ' & Unpaid Fines';
@@ -112,16 +117,16 @@ export const getBlockedMembers = asyncHandler(async (req: Request, res: Response
 
 export const getRosterAudit = asyncHandler(async (req: Request, res: Response) => {
   const { format } = req.query;
-  
+
   const users = await prisma.users.findMany({
     where: { role: 'member' },
     select: { id: true, name: true, student_id: true, index_number: true }
   });
 
   const roster = await prisma.student_roster.findMany();
-  const rosterMap = new Map(roster.map(r => [r.student_id, r]));
+  const rosterMap = new Map(roster.map((r) => [r.student_id, r]));
 
-  const auditResults = users.map(u => {
+  const auditResults = users.map((u) => {
     const rosterRecord = u.student_id ? rosterMap.get(u.student_id) : undefined;
     let status = 'Match';
     let details = 'Valid';

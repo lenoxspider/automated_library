@@ -6,30 +6,30 @@ const options = {
     info: {
       title: 'SmartLib API',
       version: '1.0.0',
-      description: 'API documentation for the modernized SmartLib library system',
+      description: 'API documentation for the modernized SmartLib library system'
     },
     servers: [
       {
         url: 'http://localhost:3000/api',
-        description: 'Development server',
-      },
+        description: 'Development server'
+      }
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
           type: 'http',
           scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
+          bearerFormat: 'JWT'
+        }
+      }
     },
     security: [
       {
-        bearerAuth: [],
-      },
-    ],
+        bearerAuth: []
+      }
+    ]
   },
-  apis: ['./src/routes/*.ts'], // Path to the API docs
+  apis: ['./src/routes/*.ts'] // Path to the API docs
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

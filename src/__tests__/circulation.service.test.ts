@@ -38,18 +38,24 @@ describe('CirculationService', () => {
       mockPrisma.library_settings.findUnique.mockResolvedValue(null); // default to max 3
       mockPrisma.borrowings.count.mockResolvedValue(3); // already has 3 loans
 
-      await expect(service.checkout(1, 1)).rejects.toThrow('User has reached the maximum number of active loans');
+      await expect(service.checkout(1, 1)).rejects.toThrow(
+        'User has reached the maximum number of active loans'
+      );
     });
 
     it('should successfully checkout a book', async () => {
-      mockPrisma.book_copies.findUnique.mockResolvedValue({ id: 1, status: 'Available', book_id: 10 });
-      mockPrisma.library_settings.findUnique.mockResolvedValue(null); 
-      mockPrisma.borrowings.count.mockResolvedValue(1); 
+      mockPrisma.book_copies.findUnique.mockResolvedValue({
+        id: 1,
+        status: 'Available',
+        book_id: 10
+      });
+      mockPrisma.library_settings.findUnique.mockResolvedValue(null);
+      mockPrisma.borrowings.count.mockResolvedValue(1);
       mockPrisma.borrowings.create.mockResolvedValue({ id: 100 });
       mockPrisma.books.findUnique.mockResolvedValue({ id: 10, available_copies: 5 });
 
       const result = await service.checkout(1, 1);
-      
+
       expect(result).toEqual({ id: 100 });
       expect(mockPrisma.borrowings.create).toHaveBeenCalled();
       expect(mockPrisma.book_copies.update).toHaveBeenCalledWith({

@@ -10,7 +10,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     }
 
     const token = authHeader.split(' ')[1];
-    
+
     // Check if token is blacklisted in Redis (optional, usually done for access tokens on logout)
     const isBlacklisted = await redisClient.get(`bl_${token}`);
     if (isBlacklisted) {
@@ -19,7 +19,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     const decoded = jwt.verify(token, process.env.ACCESS_SECRET || 'fallback_secret') as JwtPayload;
     (req as any).user = { id: decoded.sub, role: decoded.role };
-    
+
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Invalid or expired token.' });
