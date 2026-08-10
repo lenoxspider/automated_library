@@ -1,22 +1,28 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { CreditCard, CheckCircle } from 'lucide-react';
 import api from '../../../lib/api';
-import { CreditCard, Search, CheckCircle } from 'lucide-react';
+import Card from '../../../components/ui/Card';
+import Button from '../../../components/ui/Button';
 
+interface Fine {
+  id: number;
+  borrowing_id: number;
+  amount: number;
+  status: string;
+}
+
+// Rebuilt against the real Fine shape returned by GET /fines
+// ({ id, borrowing_id, amount, status, payment_date }) - the previous
+// version referenced fine.userId and fine.reason, neither of which exist
+// on the model, so it never actually rendered real data correctly.
 export default function ManageFinesPage() {
   const queryClient = useQueryClient();
-  const [searchUserId, setSearchUserId] = useState('');
 
-  // Fetch all unpaid fines across all users for the librarian to manage
-  const { data: fines, isLoading } = useQuery({
+  const { data: fines, isLoading } = useQuery<Fine[]>({
     queryKey: ['admin-fines'],
-    queryFn: async () => {
-      // Assuming a generic fines endpoint for admins/librarians returns all fines
-      const res = await api.get('/fines'); 
-      return res.data;
-    }
+    queryFn: async () => (await api.get('/fines')).data,
   });
 
   const payFine = useMutation({
@@ -25,77 +31,66 @@ export default function ManageFinesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-fines'] });
-    }
+    },
   });
 
-  const displayFines = fines?.filter((f: any) => 
-    f.status === 'unpaid' && (searchUserId === '' || f.userId.toString().includes(searchUserId))
-  ) || [];
+  const unpaid = (fines ?? []).filter((f) => f.status === 'unpaid');
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-heading font-bold">Fine Processing</h1>
-          <p className="text-white/60 mt-1">Accept payments and clear member fines.</p>
-        </div>
-        
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search by Member ID..."
-            value={searchUserId}
-            onChange={(e) => setSearchUserId(e.target.value)}
-            className="w-full glass py-2 pl-10 pr-4 outline-none focus:border-(--color-brand-teal)"
-          />
-        </div>
+      <div>
+        <h1 className="text-3xl font-mono font-bold tracking-tight">Fine Processing</h1>
+        <p className="opacity-60 mt-1">Accept payments and clear outstanding fines.</p>
       </div>
 
-      <div className="glass overflow-hidden rounded-xl">
+      <Card surface="dark" className="overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-black/20 text-white/50 text-xs uppercase tracking-wider">
-              <th className="p-4 font-semibold">Fine ID</th>
-              <th className="p-4 font-semibold">Member ID</th>
-              <th className="p-4 font-semibold">Reason</th>
-              <th className="p-4 font-semibold">Amount</th>
-              <th className="p-4 font-semibold text-right">Action</th>
+            <tr className="text-xs uppercase tracking-wider opacity-60 border-b" style={{ borderColor: 'var(--color-signal-border-dark)' }}>
+              <th className="p-4 font-mono font-normal">Fine ID</th>
+              <th className="p-4 font-mono font-normal">Borrowing ID</th>
+              <th className="p-4 font-mono font-normal">Amount</th>
+              <th className="p-4 font-mono font-normal text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="p-8 text-center">Loading...</td>
+                <td colSpan={4} className="p-8 text-center opacity-60">
+                  Loading...
+                </td>
               </tr>
-            ) : displayFines.length === 0 ? (
+            ) : unpaid.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-white/50">No unpaid fines found.</td>
+                <td colSpan={4} className="p-10 text-center opacity-60">
+                  <CheckCircle size={24} className="mx-auto mb-2" style={{ color: 'var(--color-signal-available)' }} />
+                  No unpaid fines.
+                </td>
               </tr>
             ) : (
-              displayFines.map((fine: any) => (
-                <tr key={fine.id} className="hover:bg-white/5 transition-colors">
+              unpaid.map((fine) => (
+                <tr key={fine.id} className="border-b" style={{ borderColor: 'var(--color-signal-border-dark)' }}>
                   <td className="p-4 font-mono text-sm">#{fine.id}</td>
-                  <td className="p-4">
-                    <span className="px-2 py-1 bg-white/10 rounded-md text-sm">User #{fine.userId}</span>
+                  <td className="p-4 font-mono text-sm opacity-70">#{fine.borrowing_id}</td>
+                  <td className="p-4 font-mono font-bold" style={{ color: 'var(--color-signal-pending)' }}>
+                    ${fine.amount.toFixed(2)}
                   </td>
-                  <td className="p-4 text-sm text-white/80">{fine.reason || 'Late Return'}</td>
-                  <td className="p-4 font-bold text-(--color-brand-amber)">${fine.amount.toFixed(2)}</td>
                   <td className="p-4 text-right">
-                    <button
+                    <Button
+                      variant="secondary"
                       onClick={() => payFine.mutate(fine.id)}
-                      disabled={payFine.isPending}
-                      className="px-4 py-2 bg-gradient-to-r from-(--color-brand-teal) to-emerald-600 text-white font-semibold rounded-lg flex items-center gap-2 ml-auto hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                      isLoading={payFine.isPending}
+                      className="ml-auto"
                     >
-                      <CreditCard size={16} /> Mark Paid
-                    </button>
+                      <CreditCard size={14} /> Mark Paid
+                    </Button>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
+      </Card>
     </div>
   );
 }

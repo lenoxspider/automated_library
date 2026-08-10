@@ -1,124 +1,119 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Save, CheckCircle2 } from 'lucide-react';
 import api from '../../../lib/api';
-import { Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+import Card from '../../../components/ui/Card';
+import Button from '../../../components/ui/Button';
 
+interface Setting {
+  key: string;
+  value: string;
+}
+
+// Fixed to match the real API: GET /settings returns the full settings list
+// in one call - there's no GET /settings/:key single-item route, which the
+// previous version of this page called twice (and would have 404'd both
+// times).
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const [successMsg, setSuccessMsg] = useState('');
+  const [maxLoans, setMaxLoans] = useState('');
+  const [fineRate, setFineRate] = useState('');
 
-  // We assume the backend has an endpoint to get all settings or specific ones.
-  // We'll fetch them individually for this mock-up.
-  const { data: maxLoans, isLoading: loadingLoans } = useQuery({
-    queryKey: ['settings', 'max_loans'],
-    queryFn: async () => (await api.get('/settings/max_loans')).data
+  const { data: settings, isLoading } = useQuery<Setting[]>({
+    queryKey: ['settings'],
+    queryFn: async () => (await api.get('/settings')).data,
   });
 
-  const { data: fineRate, isLoading: loadingRate } = useQuery({
-    queryKey: ['settings', 'fine_rate'],
-    queryFn: async () => (await api.get('/settings/fine_rate')).data
-  });
-
-  const [formState, setFormState] = useState({
-    max_loans: '',
-    fine_rate: ''
-  });
-
-  // Sync state once data loads
-  if (maxLoans && formState.max_loans === '') setFormState(s => ({ ...s, max_loans: maxLoans.value }));
-  if (fineRate && formState.fine_rate === '') setFormState(s => ({ ...s, fine_rate: fineRate.value }));
+  useEffect(() => {
+    if (!settings) return;
+    const ml = settings.find((s) => s.key === 'max_loans');
+    const fr = settings.find((s) => s.key === 'fine_rate');
+    if (ml) setMaxLoans(ml.value);
+    if (fr) setFineRate(fr.value);
+  }, [settings]);
 
   const updateSetting = useMutation({
-    mutationFn: async ({ key, value }: { key: string, value: string }) => {
+    mutationFn: async ({ key, value }: { key: string; value: string }) => {
       await api.put(`/settings/${key}`, { value });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
-      setSuccessMsg('Settings updated successfully!');
+      setSuccessMsg('Settings updated.');
       setTimeout(() => setSuccessMsg(''), 3000);
-    }
+    },
   });
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formState.max_loans !== maxLoans?.value) {
-      updateSetting.mutate({ key: 'max_loans', value: formState.max_loans });
-    }
-    if (formState.fine_rate !== fineRate?.value) {
-      updateSetting.mutate({ key: 'fine_rate', value: formState.fine_rate });
-    }
+    updateSetting.mutate({ key: 'max_loans', value: maxLoans });
+    updateSetting.mutate({ key: 'fine_rate', value: fineRate });
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-3xl font-heading font-bold">System Settings</h1>
-        <p className="text-white/60 mt-1">Configure global library policies and rules.</p>
+        <h1 className="text-3xl font-mono font-bold tracking-tight">System Settings</h1>
+        <p className="opacity-60 mt-1">Configure global library policies.</p>
       </div>
 
       {successMsg && (
-        <div className="bg-green-500/20 text-green-400 border border-green-500/50 p-4 rounded-lg flex items-center gap-3 font-semibold animate-in fade-in">
-          <CheckCircle2 /> {successMsg}
+        <div
+          className="flex items-center gap-2 border-2 px-4 py-3 font-mono text-sm"
+          style={{ borderColor: 'var(--color-signal-available)', color: 'var(--color-signal-available)' }}
+        >
+          <CheckCircle2 size={16} /> {successMsg}
         </div>
       )}
 
-      {(loadingLoans || loadingRate) ? (
-        <div className="glass p-8 animate-pulse bg-white/5 rounded-xl h-64"></div>
+      {isLoading ? (
+        <div className="h-64 animate-pulse border" style={{ borderColor: 'var(--color-signal-border-dark)' }} />
       ) : (
-        <form onSubmit={handleSave} className="glass p-8 rounded-xl space-y-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-(--color-brand-indigo) rounded-full mix-blend-screen filter blur-[100px] opacity-20 pointer-events-none"></div>
-
-          <div className="space-y-6 relative z-10">
+        <Card surface="dark" className="p-8">
+          <form onSubmit={handleSave} className="space-y-8">
             <div>
-              <h3 className="text-xl font-bold mb-1">Borrowing Limits</h3>
-              <p className="text-sm text-white/50 mb-4">Determine the maximum number of books a member can hold at once.</p>
-              
-              <label className="block text-sm uppercase tracking-wider font-semibold text-white/70 mb-2">Max Active Loans</label>
-              <div className="relative w-1/2">
-                <input 
-                  type="number" 
-                  min="1"
-                  max="20"
-                  value={formState.max_loans}
-                  onChange={(e) => setFormState({ ...formState, max_loans: e.target.value })}
-                  className="w-full bg-black/20 border border-white/10 focus:border-(--color-brand-teal) rounded-lg px-4 py-3 text-white outline-none transition-all font-mono"
-                />
-              </div>
+              <h3 className="font-bold mb-1">Borrowing Limits</h3>
+              <p className="text-sm opacity-60 mb-4">Max books a member can hold at once.</p>
+              <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-2">
+                Max Active Loans
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={maxLoans}
+                onChange={(e) => setMaxLoans(e.target.value)}
+                className="w-full sm:w-48 bg-transparent border-2 px-4 py-3 outline-none font-mono"
+                style={{ borderColor: 'var(--color-signal-border-dark)' }}
+              />
             </div>
 
-            <hr className="border-white/10" />
+            <hr style={{ borderColor: 'var(--color-signal-border-dark)' }} />
 
             <div>
-              <h3 className="text-xl font-bold mb-1">Financial Policies</h3>
-              <p className="text-sm text-white/50 mb-4">Set the daily fine rate for overdue books.</p>
-              
-              <label className="block text-sm uppercase tracking-wider font-semibold text-white/70 mb-2">Daily Fine Rate (USD)</label>
-              <div className="relative w-1/2 flex items-center">
-                <span className="absolute left-4 text-white/50">$</span>
-                <input 
-                  type="number" 
-                  step="0.10"
-                  min="0.00"
-                  value={formState.fine_rate}
-                  onChange={(e) => setFormState({ ...formState, fine_rate: e.target.value })}
-                  className="w-full bg-black/20 border border-white/10 focus:border-(--color-brand-teal) rounded-lg pl-8 pr-4 py-3 text-white outline-none transition-all font-mono"
-                />
-              </div>
+              <h3 className="font-bold mb-1">Financial Policies</h3>
+              <p className="text-sm opacity-60 mb-4">Daily fine rate for overdue books.</p>
+              <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-2">
+                Daily Fine Rate (USD)
+              </label>
+              <input
+                type="number"
+                step="0.10"
+                min="0"
+                value={fineRate}
+                onChange={(e) => setFineRate(e.target.value)}
+                className="w-full sm:w-48 bg-transparent border-2 px-4 py-3 outline-none font-mono"
+                style={{ borderColor: 'var(--color-signal-border-dark)' }}
+              />
             </div>
-          </div>
 
-          <div className="pt-4 flex justify-end relative z-10">
-            <button 
-              type="submit"
-              disabled={updateSetting.isPending}
-              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-(--color-brand-teal) to-(--color-brand-indigo) text-white font-bold rounded-lg hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50"
-            >
-              <Save size={18} /> {updateSetting.isPending ? 'Saving...' : 'Save Settings'}
-            </button>
-          </div>
-        </form>
+            <Button type="submit" isLoading={updateSetting.isPending}>
+              <Save size={16} /> Save Settings
+            </Button>
+          </form>
+        </Card>
       )}
     </div>
   );

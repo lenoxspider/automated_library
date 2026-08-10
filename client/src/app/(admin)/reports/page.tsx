@@ -1,136 +1,146 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { BarChart3, AlertTriangle, BookOpen } from 'lucide-react';
 import api from '../../../lib/api';
-import { BarChart3, AlertTriangle, Users, BookOpen, Download } from 'lucide-react';
+import Card from '../../../components/ui/Card';
 
+interface CirculationLog {
+  id: number;
+  member: string;
+  book: string;
+  barcode: string;
+  borrow_date: string;
+  due_date: string;
+  return_date: string | null;
+  status: string;
+}
+
+interface BlockedMember {
+  id: number;
+  name: string;
+  email: string;
+  reason: string;
+  unpaid_fines: number;
+}
+
+// Fixed to match the real report envelope ({ data, count }, not a bare
+// array) and the real flattened field names (log.book / log.member /
+// log.return_date, not log.copy.book.title / log.userId / log.returnDate).
 export default function ReportsPage() {
-  const { data: circulation, isLoading: loadingCirc } = useQuery({
+  const { data: circulation, isLoading: loadingCirc } = useQuery<{ data: CirculationLog[]; count: number }>({
     queryKey: ['reports', 'circulation'],
-    queryFn: async () => (await api.get('/reports/circulation')).data
+    queryFn: async () => (await api.get('/reports/circulation')).data,
   });
 
-  const { data: blockedUsers, isLoading: loadingBlocked } = useQuery({
+  const { data: blocked, isLoading: loadingBlocked } = useQuery<{ data: BlockedMember[]; count: number }>({
     queryKey: ['reports', 'blocked'],
-    queryFn: async () => (await api.get('/reports/blocked')).data
+    queryFn: async () => (await api.get('/reports/blocked')).data,
   });
 
+  const logs = circulation?.data ?? [];
+  const blockedUsers = blocked?.data ?? [];
   const isLoading = loadingCirc || loadingBlocked;
+
+  const activeCount = logs.filter((l) => !l.return_date).length;
+  const overdueCount = logs.filter((l) => !l.return_date && new Date(l.due_date) < new Date()).length;
+  const overdueRate = logs.length > 0 ? Math.round((overdueCount / logs.length) * 100) : 0;
+
+  // Most-borrowed titles, computed client-side from the circulation log -
+  // no charting library, plain divs sized by relative count.
+  const byTitle = new Map<string, number>();
+  logs.forEach((l) => byTitle.set(l.book, (byTitle.get(l.book) ?? 0) + 1));
+  const topTitles = Array.from(byTitle.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  const maxCount = topTitles[0]?.[1] ?? 1;
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-heading font-bold">Reporting Suite</h1>
-          <p className="text-white/60 mt-1">Analytics and actionable system audits.</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 glass hover:bg-white/10 transition-colors font-semibold rounded-lg">
-          <Download size={18} /> Export PDF
-        </button>
+      <div>
+        <h1 className="text-3xl font-mono font-bold tracking-tight">Reports</h1>
+        <p className="opacity-60 mt-1">Circulation analytics and system alerts.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass p-6 rounded-xl flex items-center gap-4 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-(--color-brand-teal) rounded-full filter blur-[50px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
-          <div className="w-12 h-12 rounded-xl bg-(--color-brand-teal)/20 text-(--color-brand-teal) flex items-center justify-center">
-            <BookOpen size={24} />
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card surface="dark" className="p-5 flex items-center gap-4">
+          <BookOpen size={22} style={{ color: 'var(--color-signal-available)' }} />
           <div>
-            <p className="text-sm text-white/50 uppercase tracking-wider font-bold mb-1">Total Circulation</p>
-            <h2 className="text-3xl font-heading font-bold">{circulation?.length || 0} <span className="text-sm font-normal text-white/40">loans</span></h2>
+            <p className="text-xs uppercase tracking-widest opacity-60 font-mono mb-1">Active Loans</p>
+            <p className="text-2xl font-mono font-bold">{activeCount}</p>
           </div>
-        </div>
-
-        <div className="glass p-6 rounded-xl flex items-center gap-4 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-(--color-brand-coral) rounded-full filter blur-[50px] opacity-10 group-hover:opacity-30 transition-opacity"></div>
-          <div className="w-12 h-12 rounded-xl bg-(--color-brand-coral)/20 text-(--color-brand-coral) flex items-center justify-center">
-            <AlertTriangle size={24} />
-          </div>
+        </Card>
+        <Card surface="dark" className="p-5 flex items-center gap-4">
+          <AlertTriangle size={22} style={{ color: 'var(--color-signal-overdue)' }} />
           <div>
-            <p className="text-sm text-white/50 uppercase tracking-wider font-bold mb-1">Blocked Accounts</p>
-            <h2 className="text-3xl font-heading font-bold">{blockedUsers?.length || 0} <span className="text-sm font-normal text-white/40">users</span></h2>
+            <p className="text-xs uppercase tracking-widest opacity-60 font-mono mb-1">Overdue Rate</p>
+            <p className="text-2xl font-mono font-bold">{overdueRate}%</p>
           </div>
-        </div>
-
-        <div className="glass p-6 rounded-xl flex items-center gap-4 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-(--color-brand-indigo) rounded-full filter blur-[50px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
-          <div className="w-12 h-12 rounded-xl bg-(--color-brand-indigo)/20 text-(--color-brand-indigo) flex items-center justify-center">
-            <Users size={24} />
-          </div>
+        </Card>
+        <Card surface="dark" className="p-5 flex items-center gap-4">
+          <AlertTriangle size={22} style={{ color: 'var(--color-signal-pending)' }} />
           <div>
-            <p className="text-sm text-white/50 uppercase tracking-wider font-bold mb-1">Active Roster</p>
-            <h2 className="text-3xl font-heading font-bold">142 <span className="text-sm font-normal text-white/40">users</span></h2>
+            <p className="text-xs uppercase tracking-widest opacity-60 font-mono mb-1">Flagged Accounts</p>
+            <p className="text-2xl font-mono font-bold">{blockedUsers.length}</p>
           </div>
-        </div>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="glass rounded-xl overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-white/5 flex items-center justify-between">
-            <h3 className="font-bold text-lg flex items-center gap-2"><BarChart3 size={18} className="text-(--color-brand-teal)" /> Recent Circulation</h3>
+      <Card surface="dark" className="p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2">
+          <BarChart3 size={16} style={{ color: 'var(--color-signal-available)' }} /> Most Borrowed
+        </h3>
+        {isLoading ? (
+          <p className="opacity-60 text-sm">Loading...</p>
+        ) : topTitles.length === 0 ? (
+          <p className="opacity-60 text-sm">No circulation data yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {topTitles.map(([title, count]) => (
+              <div key={title}>
+                <div className="flex justify-between text-sm font-mono mb-1">
+                  <span className="truncate pr-4">{title}</span>
+                  <span className="opacity-60">{count}</span>
+                </div>
+                <div className="h-2 bg-white/5 w-full">
+                  <div
+                    className="h-full"
+                    style={{
+                      width: `${(count / maxCount) * 100}%`,
+                      backgroundColor: 'var(--color-signal-available)',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="p-0 flex-1">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-black/20 text-white/40 uppercase">
-                <tr>
-                  <th className="p-4 font-semibold">Book</th>
-                  <th className="p-4 font-semibold">Member</th>
-                  <th className="p-4 font-semibold">Status</th>
+        )}
+      </Card>
+
+      <Card surface="dark" className="overflow-hidden" style={{ borderColor: 'var(--color-signal-overdue)' }}>
+        <div className="p-5 border-b flex items-center gap-2" style={{ borderColor: 'var(--color-signal-border-dark)' }}>
+          <AlertTriangle size={16} style={{ color: 'var(--color-signal-overdue)' }} />
+          <h3 className="font-bold">System Alerts - Flagged Accounts</h3>
+        </div>
+        {blockedUsers.length === 0 ? (
+          <p className="p-8 text-center opacity-60 text-sm">No flagged accounts.</p>
+        ) : (
+          <table className="w-full text-left text-sm">
+            <tbody>
+              {blockedUsers.map((u) => (
+                <tr key={u.id} className="border-b" style={{ borderColor: 'var(--color-signal-border-dark)' }}>
+                  <td className="p-4 font-mono opacity-70">#{u.id}</td>
+                  <td className="p-4 font-bold">{u.name}</td>
+                  <td className="p-4 opacity-70">{u.reason}</td>
+                  <td className="p-4 text-right font-mono" style={{ color: 'var(--color-signal-overdue)' }}>
+                    {u.unpaid_fines > 0 ? `$${u.unpaid_fines.toFixed(2)}` : '-'}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {isLoading ? (
-                  <tr><td colSpan={3} className="p-4 text-center">Loading...</td></tr>
-                ) : circulation?.slice(0, 5).map((log: any) => (
-                  <tr key={log.id} className="hover:bg-white/5 transition-colors">
-                    <td className="p-4 truncate max-w-[200px]">{log.copy.book.title}</td>
-                    <td className="p-4">#{log.userId}</td>
-                    <td className="p-4">
-                      {log.returnDate ? (
-                        <span className="text-green-400">Returned</span>
-                      ) : (
-                        <span className="text-(--color-brand-amber)">Active</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="glass rounded-xl overflow-hidden flex flex-col border border-(--color-brand-coral)/20">
-          <div className="p-6 border-b border-white/5 flex items-center justify-between bg-(--color-brand-coral)/5">
-            <h3 className="font-bold text-lg flex items-center gap-2 text-(--color-brand-coral)"><AlertTriangle size={18} /> High-Risk Blocked Users</h3>
-          </div>
-          <div className="p-0 flex-1">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-black/20 text-white/40 uppercase">
-                <tr>
-                  <th className="p-4 font-semibold">Member ID</th>
-                  <th className="p-4 font-semibold">Name</th>
-                  <th className="p-4 font-semibold text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {isLoading ? (
-                  <tr><td colSpan={3} className="p-4 text-center">Loading...</td></tr>
-                ) : blockedUsers?.length === 0 ? (
-                  <tr><td colSpan={3} className="p-8 text-center text-white/50">No blocked users detected.</td></tr>
-                ) : blockedUsers?.map((user: any) => (
-                  <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                    <td className="p-4 font-mono text-(--color-brand-coral)">#{user.id}</td>
-                    <td className="p-4 font-bold">{user.name}</td>
-                    <td className="p-4 text-right">
-                      <button className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded transition-colors">Review</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Card>
     </div>
   );
 }
