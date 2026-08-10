@@ -14,7 +14,6 @@ import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 
-// TODO: Import and mount routers (Phase 3)
 import authRoutes from './routes/auth';
 import bookRoutes from './routes/books';
 import userRoutes from './routes/users';
