@@ -42,8 +42,27 @@ jobs:
     - name: Run Unit Tests
       run: npm test
 
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+
+    - name: Install dependencies
+      working-directory: client
+      run: npm ci
+
+    - name: Build Next.js app
+      working-directory: client
+      run: npm run build
+
   deploy:
-    needs: test
+    needs: [test, frontend]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
