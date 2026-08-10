@@ -2,3 +2,5 @@ node_modules
 .env
 library.db
 *.vcf
+
+/src/generated/prisma
