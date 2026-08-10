@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
 import AppLayout from "@/components/layout/AppLayout";
 import ReactQueryProvider from "@/lib/queryClient";
@@ -9,9 +9,10 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-heading",
+const spaceMono = Space_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -24,11 +25,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Surface (light vs dark) is decided per route-group layout, not globally
+  // here - member/public routes default light, staff/admin routes default
+  // dark. See (member)/layout.tsx, (librarian)/layout.tsx, (admin)/layout.tsx,
+  // (auth)/layout.tsx.
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} antialiased dark`}
-    >
+    <html lang="en" className={`${inter.variable} ${spaceMono.variable} antialiased`}>
       <body>
         <ReactQueryProvider>
           <AppLayout>{children}</AppLayout>

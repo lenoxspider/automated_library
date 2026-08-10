@@ -8,7 +8,7 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
   // The Sidebar will automatically highlight the correct items.
   return (
     <ProtectedRoute allowedRoles={['member', 'librarian', 'admin']}>
-      {children}
+      <div className="signal-surface-light min-h-full">{children}</div>
     </ProtectedRoute>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 export default function TopBar() {
@@ -8,31 +8,36 @@ export default function TopBar() {
 
   if (!user) return null;
 
+  const isDark = user.role === 'librarian' || user.role === 'admin';
+  const borderVar = isDark ? '--color-signal-border-dark' : '--color-signal-border-light';
+
   return (
-    <header className="h-20 flex items-center justify-between px-8 mb-6 glass">
-      <div className="flex-1 max-w-xl">
+    <header
+      className="h-16 flex items-center justify-between px-6 border-b shrink-0"
+      style={{ borderColor: `var(${borderVar})` }}
+    >
+      <div className="flex-1 max-w-md">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search books, authors, or ISBN..." 
-            className="w-full bg-black/10 dark:bg-white/5 border border-transparent focus:border-(--color-brand-teal) rounded-lg py-2.5 pl-10 pr-4 outline-none transition-all"
+          <Search className="absolute left-0 top-1/2 -translate-y-1/2 opacity-50" size={16} />
+          <input
+            type="text"
+            placeholder="search books, authors, isbn..."
+            className="w-full bg-transparent border-0 border-b py-2 pl-6 pr-2 outline-none font-mono text-sm placeholder:opacity-40"
+            style={{ borderColor: `var(${borderVar})` }}
           />
         </div>
       </div>
-      
-      <div className="flex items-center gap-6">
-        <button className="relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-          <Bell size={20} />
-          <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-(--color-brand-amber) rounded-full border-2 border-[var(--background)]"></span>
-        </button>
-        
-        <div className="flex items-center gap-3 border-l border-black/10 dark:border-white/10 pl-6">
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-semibold">{user.email}</p>
-            <p className="text-xs opacity-70 capitalize">{user.role}</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-(--color-brand-teal) to-(--color-brand-indigo) shadow-md"></div>
+
+      <div className="flex items-center gap-4 pl-6 border-l" style={{ borderColor: `var(${borderVar})` }}>
+        <div className="text-right hidden md:block">
+          <p className="text-sm font-mono font-bold leading-tight">{user.email}</p>
+          <p className="text-xs opacity-60 uppercase font-mono tracking-wider">{user.role}</p>
+        </div>
+        <div
+          className="w-9 h-9 flex items-center justify-center border-2 font-mono font-bold text-sm"
+          style={{ borderColor: 'var(--color-signal-available)', color: 'var(--color-signal-available)' }}
+        >
+          {user.email[0]?.toUpperCase()}
         </div>
       </div>
     </header>

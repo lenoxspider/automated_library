@@ -31,8 +31,8 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   if (isChecking || !isAuthenticated) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-(--color-background-dark)">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-(--color-brand-teal) border-t-transparent"></div>
+      <div className="signal-surface-dark flex h-screen w-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin border-2 border-(--color-signal-available) border-t-transparent"></div>
       </div>
     );
   }

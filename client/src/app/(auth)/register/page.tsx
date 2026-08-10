@@ -1,17 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { CheckCircle2, AlertCircle, Terminal } from 'lucide-react';
 import api from '../../../lib/api';
+import Button from '../../../components/ui/Button';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    studentId: '',
+    indexNumber: '',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -27,108 +28,106 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await api.post('/auth/register', formData);
+      await api.post('/auth/register', {
+        ...formData,
+        username: formData.email,
+      });
       setSuccess(true);
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'Registration failed. Please try again.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-(--color-background-dark)">
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-(--color-brand-amber) rounded-full mix-blend-screen filter blur-[128px] opacity-30 animate-pulse"></div>
-      <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-(--color-brand-indigo) rounded-full mix-blend-screen filter blur-[128px] opacity-40 animate-pulse" style={{ animationDelay: '2s' }}></div>
-      
-      <div className="w-full max-w-md relative z-10">
-        <div className="glass p-8 md:p-10 shadow-2xl">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-heading font-bold mb-2">Create Account</h1>
-            <p className="text-white/60">Join SmartLib as a Member today</p>
+    <div className="min-h-screen w-full flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="border-2 p-8" style={{ borderColor: 'var(--color-signal-border-dark)' }}>
+          <div className="mb-8">
+            <div
+              className="w-10 h-10 flex items-center justify-center border-2 mb-5"
+              style={{ borderColor: 'var(--color-signal-available)', color: 'var(--color-signal-available)' }}
+            >
+              <Terminal size={20} />
+            </div>
+            <h1 className="text-2xl font-mono font-bold tracking-tight">create account</h1>
+            <p className="opacity-60 mt-1 text-sm">Join SmartLib as a member</p>
           </div>
 
           {success ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/50">
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+            <div className="text-center py-6">
+              <div
+                className="w-14 h-14 flex items-center justify-center mx-auto mb-4 border-2"
+                style={{ borderColor: 'var(--color-signal-available)', color: 'var(--color-signal-available)' }}
+              >
+                <CheckCircle2 size={28} />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Registration Successful!</h2>
-              <p className="text-white/70">Redirecting you to login...</p>
+              <h2 className="text-lg font-mono font-bold mb-2">Registration submitted</h2>
+              <p className="opacity-70 text-sm mb-6">
+                Check your email to verify your account, then{' '}
+                <Link href="/login" className="underline" style={{ color: 'var(--color-signal-available)' }}>
+                  log in
+                </Link>
+                .
+              </p>
             </div>
           ) : (
             <form onSubmit={handleRegister} className="space-y-5">
               {error && (
-                <div className="bg-(--color-brand-coral)/20 border border-(--color-brand-coral)/50 text-(--color-brand-coral) px-4 py-3 rounded-lg text-sm">
+                <div
+                  className="flex items-center gap-2 border px-3 py-2.5 text-sm font-mono"
+                  style={{ borderColor: 'var(--color-signal-overdue)', color: 'var(--color-signal-overdue)' }}
+                >
+                  <AlertCircle size={16} className="shrink-0" />
                   {error}
                 </div>
               )}
-              
-              <div>
-                <label className="block text-sm font-medium mb-2 text-white/80">Full Name</label>
-                <input 
-                  type="text" 
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full bg-black/20 border border-white/10 focus:border-(--color-brand-teal) rounded-lg px-4 py-3 text-white outline-none transition-all focus:ring-1 focus:ring-(--color-brand-teal)"
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2 text-white/80">Email Address</label>
-                <input 
-                  type="email" 
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full bg-black/20 border border-white/10 focus:border-(--color-brand-teal) rounded-lg px-4 py-3 text-white outline-none transition-all focus:ring-1 focus:ring-(--color-brand-teal)"
-                  placeholder="you@library.com"
-                  required
-                />
-              </div>
+              {[
+                { name: 'name', label: 'Full Name', type: 'text', placeholder: 'John Doe' },
+                { name: 'email', label: 'Email Address', type: 'email', placeholder: 'you@library.com' },
+                { name: 'password', label: 'Password', type: 'password', placeholder: '••••••••' },
+                { name: 'studentId', label: 'Student ID', type: 'text', placeholder: '2024001234' },
+                { name: 'indexNumber', label: 'Index Number', type: 'text', placeholder: '00123' },
+              ].map((field) => (
+                <div key={field.name}>
+                  <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-2">
+                    {field.label}
+                  </label>
+                  <input
+                    type={field.type}
+                    name={field.name}
+                    value={formData[field.name as keyof typeof formData]}
+                    onChange={handleChange}
+                    className="w-full bg-transparent border-2 px-3 py-2.5 outline-none font-mono text-sm transition-colors"
+                    style={{ borderColor: 'var(--color-signal-border-dark)' }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-signal-available)')}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--color-signal-border-dark)')}
+                    placeholder={field.placeholder}
+                    minLength={field.name === 'password' ? 6 : undefined}
+                    required
+                  />
+                </div>
+              ))}
 
-              <div>
-                <label className="block text-sm font-medium mb-2 text-white/80">Password</label>
-                <input 
-                  type="password" 
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full bg-black/20 border border-white/10 focus:border-(--color-brand-teal) rounded-lg px-4 py-3 text-white outline-none transition-all focus:ring-1 focus:ring-(--color-brand-teal)"
-                  placeholder="••••••••"
-                  minLength={6}
-                  required
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-(--color-brand-indigo) to-(--color-brand-teal) hover:from-(--color-brand-teal) hover:to-(--color-brand-indigo) text-white font-semibold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  'Create Account'
-                )}
-              </button>
+              <Button type="submit" isLoading={isLoading} className="w-full">
+                Create Account
+              </Button>
             </form>
           )}
 
-          <div className="mt-8 text-center text-sm text-white/60">
-            Already have an account?{' '}
-            <Link href="/login" className="text-(--color-brand-teal) hover:text-white transition-colors font-medium">
-              Log in here
-            </Link>
-          </div>
+          {!success && (
+            <div className="mt-8 text-center text-sm opacity-70">
+              Already have an account?{' '}
+              <Link href="/login" className="font-mono underline" style={{ color: 'var(--color-signal-available)' }}>
+                log in
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

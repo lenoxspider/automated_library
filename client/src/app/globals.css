@@ -1,47 +1,45 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-indigo: #3C3489;
-  --color-brand-teal: #0F766E;
-  --color-brand-amber: #F59E0B;
-  --color-brand-coral: #D9534F;
-  --color-background-dark: #1E1E1C;
-  --color-background-light: #F9FAFB;
-  --color-glass-overlay: rgba(255, 255, 255, 0.08);
-  
+  /* Signal design system */
+  --color-signal-bg-dark: #111412;
+  --color-signal-bg-light: #F4F6F4;
+  --color-signal-text-dark: #E9EDEA;
+  --color-signal-text-light: #14201A;
+
+  /* #00C98A on #F4F6F4 is ~1.9:1 contrast - fails WCAG AA for text/icons on
+     the light surface. Use signal-available only for large/bold text, icons,
+     or as a border/fill on badges (never as small colored text on light bg).
+     signal-available-on-light is a darkened variant (~4.6:1) for the rare case
+     text color is needed on a light surface. */
+  --color-signal-available: #00C98A;
+  --color-signal-available-on-light: #04875D;
+  --color-signal-pending: #FF8A3D;
+  --color-signal-overdue: #FF4757;
+  --color-signal-reserved: #5B8FF9;
+
+  --color-signal-border-dark: #232823;
+  --color-signal-border-light: #DCE3DE;
+
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Space Grotesk', system-ui, sans-serif;
-}
-
-:root {
-  --background: var(--color-background-light);
-  --foreground: #111827;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--color-background-dark);
-    --foreground: #F9FAFB;
-  }
+  --font-mono: 'Space Mono', 'JetBrains Mono', ui-monospace, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
+/* Surface utilities - each route-group layout applies one of these to its
+   root wrapper instead of relying on a global `dark` class on <html>. */
 @layer utilities {
-  .glass {
-    backdrop-filter: blur(16px);
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.75rem;
+  .signal-surface-dark {
+    background-color: var(--color-signal-bg-dark);
+    color: var(--color-signal-text-dark);
   }
-  
-  .dark .glass {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+
+  .signal-surface-light {
+    background-color: var(--color-signal-bg-light);
+    color: var(--color-signal-text-light);
   }
 }

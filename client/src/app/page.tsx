@@ -31,8 +31,8 @@ export default function Home() {
   }, [user, router]);
 
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <div className="w-10 h-10 border-4 border-white/20 border-t-(--color-brand-teal) rounded-full animate-spin"></div>
+    <div className="signal-surface-dark flex h-screen w-full items-center justify-center">
+      <div className="w-8 h-8 border-2 border-white/20 border-t-(--color-signal-available) animate-spin"></div>
     </div>
   );
 }
