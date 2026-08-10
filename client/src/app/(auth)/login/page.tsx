@@ -21,12 +21,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', { username: email, password });
       // The backend returns { message, user, token }
-      login(response.data.token, response.data.user);
+      login(response.data.accessToken, { email: email, role: 'admin' }); // Hacky workaround for now, ideally backend returns user info
       
-      // Redirect based on role
-      const role = response.data.user.role;
+      // We need to decode JWT to get role since backend only returns tokens
+      const tokenPayload = JSON.parse(atob(response.data.accessToken.split('.')[1]));
+      login(response.data.accessToken, { id: tokenPayload.sub, email: email, role: tokenPayload.role });
+      
+      const role = tokenPayload.role;
       if (role === 'admin') router.push('/inventory');
       else if (role === 'librarian') router.push('/circulation');
       else router.push('/catalog');
