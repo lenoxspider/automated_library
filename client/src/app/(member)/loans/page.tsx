@@ -162,11 +162,11 @@ export default function LoansPage() {
         <Card surface="light" className="p-6 flex items-start gap-3">
           <BookMarked className="shrink-0 mt-0.5 opacity-60" />
           <div>
-            <p className="font-bold text-sm">No endpoint to list your reservations yet</p>
+            <p className="font-bold text-sm">Personal reservation list isn&apos;t available yet</p>
             <p className="text-sm opacity-70 mt-1">
-              The API supports creating (POST) and cancelling (DELETE) a reservation, but there&apos;s
-              no GET endpoint to list a member&apos;s own reservations - another backend gap outside
-              this redesign&apos;s scope.
+              GET /reservations now exists and lists everyone&apos;s holds for staff, but it&apos;s
+              staff-only and isn&apos;t scoped to a single member - there&apos;s still no way for a
+              member to see just their own reservations.
             </p>
           </div>
         </Card>

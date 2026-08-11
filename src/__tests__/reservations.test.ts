@@ -17,6 +17,8 @@ jest.mock('../config/prisma', () => {
       create: jest.fn(),
       findUnique: jest.fn(),
       findFirst: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
       delete: jest.fn()
     }
   };
@@ -31,6 +33,75 @@ const mockPrisma = prisma as any;
 const app = express();
 app.use(express.json());
 app.use('/api/reservations', reservationRoutes);
+
+describe('GET /api/reservations', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('lists reservations with book and member info included', async () => {
+    mockPrisma.reservations.findMany.mockResolvedValue([
+      {
+        id: 1,
+        book_id: 10,
+        member_id: 1,
+        status: 'pending',
+        books: { title: 'Clean Code', author: 'Robert Martin' },
+        users: { name: 'Jane Doe', email: 'jane@library.com' }
+      }
+    ]);
+
+    const res = await request(app).get('/api/reservations');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].books.title).toBe('Clean Code');
+  });
+
+  it('filters by status when a status query param is given', async () => {
+    mockPrisma.reservations.findMany.mockResolvedValue([]);
+
+    await request(app).get('/api/reservations?status=pending');
+
+    expect(mockPrisma.reservations.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: 'pending' } })
+    );
+  });
+});
+
+describe('POST /api/reservations/:id/approve', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('returns 404 if the reservation does not exist', async () => {
+    mockPrisma.reservations.findUnique.mockResolvedValue(null);
+
+    const res = await request(app).post('/api/reservations/999/approve');
+
+    expect(res.status).toBe(404);
+    expect(mockPrisma.reservations.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects approving a reservation that is not pending', async () => {
+    mockPrisma.reservations.findUnique.mockResolvedValue({ id: 1, status: 'approved' });
+
+    const res = await request(app).post('/api/reservations/1/approve');
+
+    expect(res.status).toBe(400);
+    expect(mockPrisma.reservations.update).not.toHaveBeenCalled();
+  });
+
+  it('approves a pending reservation', async () => {
+    mockPrisma.reservations.findUnique.mockResolvedValue({ id: 1, status: 'pending' });
+    mockPrisma.reservations.update.mockResolvedValue({ id: 1, status: 'approved' });
+
+    const res = await request(app).post('/api/reservations/1/approve');
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('approved');
+    expect(mockPrisma.reservations.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { status: 'approved' }
+    });
+  });
+});
 
 describe('POST /api/reservations', () => {
   beforeEach(() => jest.clearAllMocks());

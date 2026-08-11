@@ -7,6 +7,30 @@ const router = Router();
 /**
  * @swagger
  * /reservations:
+ *   get:
+ *     summary: List reservations (staff)
+ *     tags: [Reservations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of reservations
+ */
+router.get(
+  '/',
+  authenticate,
+  authorize(['librarian', 'admin']),
+  reservationsController.getReservations
+);
+
+/**
+ * @swagger
+ * /reservations:
  *   post:
  *     summary: Create a new reservation
  *     tags: [Reservations]
@@ -57,6 +81,31 @@ router.delete(
   authenticate,
   authorize(['member', 'librarian']),
   reservationsController.cancelReservation
+);
+
+/**
+ * @swagger
+ * /reservations/{id}/approve:
+ *   post:
+ *     summary: Approve a pending reservation (staff)
+ *     tags: [Reservations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: The approved reservation
+ */
+router.post(
+  '/:id/approve',
+  authenticate,
+  authorize(['librarian', 'admin']),
+  reservationsController.approveReservation
 );
 
 export default router;
