@@ -5,6 +5,7 @@ import { z } from 'zod';
 import asyncHandler from 'express-async-handler';
 import crypto from 'crypto';
 import { getOrFetchCoverPath } from '../services/bookCover.service';
+import { lookupBookByIsbn } from '../services/bookLookup.service';
 import logger from '../config/logger';
 
 const bookRepo = container.resolve(BookRepository);
@@ -52,6 +53,18 @@ export const createBook = asyncHandler(async (req: Request, res: Response) => {
   });
 
   res.status(201).json(newBook);
+});
+
+export const lookupBook = asyncHandler(async (req: Request, res: Response) => {
+  const isbn = req.params.isbn as string;
+  const result = await lookupBookByIsbn(isbn);
+
+  if (!result) {
+    res.status(404).json({ error: 'No book found for that ISBN' });
+    return;
+  }
+
+  res.json(result);
 });
 
 export const getBookById = asyncHandler(async (req: Request, res: Response) => {

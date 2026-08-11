@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Wand2 } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -34,6 +34,7 @@ export default function InventoryPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<BookForm>(emptyForm);
   const [formError, setFormError] = useState('');
+  const [lookupError, setLookupError] = useState('');
 
   const { data, isLoading } = useQuery<{ data: Book[]; totalCount: number }>({
     queryKey: ['admin-books'],
@@ -75,10 +76,30 @@ export default function InventoryPage() {
     },
   });
 
+  const lookupIsbn = useMutation({
+    mutationFn: async () => {
+      const res = await api.get(`/books/lookup/${form.isbn}`);
+      return res.data as { title: string; author: string; genre: string | null };
+    },
+    onSuccess: (result) => {
+      setLookupError('');
+      setForm((f) => ({
+        ...f,
+        title: result.title,
+        author: result.author,
+        genre: result.genre || f.genre,
+      }));
+    },
+    onError: () => {
+      setLookupError('No book found for that ISBN - fill in the details manually.');
+    },
+  });
+
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm);
     setFormError('');
+    setLookupError('');
     setShowForm(true);
   };
 
@@ -92,6 +113,7 @@ export default function InventoryPage() {
       total_copies: String(book.total_copies),
     });
     setFormError('');
+    setLookupError('');
     setShowForm(true);
   };
 
@@ -99,6 +121,7 @@ export default function InventoryPage() {
     setShowForm(false);
     setEditing(null);
     setFormError('');
+    setLookupError('');
   };
 
   const filteredBooks = books.filter(
@@ -226,11 +249,46 @@ export default function InventoryPage() {
                 </div>
               )}
 
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-1.5">
+                  ISBN
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={form.isbn}
+                    onChange={(e) => {
+                      setForm({ ...form, isbn: e.target.value });
+                      setLookupError('');
+                    }}
+                    className="flex-1 min-w-0 bg-transparent border-2 px-3 py-2 outline-none font-mono text-sm"
+                    style={{ borderColor: 'var(--color-signal-border-dark)' }}
+                    placeholder="9780135957059"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => lookupIsbn.mutate()}
+                    disabled={!form.isbn || lookupIsbn.isPending}
+                    className="flex items-center gap-1.5 px-3 border-2 font-mono text-xs uppercase tracking-wider disabled:opacity-40"
+                    style={{ borderColor: 'var(--color-signal-available)', color: 'var(--color-signal-available)' }}
+                    title="Look up title/author from OpenLibrary"
+                  >
+                    <Wand2 size={14} />
+                    {lookupIsbn.isPending ? '...' : 'Lookup'}
+                  </button>
+                </div>
+                {lookupError && (
+                  <p className="text-xs mt-1.5 font-mono" style={{ color: 'var(--color-signal-pending)' }}>
+                    {lookupError}
+                  </p>
+                )}
+              </div>
+
               {[
                 { key: 'title', label: 'Title' },
                 { key: 'author', label: 'Author' },
                 { key: 'genre', label: 'Genre' },
-                { key: 'isbn', label: 'ISBN' },
               ].map((f) => (
                 <div key={f.key}>
                   <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-1.5">

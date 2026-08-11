@@ -32,6 +32,33 @@ router.get('/', bookController.getBooks);
  *       200:
  *         description: The requested book
  */
+/**
+ * @swagger
+ * /books/lookup/{isbn}:
+ *   get:
+ *     summary: Look up a book's title/author/subject by ISBN via OpenLibrary (staff, for the Add Book form)
+ *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: isbn
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Title/author/genre found for the ISBN
+ *       404:
+ *         description: No book found for that ISBN
+ */
+router.get(
+  '/lookup/:isbn',
+  authenticate,
+  authorize(['librarian', 'admin']),
+  bookController.lookupBook
+);
+
 router.get('/:id', bookController.getBookById);
 
 /**
