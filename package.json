@@ -9,7 +9,8 @@
     "build": "npx tsc",
     "lint": "eslint 'src/**/*.{js,ts}'",
     "test": "jest",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "seed:books": "ts-node prisma/seed-books.ts"
   },
   "keywords": [],
   "type": "commonjs",
