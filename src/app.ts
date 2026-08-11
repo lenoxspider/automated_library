@@ -34,6 +34,8 @@ import auditRoutes from './routes/audit';
 import backupRoutes from './routes/backup';
 import integrationsRoutes from './routes/integrations';
 import complianceRoutes from './routes/compliance';
+import analyticsRoutes from './routes/analytics';
+import contributionsRoutes from './routes/contributions';
 
 // Maintenance Mode
 app.use((req, res, next) => {
@@ -94,6 +96,8 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/compliance', complianceRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/contributions', contributionsRoutes);
 
 // Export the app for use in server.ts and tests
 export default app;

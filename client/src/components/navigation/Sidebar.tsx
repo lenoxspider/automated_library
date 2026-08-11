@@ -18,7 +18,8 @@ import {
   Activity,
   ClipboardList,
   Database,
-  Webhook
+  Webhook,
+  Star
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -38,6 +39,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'For You', href: '/recommendations', icon: Activity },
     { name: 'My Loans', href: '/loans', icon: Clock },
     { name: 'Fines', href: '/fines', icon: CreditCard },
+    { name: 'Contributions', href: '/contributions', icon: Star },
     { name: 'Profile', href: '/profile', icon: Settings },
   ];
 
@@ -49,6 +51,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Acquisitions', href: '/acquisitions', icon: Book },
     { name: 'Catalog Sync', href: '/catalog-sync', icon: Activity },
     { name: 'User Support', href: '/support-tickets', icon: Users },
+    { name: 'Contributions Queue', href: '/contributions-queue', icon: ClipboardList },
   ];
 
   const adminLinks = [

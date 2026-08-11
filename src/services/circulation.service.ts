@@ -36,9 +36,13 @@ export class CirculationService {
     }
 
     // 4. Create borrowing and update copy status
+    const user = await prisma.users.findUnique({ where: { id: memberId } });
+    const hasPremiumExtendedLoan = (user?.library_points ?? 0) >= 50;
+    const loanDays = hasPremiumExtendedLoan ? 28 : 14;
+
     const borrowDate = new Date();
     const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 14); // 14 days loan period
+    dueDate.setDate(dueDate.getDate() + loanDays); // 14 days standard, 28 days premium
 
     const borrowing = await prisma.borrowings.create({
       data: {

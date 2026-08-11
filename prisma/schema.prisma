@@ -27,6 +27,7 @@ model books {
   cover_path       String?
   book_copies      book_copies[]
   reservations     reservations[]
+  contributions    contributions[]
 
   @@index([title])
   @@index([author])
@@ -98,10 +99,12 @@ model users {
   account_status     String?        @default("active")
   language           String?        @default("en")
   email_notifications Boolean       @default(true)
-  borrowings         borrowings[]
+  library_points      Int           @default(0)
+  borrowings          borrowings[]
   reservations       reservations[]
   search_history     search_history[]
   support_tickets    support_tickets[]
+  contributions      contributions[]
 }
 
 model search_history {
@@ -154,4 +157,16 @@ model compliance_requests {
   request_type String // DATA_EXPORT, ACCOUNT_DELETION
   status       String @default("pending")
   created_at   String
+}
+
+model contributions {
+  id                Int    @id @default(autoincrement())
+  member_id         Int
+  book_id           Int
+  contribution_type String // correction, review, tag
+  content           String
+  status            String @default("pending") // pending, approved, rejected
+  created_at        String
+  users             users  @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  books             books  @relation(fields: [book_id], references: [id], onDelete: Cascade)
 }

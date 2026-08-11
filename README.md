@@ -56,6 +56,7 @@ librarySys/
 - **Reservations**: Members can place holds on books directly from the Catalog view, while Librarians approve them in the Reservations Queue.
 - **Dynamic Settings**: Administrators can update system limits (e.g., `max_loans`, `fine_rate`, `block_fines`) on the fly via dedicated API endpoints and a beautiful Settings UI.
 - **Analytics & Reporting**: Generates circulation logs, blocked member reports, and roster audits viewable in the Admin Control Center.
+- **Differential Privacy Analytics**: Publishes aggregate usage statistics (like popular books and peak search times) while protecting individual patron privacy by injecting mathematical noise via the Laplace mechanism.
 - **Automated Cron Jobs**: Background service runs daily at midnight to scan active loans and automatically upsert fine records for overdue books.
 
 ## 🛠️ Setup Instructions
