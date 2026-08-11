@@ -37,6 +37,7 @@ export default function Sidebar() {
   ];
 
   const adminLinks = [
+    { name: 'Accounts', href: '/users', icon: Users },
     { name: 'Inventory', href: '/inventory', icon: Library },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Reports', href: '/reports', icon: BarChart },

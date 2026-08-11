@@ -3,33 +3,28 @@ import nodemailer from 'nodemailer';
 import Handlebars from 'handlebars';
 import redisClient from '../config/redis';
 import { injectable } from 'tsyringe';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
-// Define the templates for emails
-const verificationTemplate = Handlebars.compile(`
-  <div style="font-family: sans-serif; padding: 20px;">
-    <h2>Welcome to SmartLib, {{name}}!</h2>
-    <p>Please verify your email using the link below:</p>
-    <a href="{{verificationLink}}" style="background: #4f46e5; color: white; padding: 10px 20px; text-decoration: none;">Verify Email</a>
-  </div>
-`);
+function getLocalIpAddress(): string {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+}
 
-const dueSoonTemplate = Handlebars.compile(`
-  <div style="font-family: sans-serif; padding: 20px;">
-    <h2>Reminder: "{{bookTitle}}" is due soon</h2>
-    <p>Hi {{name}}, your loan of <strong>{{bookTitle}}</strong> is due on <strong>{{dueDate}}</strong>.</p>
-    <p>Please return it by then to avoid a late fine.</p>
-  </div>
-`);
-
-const overdueTemplate = Handlebars.compile(`
-  <div style="font-family: sans-serif; padding: 20px;">
-    <h2>Overdue: "{{bookTitle}}"</h2>
-    <p>Hi {{name}}, your loan of <strong>{{bookTitle}}</strong> was due on <strong>{{dueDate}}</strong> and is now
-    <strong>{{daysOverdue}} day(s) overdue</strong>.</p>
-    <p>A fine of <strong>\${{fineAmount}}</strong> has been applied to your account. Please return the book as soon
-    as possible.</p>
-  </div>
-`);
+// Load templates once
+const templateDir = path.join(process.cwd(), 'templates', 'email');
+const baseTemplate = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'base.hbs'), 'utf8'));
+const verifyBody = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'verify.hbs'), 'utf8'));
+const reminderBody = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'reminder.hbs'), 'utf8'));
+const overdueBody = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'overdue.hbs'), 'utf8'));
 
 @injectable()
 export class EmailService {
@@ -57,35 +52,46 @@ export class EmailService {
     new Worker(
       'email-queue',
       async (job) => {
-        if (job.name === 'sendVerification') {
-          const { email, name, token } = job.data;
-          const verificationLink = `${process.env.APP_URL}/api/auth/verify?token=${token}`;
+          const localIp = getLocalIpAddress();
+          const baseUrl = `http://${localIp}:3000`;
+          const unsubscribeUrl = `${baseUrl}/unsubscribe`;
+          const year = new Date().getFullYear();
 
-          await this.transporter.sendMail({
-            from: `"SmartLib" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: 'Activate Your SmartLib Account',
-            html: verificationTemplate({ name, verificationLink })
-          });
-        } else if (job.name === 'dueSoonReminder') {
-          const { email, name, bookTitle, dueDate } = job.data;
+          if (job.name === 'sendVerification') {
+            const { email, name, token } = job.data;
+            const verificationLink = `${baseUrl}/verify?token=${token}`;
+            const body = verifyBody({ name, verificationLink });
+            const html = baseTemplate({ body, year, unsubscribeUrl });
 
-          await this.transporter.sendMail({
-            from: `"SmartLib" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: `Reminder: "${bookTitle}" is due soon`,
-            html: dueSoonTemplate({ name, bookTitle, dueDate })
-          });
-        } else if (job.name === 'overdueReminder') {
-          const { email, name, bookTitle, dueDate, daysOverdue, fineAmount } = job.data;
+            await this.transporter.sendMail({
+              from: `"SmartLib" <${process.env.SMTP_USER}>`,
+              to: email,
+              subject: 'Activate Your SmartLib Account',
+              html
+            });
+          } else if (job.name === 'dueSoonReminder') {
+            const { email, name, bookTitle, dueDate } = job.data;
+            const body = reminderBody({ name, bookTitle, dueDate });
+            const html = baseTemplate({ body, year, unsubscribeUrl });
 
-          await this.transporter.sendMail({
-            from: `"SmartLib" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: `Overdue: "${bookTitle}"`,
-            html: overdueTemplate({ name, bookTitle, dueDate, daysOverdue, fineAmount })
-          });
-        }
+            await this.transporter.sendMail({
+              from: `"SmartLib" <${process.env.SMTP_USER}>`,
+              to: email,
+              subject: `Reminder: "${bookTitle}" is due soon`,
+              html
+            });
+          } else if (job.name === 'overdueReminder') {
+            const { email, name, bookTitle, dueDate, daysOverdue, fineAmount } = job.data;
+            const body = overdueBody({ name, bookTitle, dueDate, daysOverdue, fineAmount });
+            const html = baseTemplate({ body, year, unsubscribeUrl });
+
+            await this.transporter.sendMail({
+              from: `"SmartLib" <${process.env.SMTP_USER}>`,
+              to: email,
+              subject: `Overdue: "${bookTitle}"`,
+              html
+            });
+          }
       },
       { connection: redisClient as any }
     );

@@ -9,6 +9,7 @@ router.get('/', authenticate, authorize(['admin', 'librarian']), usersController
 router.get('/:id/history', authenticate, usersController.getUserHistory);
 
 // Admin only routes
+router.post('/', authenticate, authorize(['admin']), usersController.createUser);
 router.delete('/:id', authenticate, authorize(['admin']), usersController.deleteUser);
 
 export default router;
