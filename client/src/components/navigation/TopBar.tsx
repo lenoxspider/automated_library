@@ -1,9 +1,13 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-export default function TopBar() {
+interface TopBarProps {
+  onMenuClick?: () => void;
+}
+
+export default function TopBar({ onMenuClick }: TopBarProps) {
   const { user } = useAuthStore();
 
   if (!user) return null;
@@ -13,20 +17,20 @@ export default function TopBar() {
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-6 border-b shrink-0"
+      className="h-16 flex items-center justify-between px-4 md:px-6 border-b shrink-0 gap-4"
       style={{ borderColor: `var(${borderVar})` }}
     >
-      <div className="flex-1 max-w-md">
-        <div className="relative">
-          <Search className="absolute left-0 top-1/2 -translate-y-1/2 opacity-50" size={16} />
-          <input
-            type="text"
-            placeholder="search books, authors, isbn..."
-            className="w-full bg-transparent border-0 border-b py-2 pl-6 pr-2 outline-none font-mono text-sm placeholder:opacity-40"
-            style={{ borderColor: `var(${borderVar})` }}
-          />
-        </div>
-      </div>
+      <div className="flex items-center gap-4 flex-1">
+        <button 
+          className="md:hidden opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[var(--color-signal-available)]" 
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+          title="Open navigation menu"
+        >
+          <Menu size={24} aria-hidden="true" />
+        </button>
+
+    </div>
 
       <div className="flex items-center gap-4 pl-6 border-l" style={{ borderColor: `var(${borderVar})` }}>
         <div className="text-right hidden md:block">

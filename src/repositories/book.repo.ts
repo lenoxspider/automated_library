@@ -14,20 +14,43 @@ export class BookRepository {
     return this.prisma.books.findMany();
   }
 
+  async findBooks(query: string, page: number, limit: number): Promise<{ data: books[], totalCount: number }> {
+    const skip = (page - 1) * limit;
+    const where = query ? {
+      OR: [
+        { title: { contains: query } },
+        { author: { contains: query } },
+        { isbn: { contains: query } }
+      ]
+    } : {};
+
+    const [totalCount, data] = await this.prisma.$transaction([
+      this.prisma.books.count({ where }),
+      this.prisma.books.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip,
+        take: limit
+      })
+    ]);
+
+    return { data, totalCount };
+  }
+
   async create(data: Omit<books, 'id'>): Promise<books> {
     return this.prisma.books.create({ data });
   }
 
-  async findById(id: number): Promise<books | null> {
-    return this.prisma.books.findUnique({ where: { id } });
+  async findByPublicId(public_id: string): Promise<books | null> {
+    return this.prisma.books.findUnique({ where: { public_id } });
   }
 
-  async update(id: number, data: Partial<books>): Promise<books> {
-    return this.prisma.books.update({ where: { id }, data });
+  async update(public_id: string, data: Partial<books>): Promise<books> {
+    return this.prisma.books.update({ where: { public_id }, data });
   }
 
-  async delete(id: number): Promise<books> {
-    return this.prisma.books.delete({ where: { id } });
+  async delete(public_id: string): Promise<books> {
+    return this.prisma.books.delete({ where: { public_id } });
   }
 
   async addCopy(bookId: number, barcode: string) {

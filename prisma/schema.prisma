@@ -17,6 +17,7 @@ model book_copies {
 
 model books {
   id               Int            @id @default(autoincrement())
+  public_id        String?        @unique @default(uuid())
   title            String
   author           String
   genre            String
@@ -26,6 +27,9 @@ model books {
   cover_path       String?
   book_copies      book_copies[]
   reservations     reservations[]
+
+  @@index([title])
+  @@index([author])
 }
 
 model borrowings {
@@ -79,6 +83,7 @@ model student_roster {
 
 model users {
   id                 Int            @id @default(autoincrement())
+  public_id          String?        @unique @default(uuid())
   username           String         @unique(map: "sqlite_autoindex_users_1")
   password           String
   role               String

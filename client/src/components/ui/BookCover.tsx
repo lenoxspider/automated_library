@@ -31,7 +31,7 @@ interface BookCoverProps {
 export default function BookCover({ title, isbn, src, className = '' }: BookCoverProps) {
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={`Cover of ${title}`} className={`object-cover ${className}`} />;
+    return <img src={src} alt={`Cover of ${title}`} className={`object-cover ${className}`} loading="lazy" />;
   }
 
   const hue = hashToHue(isbn || title);

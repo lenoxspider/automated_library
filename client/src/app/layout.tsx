@@ -3,6 +3,7 @@ import { Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
 import AppLayout from "@/components/layout/AppLayout";
 import ReactQueryProvider from "@/lib/queryClient";
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({
   variable: "--font-sans",
@@ -34,6 +35,18 @@ export default function RootLayout({
       <body>
         <ReactQueryProvider>
           <AppLayout>{children}</AppLayout>
+          <Toaster 
+            position="top-right" 
+            toastOptions={{
+              style: {
+                borderRadius: '0',
+                background: 'var(--color-signal-surface-dark)',
+                color: 'white',
+                border: '1px solid var(--color-signal-border-dark)',
+                fontFamily: 'var(--font-mono)'
+              }
+            }} 
+          />
         </ReactQueryProvider>
       </body>
     </html>

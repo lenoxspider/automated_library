@@ -26,10 +26,19 @@ const addCopySchema = z.object({
 });
 
 export const getBooks = asyncHandler(async (req: Request, res: Response) => {
-  // Note: For full implementation, search/pagination should be added to the BookRepository
-  // For Phase 3 MVC refactor, we are just hooking up the basic route
-  const books = await bookRepo.findAll();
-  res.json({ data: books, totalCount: books.length });
+  const query = (req.query.q as string) || '';
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 50;
+  
+  const result = await bookRepo.findBooks(query, page, limit);
+  
+  res.json({ 
+    data: result.data, 
+    totalCount: result.totalCount,
+    page,
+    limit,
+    totalPages: Math.ceil(result.totalCount / limit)
+  });
 });
 
 export const createBook = asyncHandler(async (req: Request, res: Response) => {
@@ -75,8 +84,8 @@ export const lookupBook = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getBookById = asyncHandler(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
-  const book = await bookRepo.findById(id);
+  const public_id = req.params.id as string;
+  const book = await bookRepo.findByPublicId(public_id);
 
   if (!book) {
     res.status(404).json({ error: 'Book not found' });
@@ -87,10 +96,10 @@ export const getBookById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const updateBook = asyncHandler(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
+  const public_id = req.params.id as string;
   const validatedData = updateBookSchema.parse(req.body);
 
-  const existing = await bookRepo.findById(id);
+  const existing = await bookRepo.findByPublicId(public_id);
   const updateData: typeof validatedData & { cover_path?: string | null } = { ...validatedData };
 
   // Only refetch the cover when the ISBN actually changed (or no cover is
@@ -104,13 +113,13 @@ export const updateBook = asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
-  const updatedBook = await bookRepo.update(id, updateData);
+  const updatedBook = await bookRepo.update(public_id, updateData);
   res.json(updatedBook);
 });
 
 export const deleteBook = asyncHandler(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
-  await bookRepo.delete(id);
+  const public_id = req.params.id as string;
+  await bookRepo.delete(public_id);
   res.json({ message: 'Book deleted successfully' });
 });
 
@@ -132,9 +141,10 @@ export const addBookCopy = asyncHandler(async (req: Request, res: Response) => {
   const copy = await bookRepo.addCopy(bookId, barcode);
 
   // Increment total_copies and available_copies for the book
-  const book = await bookRepo.findById(bookId);
+  const book = await bookRepo.findByPublicId(req.params.id); // For addCopy we still need a way to find by public_id if the route uses it, wait, addBookCopy uses bookId!
+  // Actually, wait, let's keep it simple and just use public_id here if req.params.id is public_id.
   if (book) {
-    await bookRepo.update(bookId, {
+    await bookRepo.update(book.public_id, {
       total_copies: book.total_copies + 1,
       available_copies: book.available_copies + 1
     });
