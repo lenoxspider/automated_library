@@ -14,6 +14,10 @@ export class BorrowingRepository {
     return this.prisma.borrowings.findMany();
   }
 
+  async findByMemberId(memberId: number): Promise<borrowings[]> {
+    return this.prisma.borrowings.findMany({ where: { member_id: memberId } });
+  }
+
   async create(data: Omit<borrowings, 'id'>): Promise<borrowings> {
     return this.prisma.borrowings.create({ data });
   }

@@ -14,7 +14,11 @@ const createBorrowingSchema = z.object({
 });
 
 export const getBorrowings = asyncHandler(async (req: Request, res: Response) => {
-  const borrowings = await borrowingRepo.findAll();
+  const user = (req as any).user;
+  const borrowings =
+    user.role === 'member'
+      ? await borrowingRepo.findByMemberId(user.id)
+      : await borrowingRepo.findAll();
   res.json({ data: borrowings, totalCount: borrowings.length });
 });
 
@@ -39,7 +43,11 @@ export const returnBorrowing = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const getFines = asyncHandler(async (req: Request, res: Response) => {
-  const fines = await circulationService.getFines();
+  const user = (req as any).user;
+  const fines =
+    user.role === 'member'
+      ? await circulationService.getFinesForMember(user.id)
+      : await circulationService.getFines();
   res.json(fines);
 });
 

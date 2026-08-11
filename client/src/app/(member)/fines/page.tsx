@@ -14,22 +14,17 @@ interface Fine {
   payment_date: string | null;
 }
 
-// KNOWN BACKEND LIMITATION: GET /fines is staff-only (authorize(['admin',
-// 'librarian'])) and POST /fines/:id/pay is librarian-only - a member
-// cannot view or pay their own fines through the current API. See
-// (member)/loans/page.tsx for the same note. Showing the real 403 rather
-// than a fabricated "pay now" flow that has no working endpoint behind it.
+// GET /fines is now member-scoped (see src/controllers/borrowings.controller.ts
+// getFines) - a member sees only their own fines. POST /fines/:id/pay is
+// still librarian-only, so there's no "Pay Now" action here yet; that's a
+// separate, smaller gap than the read access that used to be missing.
 export default function FinesPage() {
   const { user } = useAuthStore();
 
-  const { data: fines, isLoading, isError, error } = useQuery<Fine[]>({
+  const { data: fines, isLoading, isError } = useQuery<Fine[]>({
     queryKey: ['fines', user?.id],
     queryFn: async () => (await api.get('/fines')).data,
-    retry: false,
   });
-
-  const isForbidden = (err: unknown) =>
-    (err as { response?: { status?: number } })?.response?.status === 403;
 
   const unpaid = (fines ?? []).filter((f) => f.status === 'unpaid');
   const totalOwed = unpaid.reduce((sum, f) => sum + f.amount, 0);
@@ -59,21 +54,9 @@ export default function FinesPage() {
         </div>
       )}
 
-      {isError && isForbidden(error) && (
-        <Card surface="light" className="p-6 flex items-start gap-3">
-          <AlertCircle className="shrink-0 mt-0.5" style={{ color: 'var(--color-signal-pending)' }} />
-          <div>
-            <p className="font-bold text-sm">Fines aren&apos;t available to member accounts yet</p>
-            <p className="text-sm opacity-70 mt-1">
-              This endpoint is currently staff-only - a backend change would be needed to expose it
-              to members.
-            </p>
-          </div>
-        </Card>
-      )}
-
-      {isError && !isForbidden(error) && (
-        <Card surface="light" className="p-6" style={{ color: 'var(--color-signal-overdue)' }}>
+      {isError && (
+        <Card surface="light" className="p-6 flex items-center gap-3" style={{ color: 'var(--color-signal-overdue)' }}>
+          <AlertCircle size={18} />
           Failed to load fines. Please contact a librarian.
         </Card>
       )}

@@ -16,7 +16,12 @@ const router = Router();
  *       200:
  *         description: List of all fines
  */
-router.get('/', authenticate, authorize(['admin', 'librarian']), borrowingsController.getFines);
+router.get(
+  '/',
+  authenticate,
+  authorize(['admin', 'librarian', 'member']),
+  borrowingsController.getFines
+);
 
 /**
  * @swagger

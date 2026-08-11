@@ -87,11 +87,15 @@ flowchart LR
 
 ## Known gaps (deliberately shown, not hidden)
 
-- **No "View My Loans" or "View My Fines" use case for Member** — the
-  underlying endpoints (`GET /borrowings`, `GET /fines`) exist but are
-  staff-only. A member cannot self-serve this today; it's flagged directly
-  in the UI (see `client/src/app/(member)/loans/page.tsx`) rather than
-  faked here.
+- **"View My Loans" / "View My Fines" for Member** — `GET /borrowings` and
+  `GET /fines` are now member-scoped (a member sees only their own
+  records), so this gap is closed. `UC9` in the diagram above reflects
+  this.
+- **No "View My Reservations" for Member** — `GET /reservations` exists
+  and is member-scoped-capable in principle, but currently only returns
+  the full staff-wide list; a member calling it would see everyone's
+  holds, not just their own. Still flagged in the UI
+  (`client/src/app/(member)/loans/page.tsx`) rather than hidden.
 - **"Manage Members"** (edit a member's profile, not just delete) has no
   endpoint — only `GET /users`, `GET /users/:id/history`, and
   `DELETE /users/:id` exist.

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Clock, CheckCircle2, AlertCircle, CreditCard, BookMarked } from 'lucide-react';
+import { Clock, CheckCircle2, CreditCard, BookMarked, AlertTriangle } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 import Card from '../../../components/ui/Card';
@@ -25,51 +25,28 @@ interface Fine {
   status: string;
 }
 
-// KNOWN BACKEND LIMITATION: GET /borrowings and GET /fines both require
-// authorize(['admin', 'librarian']) - there is currently no member-facing
-// endpoint to list a member's own loans/fines/reservations. This dashboard
-// calls the real endpoints as they exist today; for a logged-in member
-// they will 403, and the empty/error state below explains why rather than
-// silently failing. Fixing this needs a backend route change, which is
-// out of scope for this frontend-only redesign (backend routes were only
-// authorized to change for the Part 3 cover feature).
-function PermissionGap({ what }: { what: string }) {
-  return (
-    <Card surface="light" className="p-6 flex items-start gap-3">
-      <AlertCircle className="shrink-0 mt-0.5" style={{ color: 'var(--color-signal-pending)' }} />
-      <div>
-        <p className="font-bold text-sm">{what} isn&apos;t available to member accounts yet</p>
-        <p className="text-sm opacity-70 mt-1">
-          The API endpoint for this is currently staff-only. This needs a backend change to expose
-          member-scoped data.
-        </p>
-      </div>
-    </Card>
-  );
-}
-
+// GET /borrowings and GET /fines are now member-scoped: authorize() allows
+// 'member', and the controller filters to the caller's own data
+// (borrowingRepo.findByMemberId / circulationService.getFinesForMember)
+// rather than the caller having to filter a full staff-wide list
+// client-side. Previously these were staff-only and a member got 403 -
+// see git history for the earlier "not available yet" version of this page.
 export default function LoansPage() {
   const { user } = useAuthStore();
-  const isMember = user?.role === 'member';
 
   const loansQuery = useQuery<{ data: Borrowing[] }>({
     queryKey: ['loans', user?.id],
     queryFn: async () => (await api.get('/borrowings')).data,
     enabled: !!user,
-    retry: false,
   });
 
   const finesQuery = useQuery<Fine[]>({
     queryKey: ['fines', user?.id],
     queryFn: async () => (await api.get('/fines')).data,
     enabled: !!user,
-    retry: false,
   });
 
-  const isForbidden = (err: unknown) =>
-    (err as { response?: { status?: number } })?.response?.status === 403;
-
-  const loans = loansQuery.data?.data.filter((l) => l.member_id === user?.id) ?? [];
+  const loans = loansQuery.data?.data ?? [];
   const activeLoans = loans.filter((l) => !l.return_date);
   const history = loans.filter((l) => l.return_date);
 
@@ -94,10 +71,10 @@ export default function LoansPage() {
           </div>
         )}
 
-        {loansQuery.isError && isForbidden(loansQuery.error) && <PermissionGap what="Loan history" />}
-        {loansQuery.isError && !isForbidden(loansQuery.error) && (
-          <Card surface="light" className="p-6" style={{ color: 'var(--color-signal-overdue)' }}>
-            Failed to load loans.
+        {loansQuery.isError && (
+          <Card surface="light" className="p-6 flex items-center gap-3" style={{ color: 'var(--color-signal-overdue)' }}>
+            <AlertTriangle size={18} />
+            Failed to load your loans.
           </Card>
         )}
 
@@ -138,7 +115,12 @@ export default function LoansPage() {
           <div className="h-16 animate-pulse border" style={{ borderColor: 'var(--color-signal-border-light)' }} />
         )}
 
-        {finesQuery.isError && isForbidden(finesQuery.error) && <PermissionGap what="Fines" />}
+        {finesQuery.isError && (
+          <Card surface="light" className="p-6 flex items-center gap-3" style={{ color: 'var(--color-signal-overdue)' }}>
+            <AlertTriangle size={18} />
+            Failed to load your fines.
+          </Card>
+        )}
 
         {finesQuery.isSuccess && (
           <Card surface="light" className="p-5 flex items-center justify-between">
@@ -164,9 +146,8 @@ export default function LoansPage() {
           <div>
             <p className="font-bold text-sm">Personal reservation list isn&apos;t available yet</p>
             <p className="text-sm opacity-70 mt-1">
-              GET /reservations now exists and lists everyone&apos;s holds for staff, but it&apos;s
-              staff-only and isn&apos;t scoped to a single member - there&apos;s still no way for a
-              member to see just their own reservations.
+              GET /reservations lists everyone&apos;s holds for staff, but it isn&apos;t scoped to a
+              single member yet - unlike loans/fines above, this gap hasn&apos;t been closed.
             </p>
           </div>
         </Card>
@@ -186,13 +167,6 @@ export default function LoansPage() {
             ))}
           </div>
         </section>
-      )}
-
-      {isMember && (loansQuery.isError || finesQuery.isError) && (
-        <p className="text-xs opacity-50 font-mono">
-          Signed in as a member - some sections above require a backend permissions update to be
-          fully functional.
-        </p>
       )}
     </div>
   );

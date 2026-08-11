@@ -133,4 +133,10 @@ export class CirculationService {
   async getFines(): Promise<any> {
     return prisma.fines.findMany();
   }
+
+  async getFinesForMember(memberId: number): Promise<any> {
+    return prisma.fines.findMany({
+      where: { borrowings: { member_id: memberId } }
+    });
+  }
 }

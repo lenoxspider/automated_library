@@ -19,7 +19,7 @@ const router = Router();
 router.get(
   '/',
   authenticate,
-  authorize(['admin', 'librarian']),
+  authorize(['admin', 'librarian', 'member']),
   borrowingsController.getBorrowings
 );
 
