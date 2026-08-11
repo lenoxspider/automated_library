@@ -52,6 +52,13 @@ export const createBook = asyncHandler(async (req: Request, res: Response) => {
     cover_path: coverPath
   });
 
+  // total_copies is meaningless for circulation unless matching book_copies
+  // rows actually exist - checkout/return operate on individual copies
+  // (with their own barcode/status), not the book's counter fields.
+  for (let i = 0; i < validatedData.total_copies; i++) {
+    await bookRepo.addCopy(newBook.id, crypto.randomUUID());
+  }
+
   res.status(201).json(newBook);
 });
 
