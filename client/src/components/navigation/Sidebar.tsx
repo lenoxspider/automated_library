@@ -15,7 +15,10 @@ import {
   LogOut,
   Book,
   X,
-  Activity
+  Activity,
+  ClipboardList,
+  Database,
+  Webhook
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,8 +34,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   const memberLinks = [
     { name: 'Catalog', href: '/catalog', icon: BookOpen },
+    { name: 'Search History', href: '/search-history', icon: Book },
+    { name: 'For You', href: '/recommendations', icon: Activity },
     { name: 'My Loans', href: '/loans', icon: Clock },
     { name: 'Fines', href: '/fines', icon: CreditCard },
+    { name: 'Profile', href: '/profile', icon: Settings },
   ];
 
   const librarianLinks = [
@@ -40,15 +46,19 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Reservations', href: '/reservations', icon: Clock },
     { name: 'Manage Fines', href: '/manage-fines', icon: CreditCard },
     { name: 'Inventory', href: '/inventory', icon: Library },
-    { name: 'Reports', href: '/reports', icon: BarChart },
+    { name: 'Acquisitions', href: '/acquisitions', icon: Book },
+    { name: 'Catalog Sync', href: '/catalog-sync', icon: Activity },
+    { name: 'User Support', href: '/support-tickets', icon: Users },
   ];
 
   const adminLinks = [
     { name: 'System Health', href: '/health', icon: Activity },
-    { name: 'Accounts', href: '/users', icon: Users },
+    { name: 'Accounts', href: '/accounts', icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings },
-    { name: 'Reports', href: '/reports', icon: BarChart },
-    { name: 'Circulation', href: '/circulation', icon: ShieldAlert },
+    { name: 'Audit Log', href: '/audit', icon: ClipboardList },
+    { name: 'Backup & Restore', href: '/backup', icon: Database },
+    { name: 'Integrations', href: '/integrations', icon: Webhook },
+    { name: 'Compliance', href: '/compliance', icon: ShieldAlert },
   ];
 
   let activeLinks = memberLinks;

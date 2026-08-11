@@ -58,3 +58,20 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 
   res.status(201).json({ message: 'User created successfully. Verification email sent.', user: newUser });
 });
+
+export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+  // @ts-ignore - Assuming req.user is set by auth middleware
+  const userId = req.user.id;
+  const { language, emailNotifications, password, name } = req.body;
+  
+  const updateData: any = {};
+  if (language) updateData.language = language;
+  if (emailNotifications !== undefined) updateData.email_notifications = emailNotifications;
+  if (name) updateData.name = name;
+  if (password) {
+    updateData.password = await bcrypt.hash(password, 10);
+  }
+
+  const updatedUser = await userRepo.update(userId, updateData);
+  res.json({ message: 'Profile updated successfully', user: { name: updatedUser.name, language: updatedUser.language, emailNotifications: updatedUser.email_notifications } });
+});

@@ -25,4 +25,8 @@ export class UserRepository {
   async create(data: any): Promise<users> {
     return this.prisma.users.create({ data });
   }
+
+  async update(id: number, data: any): Promise<users> {
+    return this.prisma.users.update({ where: { id }, data });
+  }
 }

@@ -4,6 +4,7 @@ import Cookies from 'js-cookie';
 interface User {
   id: number;
   email: string;
+  name?: string;
   role: 'member' | 'librarian' | 'admin';
 }
 

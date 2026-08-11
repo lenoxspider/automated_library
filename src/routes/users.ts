@@ -12,4 +12,7 @@ router.get('/:id/history', authenticate, usersController.getUserHistory);
 router.post('/', authenticate, authorize(['admin']), usersController.createUser);
 router.delete('/:id', authenticate, authorize(['admin']), usersController.deleteUser);
 
+// Profile
+router.put('/profile', authenticate, usersController.updateProfile);
+
 export default router;

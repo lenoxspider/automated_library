@@ -96,6 +96,62 @@ model users {
   reset_token        String?
   reset_token_expiry String?
   account_status     String?        @default("active")
+  language           String?        @default("en")
+  email_notifications Boolean       @default(true)
   borrowings         borrowings[]
   reservations       reservations[]
+  search_history     search_history[]
+  support_tickets    support_tickets[]
+}
+
+model search_history {
+  id        Int    @id @default(autoincrement())
+  user_id   Int
+  query     String
+  timestamp String
+  users     users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model purchase_orders {
+  id          Int    @id @default(autoincrement())
+  title       String
+  vendor      String
+  quantity    Int
+  total_price Float
+  status      String @default("pending") // pending, approved, received
+  order_date  String
+}
+
+model support_tickets {
+  id         Int    @id @default(autoincrement())
+  member_id  Int
+  subject    String
+  message    String
+  status     String @default("open") // open, resolved
+  created_at String
+  users      users  @relation(fields: [member_id], references: [id], onDelete: Cascade)
+}
+
+model audit_logs {
+  id          Int    @id @default(autoincrement())
+  admin_id    Int
+  action      String
+  details     String
+  timestamp   String
+}
+
+model api_keys {
+  id           Int    @id @default(autoincrement())
+  service_name String
+  token        String
+  status       String @default("active")
+  created_at   String
+}
+
+model compliance_requests {
+  id           Int    @id @default(autoincrement())
+  member_id    Int
+  request_type String // DATA_EXPORT, ACCOUNT_DELETION
+  status       String @default("pending")
+  created_at   String
 }

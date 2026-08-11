@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { Search, AlertCircle, Clock, BookOpen } from 'lucide-react';
@@ -32,6 +32,21 @@ export default function CatalogPage() {
   const [genreFilter, setGenreFilter] = useState('all');
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available'>('all');
   const [selectedBook, setSelectedBook] = useState<BookDetail | null>(null);
+
+  const logSearch = useMutation({
+    mutationFn: async (q: string) => {
+      await api.post('/search-history', { query: q });
+    }
+  });
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (search.trim().length > 2) {
+        logSearch.mutate(search.trim());
+      }
+    }, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [search]);
 
   const { data, isLoading, error } = useQuery<BooksResponse>({
     queryKey: ['books'],
