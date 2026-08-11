@@ -1,9 +1,16 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, AlertTriangle, BookOpen } from 'lucide-react';
+import { BarChart3, AlertTriangle, BookOpen, TrendingUp } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
+
+interface DailyActivity {
+  date: string;
+  checkouts: number;
+  returns: number;
+  fines_collected: number;
+}
 
 interface CirculationLog {
   id: number;
@@ -37,6 +44,17 @@ export default function ReportsPage() {
     queryKey: ['reports', 'blocked'],
     queryFn: async () => (await api.get('/reports/blocked')).data,
   });
+
+  const { data: weekly, isLoading: loadingWeekly } = useQuery<{ data: DailyActivity[]; count: number }>({
+    queryKey: ['reports', 'weekly-activity'],
+    queryFn: async () => (await api.get('/reports/weekly-activity')).data,
+  });
+
+  const week = weekly?.data ?? [];
+  const weekMax = Math.max(1, ...week.map((d) => Math.max(d.checkouts, d.returns)));
+  const weekFinesTotal = week.reduce((sum, d) => sum + d.fines_collected, 0);
+  const dayLabel = (iso: string) =>
+    new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' });
 
   const logs = circulation?.data ?? [];
   const blockedUsers = blocked?.data ?? [];
@@ -85,6 +103,57 @@ export default function ReportsPage() {
           </div>
         </Card>
       </div>
+
+      <Card surface="dark" className="p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+          <h3 className="font-bold flex items-center gap-2">
+            <TrendingUp size={16} style={{ color: 'var(--color-signal-available)' }} /> Weekly Activity
+          </h3>
+          <span className="text-xs font-mono opacity-60">
+            Fines collected (7d):{' '}
+            <span style={{ color: 'var(--color-signal-available)' }}>${weekFinesTotal.toFixed(2)}</span>
+          </span>
+        </div>
+        {loadingWeekly ? (
+          <p className="opacity-60 text-sm">Loading...</p>
+        ) : (
+          <div className="grid grid-cols-7 gap-3">
+            {week.map((d) => (
+              <div key={d.date} className="flex flex-col items-center gap-2">
+                <div className="flex items-end gap-1 h-24 w-full justify-center">
+                  <div
+                    className="w-3"
+                    title={`${d.checkouts} checkout(s)`}
+                    style={{
+                      height: `${(d.checkouts / weekMax) * 100}%`,
+                      minHeight: d.checkouts > 0 ? 3 : 0,
+                      backgroundColor: 'var(--color-signal-available)'
+                    }}
+                  />
+                  <div
+                    className="w-3"
+                    title={`${d.returns} return(s)`}
+                    style={{
+                      height: `${(d.returns / weekMax) * 100}%`,
+                      minHeight: d.returns > 0 ? 3 : 0,
+                      backgroundColor: 'var(--color-signal-reserved)'
+                    }}
+                  />
+                </div>
+                <span className="text-[11px] font-mono opacity-60">{dayLabel(d.date)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex items-center gap-5 mt-5 pt-4 border-t text-xs font-mono opacity-70" style={{ borderColor: 'var(--color-signal-border-dark)' }}>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5" style={{ backgroundColor: 'var(--color-signal-available)' }} /> Checkouts
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5" style={{ backgroundColor: 'var(--color-signal-reserved)' }} /> Returns
+          </span>
+        </div>
+      </Card>
 
       <Card surface="dark" className="p-6">
         <h3 className="font-bold mb-4 flex items-center gap-2">

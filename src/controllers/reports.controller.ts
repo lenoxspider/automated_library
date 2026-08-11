@@ -115,6 +115,60 @@ export const getBlockedMembers = asyncHandler(async (req: Request, res: Response
   sendReportResponse(res, finalData, format as string, 'blocked_members');
 });
 
+// Last 7 calendar days (including today), oldest first, as YYYY-MM-DD keys.
+function lastNDays(n: number): string[] {
+  const days: string[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  return days;
+}
+
+export const getWeeklyActivity = asyncHandler(async (req: Request, res: Response) => {
+  const days = lastNDays(7);
+  const rangeStart = `${days[0]}T00:00:00.000Z`;
+
+  const [checkedOut, returned, paidFines] = await Promise.all([
+    prisma.borrowings.findMany({
+      where: { borrow_date: { gte: rangeStart } },
+      select: { borrow_date: true }
+    }),
+    prisma.borrowings.findMany({
+      where: { return_date: { gte: rangeStart } },
+      select: { return_date: true }
+    }),
+    prisma.fines.findMany({
+      where: { status: 'paid', payment_date: { gte: rangeStart } },
+      select: { payment_date: true, amount: true }
+    })
+  ]);
+
+  const byDay = Object.fromEntries(
+    days.map((day) => [day, { date: day, checkouts: 0, returns: 0, fines_collected: 0 }])
+  );
+
+  checkedOut.forEach((b) => {
+    const day = b.borrow_date.slice(0, 10);
+    if (byDay[day]) byDay[day].checkouts += 1;
+  });
+  returned.forEach((b) => {
+    if (!b.return_date) return;
+    const day = b.return_date.slice(0, 10);
+    if (byDay[day]) byDay[day].returns += 1;
+  });
+  paidFines.forEach((f) => {
+    if (!f.payment_date) return;
+    const day = f.payment_date.slice(0, 10);
+    if (byDay[day]) byDay[day].fines_collected += f.amount;
+  });
+
+  const data = days.map((day) => byDay[day]);
+  const { format } = req.query;
+  sendReportResponse(res, data, format as string, 'weekly_activity');
+});
+
 export const getRosterAudit = asyncHandler(async (req: Request, res: Response) => {
   const { format } = req.query;
 

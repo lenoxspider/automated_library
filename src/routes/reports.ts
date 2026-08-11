@@ -44,6 +44,25 @@ router.get(
 
 /**
  * @swagger
+ * /reports/weekly-activity:
+ *   get:
+ *     summary: Get daily checkout/return/fines-collected counts for the last 7 days
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Per-day activity for the last 7 days
+ */
+router.get(
+  '/weekly-activity',
+  authenticate,
+  authorize(['admin', 'librarian']),
+  reportsController.getWeeklyActivity
+);
+
+/**
+ * @swagger
  * /reports/roster-audit:
  *   get:
  *     summary: Audit users against the student roster
