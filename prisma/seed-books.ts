@@ -7,15 +7,23 @@ import logger from '../src/config/logger';
 // search API (https://openlibrary.org/search.json - no key required),
 // rather than requiring a librarian to type each one in through the UI.
 // Subjects chosen to match common university faculties (KNUST-relevant:
-// Engineering, Computer Science, Physics, Business, Mathematics), plus a
-// couple of general fiction titles for variety.
-const SUBJECTS: { query: string; genre: string; limit: number }[] = [
-  { query: 'engineering', genre: 'Engineering', limit: 3 },
-  { query: 'computer_science', genre: 'Computer Science', limit: 3 },
-  { query: 'physics', genre: 'Physics', limit: 2 },
-  { query: 'business', genre: 'Business', limit: 2 },
-  { query: 'mathematics', genre: 'Mathematics', limit: 2 },
-  { query: 'fiction', genre: 'Fiction', limit: 2 }
+// Engineering, Computer Science, Physics, Business, Mathematics, Chemistry,
+// Biology, Electrical Engineering, Economics, Agriculture), plus general
+// fiction for variety. `page` lets a re-run pull further down OpenLibrary's
+// results instead of re-fetching (and skipping as duplicate) the same top
+// hits every time.
+const SUBJECTS: { query: string; genre: string; limit: number; page?: number }[] = [
+  { query: 'engineering', genre: 'Engineering', limit: 4, page: 2 },
+  { query: 'computer_science', genre: 'Computer Science', limit: 4, page: 2 },
+  { query: 'physics', genre: 'Physics', limit: 3, page: 2 },
+  { query: 'business', genre: 'Business', limit: 3, page: 2 },
+  { query: 'mathematics', genre: 'Mathematics', limit: 3, page: 2 },
+  { query: 'fiction', genre: 'Fiction', limit: 3, page: 2 },
+  { query: 'chemistry', genre: 'Chemistry', limit: 3 },
+  { query: 'biology', genre: 'Biology', limit: 3 },
+  { query: 'electrical_engineering', genre: 'Electrical Engineering', limit: 3 },
+  { query: 'economics', genre: 'Economics', limit: 3 },
+  { query: 'agriculture', genre: 'Agriculture', limit: 2 }
 ];
 
 interface OpenLibrarySearchDoc {
@@ -31,8 +39,12 @@ function pickIsbn(doc: OpenLibrarySearchDoc): string | null {
   return doc.isbn?.find((i) => /^\d{9}[\dX]$/.test(i)) ?? null;
 }
 
-async function fetchSubjectBooks(query: string, limit: number): Promise<OpenLibrarySearchDoc[]> {
-  const url = `https://openlibrary.org/search.json?subject=${encodeURIComponent(query)}&limit=${limit * 4}&fields=title,author_name,isbn`;
+async function fetchSubjectBooks(
+  query: string,
+  limit: number,
+  page = 1
+): Promise<OpenLibrarySearchDoc[]> {
+  const url = `https://openlibrary.org/search.json?subject=${encodeURIComponent(query)}&limit=${limit * 4}&page=${page}&fields=title,author_name,isbn`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const body = (await res.json()) as { docs: OpenLibrarySearchDoc[] };
@@ -43,9 +55,9 @@ async function main() {
   let added = 0;
   let skipped = 0;
 
-  for (const { query, genre, limit } of SUBJECTS) {
-    logger.info(`Fetching "${query}" books from OpenLibrary...`);
-    const docs = await fetchSubjectBooks(query, limit);
+  for (const { query, genre, limit, page } of SUBJECTS) {
+    logger.info(`Fetching "${query}" books from OpenLibrary (page ${page ?? 1})...`);
+    const docs = await fetchSubjectBooks(query, limit, page);
 
     let addedForSubject = 0;
     for (const doc of docs) {
