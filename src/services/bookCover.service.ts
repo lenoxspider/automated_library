@@ -10,7 +10,11 @@ import logger from '../config/logger';
 // URL, so a book's cover keeps working entirely offline (including during a
 // live presentation) once it has been fetched once.
 const COVERS_DIR = path.join(process.cwd(), 'client', 'public', 'covers');
-const FETCH_TIMEOUT_MS = 3000;
+// 3s (the original spec figure) proved too tight in practice - a real
+// fetch to OpenLibrary from this environment measured ~3.1s. 5s keeps
+// book creation snappy while giving real-world TLS/connection latency
+// enough headroom to actually succeed instead of always falling back.
+const FETCH_TIMEOUT_MS = 5000;
 
 function coverUrlFor(isbn: string): string {
   return `/covers/${isbn}.jpg`;
