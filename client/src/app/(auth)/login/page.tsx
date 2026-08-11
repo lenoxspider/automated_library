@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Terminal, AlertCircle } from 'lucide-react';
+import { Book, Moon, User, Lock, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../../store/authStore';
 import api from '../../../lib/api';
-import Button from '../../../components/ui/Button';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,7 +27,7 @@ export default function LoginPage() {
       login(response.data.accessToken, { id: tokenPayload.sub, email, role: tokenPayload.role });
 
       const role = tokenPayload.role;
-      if (role === 'admin') router.push('/inventory');
+      if (role === 'admin') router.push('/users');
       else if (role === 'librarian') router.push('/circulation');
       else router.push('/catalog');
     } catch (err: unknown) {
@@ -42,79 +41,87 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div
-          className="border-2 p-8"
-          style={{ borderColor: 'var(--color-signal-border-dark)' }}
-        >
-          <div className="mb-8">
-            <div
-              className="w-10 h-10 flex items-center justify-center border-2 mb-5"
-              style={{ borderColor: 'var(--color-signal-available)', color: 'var(--color-signal-available)' }}
-            >
-              <Terminal size={20} />
-            </div>
-            <h1 className="text-2xl font-mono font-bold tracking-tight">smartlib login</h1>
-            <p className="opacity-60 mt-1 text-sm">Sign in to access your account</p>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-teal-50 font-sans relative">
+      {/* Dark mode toggle */}
+      <button className="absolute top-6 right-6 p-2 text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full transition-colors">
+        <Moon size={24} />
+      </button>
+
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-8 border border-gray-100">
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center gap-2 text-indigo-600 mb-6">
+            <Book size={32} />
+            <span className="text-3xl font-bold tracking-tight">SmartLib</span>
           </div>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
+          <p className="text-sm text-gray-500 mt-1">Digital Library Management System</p>
+        </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            {error && (
-              <div
-                className="flex items-center gap-2 border px-3 py-2.5 text-sm font-mono"
-                style={{ borderColor: 'var(--color-signal-overdue)', color: 'var(--color-signal-overdue)' }}
-              >
-                <AlertCircle size={16} className="shrink-0" />
-                {error}
+        <form onSubmit={handleLogin} className="space-y-5">
+          {error && (
+            <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+              <AlertCircle size={18} className="shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-semibold text-gray-600">Username</label>
+            <div className="relative flex items-center">
+              <div className="absolute left-3 text-gray-400">
+                <User size={18} />
               </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-2">
-                Email Address
-              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent border-2 px-3 py-2.5 outline-none font-mono text-sm transition-colors"
-                style={{ borderColor: 'var(--color-signal-border-dark)' }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-signal-available)')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--color-signal-border-dark)')}
-                placeholder="you@library.com"
+                className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                placeholder="Enter username"
                 required
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-2">
-                Password
-              </label>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-semibold text-gray-600">Password</label>
+            <div className="relative flex items-center">
+              <div className="absolute left-3 text-gray-400">
+                <Lock size={18} />
+              </div>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-transparent border-2 px-3 py-2.5 outline-none font-mono text-sm transition-colors"
-                style={{ borderColor: 'var(--color-signal-border-dark)' }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-signal-available)')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--color-signal-border-dark)')}
-                placeholder="••••••••"
+                className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                placeholder="Enter password"
                 required
               />
             </div>
-
-            <Button type="submit" isLoading={isLoading} className="w-full">
-              Sign In
-            </Button>
-          </form>
-
-          <div className="mt-8 text-center text-sm opacity-70">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="font-mono underline" style={{ color: 'var(--color-signal-available)' }}>
-              create one
-            </Link>
           </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg py-3 mt-4 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+
+        <div className="mt-6 flex items-center justify-between text-sm font-medium text-indigo-600">
+          <Link href="/" className="hover:text-indigo-800 transition-colors flex items-center gap-1">
+            <span>&larr;</span> Home
+          </Link>
+          <Link href="/forgot-password" className="hover:text-indigo-800 transition-colors">
+            Forgot Password?
+          </Link>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-gray-100 text-center text-sm text-gray-600">
+          New Student?{' '}
+          <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+            Create Account
+          </Link>
         </div>
       </div>
     </div>

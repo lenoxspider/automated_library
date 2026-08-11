@@ -1,45 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-  /* Signal design system */
-  --color-signal-bg-dark: #111412;
-  --color-signal-bg-light: #F4F6F4;
-  --color-signal-text-dark: #E9EDEA;
-  --color-signal-text-light: #14201A;
-
-  /* #00C98A on #F4F6F4 is ~1.9:1 contrast - fails WCAG AA for text/icons on
-     the light surface. Use signal-available only for large/bold text, icons,
-     or as a border/fill on badges (never as small colored text on light bg).
-     signal-available-on-light is a darkened variant (~4.6:1) for the rare case
-     text color is needed on a light surface. */
-  --color-signal-available: #00C98A;
-  --color-signal-available-on-light: #04875D;
-  --color-signal-pending: #FF8A3D;
-  --color-signal-overdue: #FF4757;
-  --color-signal-reserved: #5B8FF9;
-
-  --color-signal-border-dark: #232823;
-  --color-signal-border-light: #DCE3DE;
-
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'Space Mono', 'JetBrains Mono', ui-monospace, monospace;
+}
+
+:root {
+  /* Legacy Signal variables mapped to modern light theme */
+  --color-signal-bg-dark: #f9fafb;
+  --color-signal-bg-light: #f9fafb;
+  --color-signal-text-dark: #111827;
+  --color-signal-text-light: #111827;
+  
+  --color-signal-available: #4f46e5;
+  --color-signal-available-on-light: #4f46e5;
+  --color-signal-pending: #d97706;
+  --color-signal-overdue: #ef4444;
+  --color-signal-reserved: #3b82f6;
+  
+  --color-signal-border-dark: #e5e7eb;
+  --color-signal-border-light: #e5e7eb;
 }
 
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  background-color: #f9fafb; /* bg-gray-50 */
+  color: #111827; /* text-gray-900 */
 }
 
-/* Surface utilities - each route-group layout applies one of these to its
-   root wrapper instead of relying on a global `dark` class on <html>. */
+/* Map legacy surface classes to modern card styling */
 @layer utilities {
-  .signal-surface-dark {
-    background-color: var(--color-signal-bg-dark);
-    color: var(--color-signal-text-dark);
-  }
-
-  .signal-surface-light {
-    background-color: var(--color-signal-bg-light);
-    color: var(--color-signal-text-light);
+  .signal-surface-dark, .signal-surface-light {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    border-radius: 0.75rem !important; /* rounded-xl */
+    border-color: #e5e7eb !important;
   }
 }

@@ -2,27 +2,20 @@ import { CheckCircle2, Clock, BookMarked, AlertTriangle, type LucideIcon } from 
 
 export type BookStatus = 'available' | 'checked_out' | 'reserved' | 'overdue';
 
-const STATUS_CONFIG: Record<BookStatus, { label: string; icon: LucideIcon; colorVar: string }> = {
-  available: { label: 'Available', icon: CheckCircle2, colorVar: '--color-signal-available' },
-  checked_out: { label: 'Checked Out', icon: Clock, colorVar: '--color-signal-pending' },
-  reserved: { label: 'Reserved', icon: BookMarked, colorVar: '--color-signal-reserved' },
-  overdue: { label: 'Overdue', icon: AlertTriangle, colorVar: '--color-signal-overdue' },
+const STATUS_CONFIG: Record<BookStatus, { label: string; icon: LucideIcon; classNames: string }> = {
+  available: { label: 'Available', icon: CheckCircle2, classNames: 'bg-green-100 text-green-800 border-green-200' },
+  checked_out: { label: 'Checked Out', icon: Clock, classNames: 'bg-amber-100 text-amber-800 border-amber-200' },
+  reserved: { label: 'Reserved', icon: BookMarked, classNames: 'bg-blue-100 text-blue-800 border-blue-200' },
+  overdue: { label: 'Overdue', icon: AlertTriangle, classNames: 'bg-red-100 text-red-800 border-red-200' },
 };
 
-// Status is communicated via icon shape + accent border together, never
-// color alone (colorblind accessibility). The accent color is only used as
-// a border/icon fill (WCAG graphical-object contrast, 3:1) - never as the
-// label's text color, since #00C98A specifically fails 4.5:1 text contrast
-// on the light surface. The label text always uses the surrounding surface's
-// own foreground color, which is already guaranteed AA-compliant.
 export default function StatusBadge({ status }: { status: BookStatus }) {
-  const { label, icon: Icon, colorVar } = STATUS_CONFIG[status];
+  const { label, icon: Icon, classNames } = STATUS_CONFIG[status];
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 border-2 font-mono text-xs uppercase tracking-wider whitespace-nowrap"
-      style={{ borderColor: `var(${colorVar})` }}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${classNames}`}
     >
-      <Icon size={13} strokeWidth={2.5} style={{ color: `var(${colorVar})` }} />
+      <Icon size={14} strokeWidth={2.5} />
       {label}
     </span>
   );

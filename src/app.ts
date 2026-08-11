@@ -22,6 +22,7 @@ import reservationRoutes from './routes/reservations';
 import settingRoutes from './routes/settings';
 import reportRoutes from './routes/reports';
 import fineRoutes from './routes/fines';
+import healthRoutes from './routes/health';
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -62,11 +63,7 @@ app.use('/api/reservations', reservationRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/fines', fineRoutes);
-
-// Healthcheck route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+app.use('/api/health', healthRoutes);
 
 // Export the app for use in server.ts and tests
 export default app;

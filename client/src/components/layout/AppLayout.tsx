@@ -10,12 +10,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuthStore();
-  
-  const isDark = user?.role === 'librarian' || user?.role === 'admin';
-  const surfaceClass = isDark ? 'signal-surface-dark' : 'signal-surface-light';
 
   if (isAuthPage) {
     return (
@@ -34,7 +31,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={`flex h-screen w-full overflow-hidden ${surfaceClass}`}>
+    <div className="flex h-screen w-full overflow-hidden bg-gray-50 text-gray-900 font-sans">
       <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
       <div className="flex flex-col flex-1 overflow-hidden w-full">
         <TopBar onMenuClick={() => setIsMobileMenuOpen(true)} />

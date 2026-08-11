@@ -13,8 +13,9 @@ import {
   ShieldAlert,
   BarChart,
   LogOut,
-  Terminal,
-  X
+  Book,
+  X,
+  Activity
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -27,8 +28,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const { user, logout } = useAuthStore();
 
   if (!user) return null;
-
-  const isDark = user.role === 'librarian' || user.role === 'admin';
 
   const memberLinks = [
     { name: 'Catalog', href: '/catalog', icon: BookOpen },
@@ -45,6 +44,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   ];
 
   const adminLinks = [
+    { name: 'System Health', href: '/health', icon: Activity },
     { name: 'Accounts', href: '/users', icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Reports', href: '/reports', icon: BarChart },
@@ -55,39 +55,32 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   if (user.role === 'librarian') activeLinks = librarianLinks;
   if (user.role === 'admin') activeLinks = adminLinks;
 
-  const borderVar = isDark ? '--color-signal-border-dark' : '--color-signal-border-light';
-  const accentVar = '--color-signal-available';
-
   return (
     <>
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col justify-between border-r transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        style={{ borderColor: `var(${borderVar})`, backgroundColor: 'var(--color-signal-surface-dark)' }}
+        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col justify-between bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-6">
           <div className="flex items-center justify-between gap-3 mb-10">
             <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 flex items-center justify-center border-2"
-                style={{ borderColor: `var(${accentVar})`, color: `var(${accentVar})` }}
-              >
-                <Terminal size={18} />
+              <div className="text-indigo-600">
+                <Book size={28} />
               </div>
               <div>
-                <h1 className="font-mono font-bold text-base leading-tight tracking-tight">SMARTLIB</h1>
-                <p className="text-xs opacity-60 uppercase tracking-widest font-mono">{user.role}</p>
+                <h1 className="font-bold text-lg tracking-tight text-gray-900">SmartLib</h1>
+                <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{user.role}</p>
               </div>
             </div>
             <button
-              className="md:hidden opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[var(--color-signal-available)] rounded"
+              className="md:hidden text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-1"
               onClick={() => setIsOpen(false)}
               aria-label="Close navigation menu"
               title="Close menu"
@@ -107,14 +100,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 href={link.href}
                 onClick={() => setIsOpen(false)}
                 aria-current={isActive ? 'page' : undefined}
-                className="flex items-center gap-3 px-3 py-2.5 border-l-2 transition-all duration-200 text-sm font-mono hover:bg-black/10 focus:outline-none focus:bg-black/10"
-                style={
-                  isActive
-                    ? { borderColor: `var(${accentVar})`, color: `var(${accentVar})`, backgroundColor: 'rgba(0,0,0,0.2)' }
-                    : { borderColor: 'transparent', opacity: 0.7 }
-                }
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  isActive 
+                    ? 'bg-indigo-50 text-indigo-700' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
               >
-                <Icon size={18} />
+                <Icon size={18} className={isActive ? 'text-indigo-600' : 'text-gray-400'} />
                 <span>{link.name}</span>
               </Link>
             );
@@ -126,10 +118,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         <button
           onClick={logout}
           aria-label="Log out of SmartLib"
-          className="flex items-center gap-3 px-3 py-2.5 w-full border-l-2 border-transparent text-left text-sm font-mono opacity-70 hover:opacity-100 focus:opacity-100 focus:outline-none focus:bg-black/10 transition-all duration-200"
-          style={{ color: 'var(--color-signal-overdue)' }}
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-left text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
         >
-          <LogOut size={18} aria-hidden="true" />
+          <LogOut size={18} aria-hidden="true" className="text-red-500" />
           <span>Log out</span>
         </button>
       </div>

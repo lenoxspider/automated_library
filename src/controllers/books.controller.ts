@@ -57,6 +57,7 @@ export const createBook = asyncHandler(async (req: Request, res: Response) => {
   // Note: In a real scenario, check for unique ISBN here or handle Prisma unique constraint error
   const newBook = await bookRepo.create({
     ...validatedData,
+    public_id: crypto.randomUUID(),
     available_copies: validatedData.total_copies,
     cover_path: coverPath
   });
@@ -141,9 +142,10 @@ export const addBookCopy = asyncHandler(async (req: Request, res: Response) => {
   const copy = await bookRepo.addCopy(bookId, barcode);
 
   // Increment total_copies and available_copies for the book
-  const book = await bookRepo.findByPublicId(req.params.id); // For addCopy we still need a way to find by public_id if the route uses it, wait, addBookCopy uses bookId!
-  // Actually, wait, let's keep it simple and just use public_id here if req.params.id is public_id.
-  if (book) {
+  const public_id = req.params.id as string;
+  const book = await bookRepo.findByPublicId(public_id);
+  
+  if (book && book.public_id) {
     await bookRepo.update(book.public_id, {
       total_copies: book.total_copies + 1,
       available_copies: book.available_copies + 1
