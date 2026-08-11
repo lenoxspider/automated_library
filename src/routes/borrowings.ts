@@ -46,7 +46,12 @@ router.get(
  *       201:
  *         description: The created borrowing
  */
-router.post('/', authenticate, authorize(['librarian']), borrowingsController.createBorrowing);
+router.post(
+  '/',
+  authenticate,
+  authorize(['admin', 'librarian']),
+  borrowingsController.createBorrowing
+);
 
 /**
  * @swagger
@@ -69,7 +74,7 @@ router.post('/', authenticate, authorize(['librarian']), borrowingsController.cr
 router.post(
   '/return/:id',
   authenticate,
-  authorize(['librarian']),
+  authorize(['admin', 'librarian']),
   borrowingsController.returnBorrowing
 );
 

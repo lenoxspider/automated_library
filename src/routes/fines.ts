@@ -41,6 +41,11 @@ router.get(
  *       200:
  *         description: Fine paid successfully
  */
-router.post('/:id/pay', authenticate, authorize(['librarian']), borrowingsController.payFine);
+router.post(
+  '/:id/pay',
+  authenticate,
+  authorize(['admin', 'librarian']),
+  borrowingsController.payFine
+);
 
 export default router;
