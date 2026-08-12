@@ -24,7 +24,8 @@ import {
   Webhook,
   Star,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BarChart3
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -71,6 +72,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Catalog Sync', href: '/catalog-sync', icon: Activity },
     { name: 'User Support', href: '/support-tickets', icon: Users },
     { name: 'Contributions Queue', href: '/contributions-queue', icon: ClipboardList },
+    { name: 'Reports', href: '/reports', icon: BarChart3 },
   ];
 
   const adminLinks = [
