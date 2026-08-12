@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Database, RefreshCw, AlertTriangle } from 'lucide-react';
 import api from '../../../lib/api';
@@ -84,7 +85,7 @@ export default function BackupPage() {
           </thead>
           <tbody className="divide-y" style={{ borderColor: 'var(--color-signal-border-light)' }}>
             {isLoading ? (
-              <tr><td colSpan={4} className="text-center py-8 opacity-50">Loading backups...</td></tr>
+              <tr><td colSpan={4}><LoadingSpinner /></td></tr>
             ) : backups?.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-8 opacity-50">No backups found on disk.</td></tr>
             ) : backups?.map((bk: { filename: string; created_at: string; size: number }) => (

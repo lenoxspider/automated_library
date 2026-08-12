@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, Truck, Clock } from 'lucide-react';
 import api from '../../../lib/api';
@@ -86,7 +87,7 @@ export default function AcquisitionsPage() {
                 </thead>
                 <tbody className="divide-y" style={{ borderColor: 'var(--color-signal-border-light)' }}>
                   {isLoading ? (
-                    <tr><td colSpan={4} className="text-center py-8 opacity-50">Loading orders...</td></tr>
+                    <tr><td colSpan={4}><LoadingSpinner /></td></tr>
                   ) : orders?.map((order: { id: number; title: string; vendor: string; quantity: number; total_price: number; status: string; order_date?: string }) => (
                     <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors">
                       <td className="px-6 py-4">

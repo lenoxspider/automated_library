@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2, Webhook } from 'lucide-react';
 import api from '../../../lib/api';
@@ -70,7 +71,7 @@ export default function IntegrationsPage() {
                 </thead>
                 <tbody className="divide-y" style={{ borderColor: 'var(--color-signal-border-light)' }}>
                   {isLoading ? (
-                    <tr><td colSpan={3} className="text-center py-8 opacity-50">Loading keys...</td></tr>
+                    <tr><td colSpan={4}><LoadingSpinner /></td></tr>
                   ) : keys?.map((k: { id: number; service_name: string; status: string; created_at: string }) => (
                     <tr key={k.id} className={`hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors ${k.status === 'revoked' ? 'opacity-50' : ''}`}>
                       <td className="px-6 py-4">

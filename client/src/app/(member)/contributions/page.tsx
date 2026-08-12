@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useState } from 'react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
@@ -28,7 +29,7 @@ export default function ContributionsPage() {
     }
   });
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingSpinner />;
 
   const points = data?.library_points || 0;
   const isPremium = points >= 50;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { CheckCircle, Mail } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
@@ -27,7 +28,7 @@ export default function SupportTicketsPage() {
 
       <div className="grid gap-4">
         {isLoading ? (
-          <div className="text-center opacity-50 py-10">Loading tickets...</div>
+          <LoadingSpinner />
         ) : tickets?.length === 0 ? (
           <div className="text-center opacity-50 py-16">
             <CheckCircle size={48} className="mx-auto mb-4 opacity-30" />

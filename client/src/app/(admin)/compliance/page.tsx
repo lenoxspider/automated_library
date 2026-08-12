@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { UserX, DownloadCloud, ShieldAlert, CheckCircle } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
@@ -35,7 +36,7 @@ export default function CompliancePage() {
           <h2 className="font-bold text-lg mb-4">Pending Requests</h2>
           <div className="grid gap-4">
             {isLoading ? (
-              <p className="text-center opacity-50 py-4">Loading requests...</p>
+              <LoadingSpinner />
             ) : requests?.length === 0 ? (
               <p className="text-center opacity-50 py-4">No active compliance requests.</p>
             ) : requests?.map((req: { id: number; member_id: number; request_type: string; status: string; created_at: string }) => (

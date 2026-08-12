@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { Clock, ShieldAlert } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
@@ -43,7 +44,7 @@ export default function AuditLogPage() {
             </thead>
             <tbody className="divide-y" style={{ borderColor: 'var(--color-signal-border-light)' }}>
               {isLoading ? (
-                <tr><td colSpan={4} className="text-center py-8 opacity-50">Loading logs...</td></tr>
+                <tr><td colSpan={4}><LoadingSpinner /></td></tr>
               ) : logs?.map((log: { id: number; admin_id: number; action: string; details?: string | null; timestamp: string }) => (
                 <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors font-mono text-sm">
                   <td className="px-6 py-4 flex items-center gap-2 opacity-70">

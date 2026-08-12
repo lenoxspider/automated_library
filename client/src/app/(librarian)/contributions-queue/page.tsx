@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
 import { Check, X, User } from 'lucide-react';
@@ -23,7 +24,7 @@ export default function ContributionsQueuePage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['contributions-queue'] })
   });
 
-  if (isLoading) return <div>Loading queue...</div>;
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">

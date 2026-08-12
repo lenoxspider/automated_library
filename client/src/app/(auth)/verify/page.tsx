@@ -2,6 +2,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useState, Suspense } from 'react';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '../../../lib/api';
@@ -71,7 +72,7 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-mono opacity-50">Loading...</div>}>
+    <Suspense fallback={<LoadingSpinner />}>
       <VerifyContent />
     </Suspense>
   );

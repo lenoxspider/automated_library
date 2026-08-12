@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { BarChart3, AlertTriangle, BookOpen, TrendingUp } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
@@ -115,7 +116,7 @@ export default function ReportsPage() {
           </span>
         </div>
         {loadingWeekly ? (
-          <p className="opacity-60 text-sm">Loading...</p>
+          <LoadingSpinner />
         ) : (
           <div className="grid grid-cols-7 gap-3">
             {week.map((d) => (
@@ -160,7 +161,7 @@ export default function ReportsPage() {
           <BarChart3 size={16} style={{ color: 'var(--color-signal-available)' }} /> Most Borrowed
         </h3>
         {isLoading ? (
-          <p className="opacity-60 text-sm">Loading...</p>
+          <LoadingSpinner />
         ) : topTitles.length === 0 ? (
           <p className="opacity-60 text-sm">No circulation data yet.</p>
         ) : (

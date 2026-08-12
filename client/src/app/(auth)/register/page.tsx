@@ -21,6 +21,7 @@ export default function RegisterPage() {
   // Local dark mode state -> now global
   const { dark, toggleDark } = useThemeStore();
   const [mounted, setMounted] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
