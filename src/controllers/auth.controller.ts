@@ -6,6 +6,7 @@ import { UserRepository } from '../repositories/user.repo';
 import redisClient from '../config/redis';
 import asyncHandler from 'express-async-handler';
 import { z } from 'zod';
+import { ACCESS_SECRET, REFRESH_SECRET } from '../config/env';
 
 const userRepo = container.resolve(UserRepository);
 
@@ -30,14 +31,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   // Issue Access Token
   const accessToken = jwt.sign(
     { sub: user.id, role: user.role },
-    process.env.ACCESS_SECRET || 'fallback_secret',
+    ACCESS_SECRET,
     { expiresIn: '15m' }
   );
 
   // Issue Refresh Token
   const refreshToken = jwt.sign(
     { sub: user.id },
-    process.env.REFRESH_SECRET || 'fallback_refresh_secret',
+    REFRESH_SECRET,
     { expiresIn: '30d' }
   );
 
@@ -72,10 +73,7 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
   }
 
   try {
-    const decoded = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_SECRET || 'fallback_refresh_secret'
-    ) as jwt.JwtPayload;
+    const decoded = jwt.verify(refreshToken, REFRESH_SECRET) as jwt.JwtPayload;
 
     // Check if refresh token is valid in Redis
     const storedToken = await redisClient.get(`rt_${decoded.sub}`);
@@ -94,7 +92,7 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
     // Issue a new access token
     const newAccessToken = jwt.sign(
       { sub: user.id, role: user.role },
-      process.env.ACCESS_SECRET || 'fallback_secret',
+      ACCESS_SECRET,
       { expiresIn: '15m' }
     );
 

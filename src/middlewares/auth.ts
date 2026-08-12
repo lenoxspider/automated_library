@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import redisClient from '../config/redis';
+import { ACCESS_SECRET } from '../config/env';
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -17,7 +18,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return res.status(401).json({ error: 'Session expired. Please log in again.' });
     }
 
-    const decoded = jwt.verify(token, process.env.ACCESS_SECRET || 'fallback_secret') as JwtPayload;
+    const decoded = jwt.verify(token, ACCESS_SECRET) as JwtPayload;
     (req as any).user = { id: decoded.sub, role: decoded.role };
 
     next();
