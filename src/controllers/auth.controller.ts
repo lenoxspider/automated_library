@@ -197,7 +197,7 @@ export const forgotPassword = asyncHandler(async (req: Request, res: Response) =
   }
 
   const resetToken = crypto.randomBytes(32).toString('hex');
-  const expiry = new Date(Date.now() + 3600000).toISOString(); // 1 hour
+  const expiry = new Date(Date.now() + 3600000); // 1 hour
 
   await prisma.users.update({
     where: { id: user.id },
@@ -215,7 +215,7 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
   const user = await prisma.users.findFirst({
     where: {
       reset_token: token,
-      reset_token_expiry: { gte: new Date().toISOString() }
+      reset_token_expiry: { gte: new Date() }
     }
   });
 

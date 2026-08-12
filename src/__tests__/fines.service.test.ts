@@ -45,8 +45,8 @@ describe('CirculationService fine calculation', () => {
     mockPrisma.borrowings.findUnique.mockResolvedValue({
       id: 1,
       copy_id: 5,
-      due_date: new Date().toISOString(),
-      return_date: '2026-01-01T00:00:00.000Z'
+      due_date: new Date(),
+      return_date: new Date('2026-01-01T00:00:00.000Z')
     });
     await expect(service.returnBook(1)).rejects.toThrow(
       'Invalid borrowing record or already returned'
@@ -58,7 +58,7 @@ describe('CirculationService fine calculation', () => {
     mockPrisma.borrowings.findUnique.mockResolvedValue({
       id: 1,
       copy_id: 5,
-      due_date: dueDate.toISOString(),
+      due_date: dueDate,
       return_date: null
     });
 
@@ -77,7 +77,7 @@ describe('CirculationService fine calculation', () => {
     mockPrisma.borrowings.findUnique.mockResolvedValue({
       id: 1,
       copy_id: 5,
-      due_date: dueDate.toISOString(),
+      due_date: dueDate,
       return_date: null
     });
 
@@ -97,7 +97,7 @@ describe('CirculationService fine calculation', () => {
     mockPrisma.borrowings.findUnique.mockResolvedValue({
       id: 1,
       copy_id: 5,
-      due_date: dueDate.toISOString(),
+      due_date: dueDate,
       return_date: null
     });
     mockPrisma.library_settings.findUnique.mockResolvedValue(null); // no override -> default rate 1.0
@@ -122,7 +122,7 @@ describe('CirculationService fine calculation', () => {
     mockPrisma.borrowings.findUnique.mockResolvedValue({
       id: 1,
       copy_id: 5,
-      due_date: dueDate.toISOString(),
+      due_date: dueDate,
       return_date: null
     });
     mockPrisma.library_settings.findUnique.mockResolvedValue({ key: 'fine_rate', value: '2.5' });
@@ -142,7 +142,7 @@ describe('CirculationService fine calculation', () => {
     mockPrisma.borrowings.findUnique.mockResolvedValue({
       id: 1,
       copy_id: 5,
-      due_date: dueDate.toISOString(),
+      due_date: dueDate,
       return_date: null
     });
 
