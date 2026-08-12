@@ -23,10 +23,6 @@ const createBookSchema = z.object({
 
 const updateBookSchema = createBookSchema.partial();
 
-const addCopySchema = z.object({
-  barcode: z.string().min(1, 'Barcode is required')
-});
-
 export const getBooks = asyncHandler(async (req: Request, res: Response) => {
   const query = (req.query.q as string) || '';
   const page = parseInt(req.query.page as string) || 1;
@@ -164,6 +160,60 @@ export const addBookCopy = asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json(copy);
 });
 
+interface CoverCandidate {
+  url: string;
+  source: string;
+  title?: string;
+}
+
+async function searchOpenLibraryCovers(query: string): Promise<CoverCandidate[]> {
+  try {
+    const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,cover_i`;
+    const response = await fetch(url);
+    if (!response.ok) return [];
+
+    const data = (await response.json()) as any;
+    return (data.docs ?? [])
+      .filter((doc: any) => doc.cover_i)
+      .map((doc: any) => ({
+        url: `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`,
+        source: 'Open Library',
+        title: doc.title
+      }));
+  } catch (err) {
+    logger.warn({ err }, 'Open Library cover search failed');
+    return [];
+  }
+}
+
+async function searchGoogleBookCovers(query: string): Promise<CoverCandidate[]> {
+  try {
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=8`;
+    const response = await fetch(url);
+    if (!response.ok) return [];
+
+    const data = (await response.json()) as any;
+    return (data.items ?? [])
+      .map((item: any) => {
+        const links = item.volumeInfo?.imageLinks;
+        const thumbnail = links?.thumbnail || links?.smallThumbnail;
+        return thumbnail
+          ? {
+              url: thumbnail.replace('http://', 'https://'),
+              source: 'Google Books',
+              title: item.volumeInfo.title
+            }
+          : null;
+      })
+      .filter(
+        (candidate: CoverCandidate | null): candidate is CoverCandidate => candidate !== null
+      );
+  } catch (err) {
+    logger.warn({ err }, 'Google Books cover search failed');
+    return [];
+  }
+}
+
 export const searchCovers = asyncHandler(async (req: Request, res: Response) => {
   const query = req.query.q as string;
   if (!query) {
@@ -171,52 +221,23 @@ export const searchCovers = asyncHandler(async (req: Request, res: Response) => 
     return;
   }
 
-  const candidates: { url: string; source: string; title?: string }[] = [];
-
-  try {
-    const olUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,cover_i`;
-    const olRes = await fetch(olUrl);
-    if (olRes.ok) {
-      const data = (await olRes.json()) as any;
-      data.docs?.forEach((doc: any) => {
-        if (doc.cover_i) {
-          candidates.push({
-            url: `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`,
-            source: 'Open Library',
-            title: doc.title
-          });
-        }
-      });
-    }
-  } catch (err) {
-    logger.warn({ err }, 'Open Library cover search failed');
-  }
-
-  try {
-    const gbUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=8`;
-    const gbRes = await fetch(gbUrl);
-    if (gbRes.ok) {
-      const data = (await gbRes.json()) as any;
-      data.items?.forEach((item: any) => {
-        const links = item.volumeInfo?.imageLinks;
-        const thumbnail = links?.thumbnail || links?.smallThumbnail;
-        if (thumbnail) {
-          const secureUrl = thumbnail.replace('http://', 'https://');
-          candidates.push({
-            url: secureUrl,
-            source: 'Google Books',
-            title: item.volumeInfo.title
-          });
-        }
-      });
-    }
-  } catch (err) {
-    logger.warn({ err }, 'Google Books cover search failed');
-  }
-
+  const candidates = [
+    ...(await searchOpenLibraryCovers(query)),
+    ...(await searchGoogleBookCovers(query))
+  ];
   const uniqueCandidates = Array.from(new Map(candidates.map((item) => [item.url, item])).values());
   res.json(uniqueCandidates);
 });
+
+async function resizeAndSaveCover(bookId: number, publicId: string, originalBuffer: Buffer) {
+  const resizedBuffer = await sharp(originalBuffer)
+    .resize({ width: 400, withoutEnlargement: true })
+    .jpeg({ quality: 85, progressive: true })
+    .toBuffer();
+
+  const minioUrl = await uploadCover(bookId, resizedBuffer, 'image/jpeg');
+  return bookRepo.update(publicId, { cover_path: minioUrl });
+}
 
 export const selectCover = asyncHandler(async (req: Request, res: Response) => {
   const public_id = req.params.id as string;
@@ -240,13 +261,7 @@ export const selectCover = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const originalBuffer = Buffer.from(await response.arrayBuffer());
-  const resizedBuffer = await sharp(originalBuffer)
-    .resize({ width: 400, withoutEnlargement: true })
-    .jpeg({ quality: 85, progressive: true })
-    .toBuffer();
-
-  const minioUrl = await uploadCover(book.id, resizedBuffer, 'image/jpeg');
-  const updatedBook = await bookRepo.update(public_id, { cover_path: minioUrl });
+  const updatedBook = await resizeAndSaveCover(book.id, public_id, originalBuffer);
   res.json(updatedBook);
 });
 
@@ -276,12 +291,6 @@ export const uploadCoverFile = asyncHandler(async (req: Request, res: Response) 
     return;
   }
 
-  const resizedBuffer = await sharp(file.buffer)
-    .resize({ width: 400, withoutEnlargement: true })
-    .jpeg({ quality: 85, progressive: true })
-    .toBuffer();
-
-  const minioUrl = await uploadCover(book.id, resizedBuffer, 'image/jpeg');
-  const updatedBook = await bookRepo.update(public_id, { cover_path: minioUrl });
+  const updatedBook = await resizeAndSaveCover(book.id, public_id, file.buffer);
   res.json(updatedBook);
 });
