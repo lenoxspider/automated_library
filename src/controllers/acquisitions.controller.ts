@@ -84,7 +84,10 @@ export const receiveOrder = asyncHandler(async (req: Request, res: Response) => 
         coverPath = await uploadCover(isbn, resizedBuffer, 'image/jpeg');
       }
     } catch (err) {
-      logger.warn({ err, coverUrl }, 'Custom cover download failed during receipt, falling back to auto-fetch');
+      logger.warn(
+        { err, coverUrl },
+        'Custom cover download failed during receipt, falling back to auto-fetch'
+      );
     }
   }
 

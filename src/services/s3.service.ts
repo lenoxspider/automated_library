@@ -1,4 +1,10 @@
-import { S3Client, PutObjectCommand, CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  CreateBucketCommand,
+  HeadBucketCommand,
+  PutBucketPolicyCommand
+} from '@aws-sdk/client-s3';
 import logger from '../config/logger';
 
 const bucketName = process.env.S3_BUCKET_NAME || 'book-covers';
@@ -48,13 +54,17 @@ async function ensureBucketExists() {
           ]
         };
 
-        await s3Client.send(new PutBucketPolicyCommand({
-          Bucket: bucketName,
-          Policy: JSON.stringify(policy)
-        }));
+        await s3Client.send(
+          new PutBucketPolicyCommand({
+            Bucket: bucketName,
+            Policy: JSON.stringify(policy)
+          })
+        );
 
         initialized = true;
-        logger.info(`MinIO bucket "${bucketName}" created and configured with public-read permissions.`);
+        logger.info(
+          `MinIO bucket "${bucketName}" created and configured with public-read permissions.`
+        );
       } catch (createErr) {
         logger.error({ err: createErr }, 'Failed to create and configure MinIO bucket');
       }
@@ -67,7 +77,11 @@ async function ensureBucketExists() {
 /**
  * Uploads a buffer to the local MinIO bucket and returns its public URL
  */
-export async function uploadCover(bookId: number | string, buffer: Buffer, contentType: string): Promise<string> {
+export async function uploadCover(
+  bookId: number | string,
+  buffer: Buffer,
+  contentType: string
+): Promise<string> {
   await ensureBucketExists();
 
   const fileExtension = contentType === 'image/png' ? 'png' : 'jpg';

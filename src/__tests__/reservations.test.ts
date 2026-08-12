@@ -18,6 +18,7 @@ jest.mock('../config/prisma', () => {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
+      count: jest.fn(),
       update: jest.fn(),
       delete: jest.fn()
     }
@@ -29,6 +30,10 @@ import prisma from '../config/prisma';
 import reservationRoutes from '../routes/reservations';
 
 const mockPrisma = prisma as any;
+
+beforeEach(() => {
+  mockPrisma.reservations.count.mockResolvedValue(0);
+});
 
 const app = express();
 app.use(express.json());
@@ -44,6 +49,7 @@ describe('GET /api/reservations', () => {
         book_id: 10,
         member_id: 1,
         status: 'pending',
+        reservation_date: '2026-01-01T00:00:00.000Z',
         books: { title: 'Clean Code', author: 'Robert Martin' },
         users: { name: 'Jane Doe', email: 'jane@library.com' }
       }
@@ -62,7 +68,7 @@ describe('GET /api/reservations', () => {
     await request(app).get('/api/reservations?status=pending');
 
     expect(mockPrisma.reservations.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { status: 'pending' } })
+      expect.objectContaining({ where: { status: { in: ['pending'] } } })
     );
   });
 });

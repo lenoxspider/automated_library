@@ -177,7 +177,7 @@ export const searchCovers = asyncHandler(async (req: Request, res: Response) => 
     const olUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,cover_i`;
     const olRes = await fetch(olUrl);
     if (olRes.ok) {
-      const data = await olRes.json() as any;
+      const data = (await olRes.json()) as any;
       data.docs?.forEach((doc: any) => {
         if (doc.cover_i) {
           candidates.push({
@@ -196,7 +196,7 @@ export const searchCovers = asyncHandler(async (req: Request, res: Response) => 
     const gbUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=8`;
     const gbRes = await fetch(gbUrl);
     if (gbRes.ok) {
-      const data = await gbRes.json() as any;
+      const data = (await gbRes.json()) as any;
       data.items?.forEach((item: any) => {
         const links = item.volumeInfo?.imageLinks;
         const thumbnail = links?.thumbnail || links?.smallThumbnail;
@@ -214,7 +214,7 @@ export const searchCovers = asyncHandler(async (req: Request, res: Response) => 
     logger.warn({ err }, 'Google Books cover search failed');
   }
 
-  const uniqueCandidates = Array.from(new Map(candidates.map(item => [item.url, item])).values());
+  const uniqueCandidates = Array.from(new Map(candidates.map((item) => [item.url, item])).values());
   res.json(uniqueCandidates);
 });
 

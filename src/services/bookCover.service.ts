@@ -36,7 +36,7 @@ async function fetchCoverBuffer(isbn: string): Promise<Buffer | null> {
     const gbUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
     const res = await fetch(gbUrl);
     if (res.ok) {
-      const data = await res.json() as any;
+      const data = (await res.json()) as any;
       const thumbnail = data.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
       if (thumbnail) {
         const secureUrl = thumbnail.replace('http://', 'https://');
