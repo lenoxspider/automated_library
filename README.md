@@ -147,8 +147,11 @@ Open a second terminal:
 
 ```bash
 cd client
+cp .env.example .env
 npm run dev
 ```
+
+`NEXT_PUBLIC_API_BASE_URL` in `client/.env` controls which backend the frontend talks to; it defaults to `http://localhost:5000/api` if unset.
 
 The frontend is normally available at:
 
@@ -229,9 +232,11 @@ The repository includes `client/Dockerfile` for a standalone Next.js production 
 
 ```bash
 cd client
-docker build -t smartlib-frontend .
+docker build --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.example.com/api -t smartlib-frontend .
 docker run --name smartlib-frontend --restart unless-stopped -p 3000:3000 smartlib-frontend
 ```
+
+`NEXT_PUBLIC_API_BASE_URL` is inlined into the client bundle at build time (standard Next.js behavior for `NEXT_PUBLIC_*` vars), so it must be passed as a `--build-arg`, not a `docker run -e`. Omit it to keep the `http://localhost:5000/api` default.
 
 This image contains the frontend only. PostgreSQL, Redis, MinIO, and the Express backend must run as separate services.
 
@@ -319,7 +324,7 @@ server {
 }
 ```
 
-The current frontend API client is in `client/src/lib/api.ts`. If it uses a hardcoded `http://localhost:5000/api` value, change it to a configurable public API URL or to `/api` before deploying behind this reverse proxy. Set `APP_URL` and `CLIENT_ORIGIN` to the public HTTPS origin.
+The frontend API client (`client/src/lib/api.ts`) reads its backend URL from `NEXT_PUBLIC_API_BASE_URL`. Set it to the public API URL (or `/api` if proxied under the same origin) before deploying behind this reverse proxy. Set `APP_URL` and `CLIENT_ORIGIN` to the public HTTPS origin.
 
 ## Testing and quality checks
 
