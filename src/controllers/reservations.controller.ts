@@ -17,7 +17,7 @@ export const getReservations = asyncHandler(async (req: Request, res: Response) 
   const where: any = {};
 
   if (status) {
-    const statuses = (status as string).split(',').map(s => s.trim());
+    const statuses = (status as string).split(',').map((s) => s.trim());
     where.status = { in: statuses };
   }
 
@@ -48,37 +48,39 @@ export const getReservations = asyncHandler(async (req: Request, res: Response) 
   ]);
 
   // Compute queue_position and expiration date for each reservation
-  const reservations = await Promise.all(rawReservations.map(async (resItem) => {
-    let queue_position = null;
-    let expiration_date = null;
+  const reservations = await Promise.all(
+    rawReservations.map(async (resItem) => {
+      let queue_position = null;
+      let expiration_date = null;
 
-    if (resItem.status === 'pending') {
-      const count = await prisma.reservations.count({
-        where: {
-          book_id: resItem.book_id,
-          status: 'pending',
-          reservation_date: { lt: resItem.reservation_date }
-        }
-      });
-      queue_position = count + 1;
-    }
+      if (resItem.status === 'pending') {
+        const count = await prisma.reservations.count({
+          where: {
+            book_id: resItem.book_id,
+            status: 'pending',
+            reservation_date: { lt: resItem.reservation_date }
+          }
+        });
+        queue_position = count + 1;
+      }
 
-    // Expiration date simulated as 7 days after request, or 3 days after ready for pickup
-    const baseDate = new Date(resItem.reservation_date);
-    if (resItem.status === 'pending') {
-      baseDate.setDate(baseDate.getDate() + 14); // e.g. expires in 14 days if not picked up
-      expiration_date = baseDate.toISOString();
-    } else if (resItem.status === 'ready_for_pickup' || resItem.status === 'approved') {
-      baseDate.setDate(baseDate.getDate() + 3);
-      expiration_date = baseDate.toISOString();
-    }
+      // Expiration date simulated as 7 days after request, or 3 days after ready for pickup
+      const baseDate = new Date(resItem.reservation_date);
+      if (resItem.status === 'pending') {
+        baseDate.setDate(baseDate.getDate() + 14); // e.g. expires in 14 days if not picked up
+        expiration_date = baseDate.toISOString();
+      } else if (resItem.status === 'ready_for_pickup' || resItem.status === 'approved') {
+        baseDate.setDate(baseDate.getDate() + 3);
+        expiration_date = baseDate.toISOString();
+      }
 
-    return {
-      ...resItem,
-      queue_position,
-      expiration_date
-    };
-  }));
+      return {
+        ...resItem,
+        queue_position,
+        expiration_date
+      };
+    })
+  );
 
   res.json({ data: reservations, count: totalCount });
 });
@@ -185,25 +187,30 @@ export const getMyReservations = asyncHandler(async (req: Request, res: Response
   }
 
   const rawReservations = await prisma.reservations.findMany({
-    where: { member_id: Number(userId), status: { in: ['pending', 'approved', 'ready_for_pickup'] } },
+    where: {
+      member_id: Number(userId),
+      status: { in: ['pending', 'approved', 'ready_for_pickup'] }
+    },
     include: { books: { select: { id: true, title: true } } },
     orderBy: { reservation_date: 'asc' }
   });
 
-  const reservations = await Promise.all(rawReservations.map(async (resItem) => {
-    let queue_position = null;
-    if (resItem.status === 'pending') {
-      const aheadCount = await prisma.reservations.count({
-        where: {
-          book_id: resItem.book_id,
-          status: 'pending',
-          reservation_date: { lt: resItem.reservation_date }
-        }
-      });
-      queue_position = aheadCount + 1;
-    }
-    return { ...resItem, queue_position };
-  }));
+  const reservations = await Promise.all(
+    rawReservations.map(async (resItem) => {
+      let queue_position = null;
+      if (resItem.status === 'pending') {
+        const aheadCount = await prisma.reservations.count({
+          where: {
+            book_id: resItem.book_id,
+            status: 'pending',
+            reservation_date: { lt: resItem.reservation_date }
+          }
+        });
+        queue_position = aheadCount + 1;
+      }
+      return { ...resItem, queue_position };
+    })
+  );
 
   res.json(reservations);
 });

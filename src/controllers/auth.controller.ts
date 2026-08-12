@@ -72,8 +72,11 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET || 'fallback_refresh_secret') as jwt.JwtPayload;
-    
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_SECRET || 'fallback_refresh_secret'
+    ) as jwt.JwtPayload;
+
     // Check if refresh token is valid in Redis
     const storedToken = await redisClient.get(`rt_${decoded.sub}`);
     if (storedToken !== refreshToken) {

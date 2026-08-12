@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { getInventory, updateBulkInventory, updateSingleInventory } from '../controllers/inventory.controller';
+import {
+  getInventory,
+  updateBulkInventory,
+  updateSingleInventory
+} from '../controllers/inventory.controller';
 
 const router = Router();
 

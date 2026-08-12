@@ -44,7 +44,9 @@ export const receiveOrder = asyncHandler(async (req: Request, res: Response) => 
   const { author, genre, isbn, branch, section, shelf } = req.body;
 
   if (!author || !genre || !isbn) {
-    res.status(400).json({ error: 'Author, genre, and ISBN are required to receive an order into inventory' });
+    res
+      .status(400)
+      .json({ error: 'Author, genre, and ISBN are required to receive an order into inventory' });
     return;
   }
 
