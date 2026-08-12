@@ -1,73 +1,62 @@
 # SmartLib
 
-SmartLib is a full-stack library management system for catalog management, circulation, reservations, fines, acquisitions, inventory, user support, reporting, compliance, and administrative operations.
+SmartLib is a full-stack library management system for catalog management, circulation, reservations, fines, acquisitions, inventory, member services, reporting, compliance, and administration.
 
-The repository contains a **TypeScript/Express backend**, a **Next.js 16 frontend**, a **SQLite database managed by Prisma**, and **Redis-backed background-job support through BullMQ**.
+The project is organized as a **TypeScript/Express backend**, a **Next.js 16 frontend**, a **PostgreSQL database managed by Prisma**, **Redis-backed background jobs through BullMQ**, and **S3-compatible object storage through MinIO** for book-cover assets.
 
-## Features
+## Current capabilities
 
-- Book and catalog management
-- Circulation, loans, reservations, and returns
-- Fines and payment-status management
-- Acquisitions and inventory workflows
-- Member contributions and recommendations
-- Librarian support-ticket management
-- Reports, audit logs, health checks, integrations, backups, and compliance tools
-- JWT authentication with HTTP-only cookie support
-- Swagger/OpenAPI documentation
-- Scheduled jobs for overdue-fine processing
-- Jest, Supertest, ESLint, TypeScript, and GitHub Actions CI
+SmartLib models the main workflows of a small library. Members can browse the catalog, manage loans and reservations, view fines, receive recommendations, maintain profiles, review search history, and submit contributions. Librarians can manage circulation, reservations, acquisitions, inventory, catalog synchronization, fines, support tickets, and contribution queues. Administrators can manage users, settings, audit logs, backups, integrations, compliance requests, and system health. Staff can access operational reports.
 
-## Technology Stack
+The backend also contains authentication and verification flows, scheduled processing for library jobs, email queue support, book lookup and cover processing, API documentation, and CI checks.
+
+## Technology stack
 
 | Area | Technology |
 |---|---|
-| Backend | Node.js, TypeScript, Express.js |
+| Backend | Node.js 20+, TypeScript, Express 5 |
 | Frontend | Next.js 16 App Router, React, Tailwind CSS, Framer Motion |
-| Database | SQLite with Prisma ORM and `better-sqlite3` |
-| Queue and jobs | BullMQ and Redis |
-| Authentication | JWT access and refresh tokens, HTTP-only cookies |
-| API documentation | Swagger UI / OpenAPI |
-| Testing | Jest and Supertest |
-| Deployment helpers | Docker, Docker Compose, PM2 or systemd |
+| Database | PostgreSQL 15 with Prisma ORM and `@prisma/adapter-pg` |
+| Background jobs | Redis 7, BullMQ, and scheduled jobs with `node-cron` |
+| Object storage | MinIO locally; S3-compatible storage in production |
+| Authentication | JWT access and refresh tokens with HTTP-only cookie support |
+| API documentation | Swagger UI / OpenAPI at `/api-docs` |
+| Testing | Jest, Supertest, ESLint, Prettier, and TypeScript checks |
+| Automation | GitHub Actions, Docker Compose, PM2 or systemd |
 
-## Repository Layout
+## Repository layout
 
 ```text
 librarySys/
-├── client/                 # Next.js frontend
-│   ├── src/app/            # App Router pages and role-based routes
-│   ├── src/components/     # Shared UI components
-│   ├── src/lib/api.ts      # Axios API client
-│   └── Dockerfile          # Production frontend image
+├── client/
+│   ├── src/app/            # Next.js App Router and role-based pages
+│   ├── src/components/     # Shared interface components
+│   ├── src/lib/api.ts      # Frontend Axios API client
+│   ├── src/store/          # Client state stores
+│   └── Dockerfile          # Standalone Next.js production image
 ├── prisma/
-│   ├── schema.prisma       # Prisma schema
-│   └── migrations/         # Database migrations
+│   ├── schema.prisma       # PostgreSQL Prisma schema
+│   └── migrations/         # Versioned database migrations
 ├── src/
-│   ├── config/             # Prisma, Redis, logging, and application config
+│   ├── config/             # Database, Redis, logging, and application config
 │   ├── controllers/        # HTTP request handlers
-│   ├── middlewares/        # Authentication and error middleware
-│   ├── routes/             # Express routes
-│   ├── services/           # Application services and scheduled jobs
+│   ├── middlewares/        # Authentication, authorization, and error handling
+│   ├── routes/             # Express route modules
+│   ├── services/           # Business logic, email, covers, jobs, and storage
 │   └── server.ts           # Backend entry point
-├── docker-compose.yml       # Redis service for local or VPS use
-├── package.json             # Backend scripts and dependencies
+├── .github/workflows/      # Backend and frontend CI pipeline
+├── docker-compose.yml      # PostgreSQL, Redis, and MinIO services
+├── package.json            # Backend scripts and dependencies
 └── README.md
 ```
 
 ## Prerequisites
 
-For local development or a Linux VPS, install:
+Install Node.js 20 LTS or newer, npm, Git, and Docker Engine with Docker Compose v2. Docker Compose is the recommended way to run PostgreSQL, Redis, and MinIO locally because the application expects all three services during normal development.
 
-- Node.js 20 LTS or newer
-- npm 10 or newer
-- Git
-- Docker Engine and Docker Compose v2 if Redis will run in Docker
-- A persistent directory for the SQLite database and backups
+The frontend Dockerfile uses Node.js 20 Alpine. Using Node.js 20 LTS locally and in production keeps the two application runtimes consistent.
 
-The frontend Dockerfile uses Node.js 20 Alpine. Using Node.js 20 LTS for both applications keeps local and production environments consistent.
-
-## Local Development
+## Quick start
 
 ### 1. Clone the repository
 
@@ -78,45 +67,49 @@ cd automated_library
 
 ### 2. Configure environment variables
 
-Copy the example configuration and replace every placeholder with a real value:
+Create a local environment file from the supplied template:
 
 ```bash
 cp .env.example .env
 ```
 
-On Windows PowerShell:
+On Windows PowerShell, use:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Never commit `.env` or real credentials to Git.
+Review every placeholder before starting the application. Never commit `.env` or real credentials.
 
 ### 3. Install dependencies
 
-Install backend dependencies from the repository root:
+Install backend dependencies from the repository root and frontend dependencies from `client/`:
 
 ```bash
 npm ci
-```
-
-Install frontend dependencies separately:
-
-```bash
 cd client
 npm ci
 cd ..
 ```
 
-### 4. Start Redis
+### 4. Start the supporting services
 
-The supplied Compose file starts Redis only; it does not start the backend or frontend:
+The Compose file starts PostgreSQL, Redis, and MinIO:
 
 ```bash
-docker compose up -d redis
+docker compose up -d postgres redis minio
 ```
 
-If Redis is installed directly on the host, make sure it is listening at the address configured by `REDIS_URL`.
+The services use these local defaults:
+
+| Service | Address | Local purpose |
+|---|---|---|
+| PostgreSQL | `localhost:5432` | Application database |
+| Redis | `localhost:6379` | BullMQ queues and scheduled-job support |
+| MinIO API | `localhost:9000` | S3-compatible book-cover storage |
+| MinIO console | `localhost:9001` | Local object-storage administration |
+
+The default PostgreSQL database is `library`, with user `smartlib` and password `password123`. Change these values for any shared or public environment.
 
 ### 5. Generate Prisma and apply migrations
 
@@ -125,9 +118,9 @@ npx prisma generate
 npx prisma migrate deploy
 ```
 
-For local schema development, use `npx prisma migrate dev` only when creating a new migration. Do not use `prisma migrate reset` against a database containing required data.
+Use `npx prisma migrate dev` when creating a new development migration. Do not use `prisma migrate reset` against a database containing required data.
 
-Optional seed commands are available when demo data is needed:
+Optional seed commands are available for development data:
 
 ```bash
 npm run seed
@@ -136,13 +129,13 @@ npm run seed:books
 
 ### 6. Start the backend
 
-Development mode watches the TypeScript source:
+Run the backend in development mode from the repository root:
 
 ```bash
 npm run dev
 ```
 
-The backend listens on `PORT`, normally `5000`. Swagger documentation is available at:
+The API listens on `PORT`, normally `5000`. Swagger UI is available at:
 
 ```text
 http://localhost:5000/api-docs
@@ -163,59 +156,46 @@ The frontend is normally available at:
 http://localhost:3000
 ```
 
-## Environment Variables
+## Environment configuration
 
-The complete template is in `.env.example`. The most important variables are:
+The complete template is `.env.example`. The most important variables are shown below.
 
-| Variable | Example | Purpose |
+| Variable | Local example | Purpose |
 |---|---|---|
 | `PORT` | `5000` | Backend listening port |
-| `DATABASE_FILE` | `./library.db` | SQLite file used by the runtime Prisma adapter |
-| `DATABASE_URL` | `file:./library.db` | SQLite URL used by Prisma CLI and migrations |
-| `REDIS_URL` | `redis://localhost:6379` | Redis connection for BullMQ and background jobs |
-| `APP_URL` | `http://localhost:3000` | Public frontend URL used by application flows |
-| `CLIENT_ORIGIN` | `http://localhost:3000` | Origin permitted by backend CORS configuration |
-| `ACCESS_SECRET` | long random value | Access-token signing secret |
-| `REFRESH_SECRET` | different long random value | Refresh-token signing secret |
+| `DATABASE_URL` | `postgresql://smartlib:password123@localhost:5432/library?schema=public` | PostgreSQL connection used by Prisma and the application |
+| `REDIS_URL` | `redis://localhost:6379` | Redis connection for queues and scheduled jobs |
+| `APP_URL` | `http://localhost:3000` | Public application URL used in links and verification flows |
+| `CLIENT_ORIGIN` | `http://localhost:3000` | Frontend origin permitted by backend CORS |
+| `ACCESS_SECRET` | Long random value | JWT access-token signing secret |
+| `REFRESH_SECRET` | Different long random value | JWT refresh-token signing secret |
 | `SMTP_HOST` | `smtp.office365.com` | SMTP server hostname |
 | `SMTP_PORT` | `587` | SMTP server port |
 | `SMTP_USER` | `your-address@example.com` | SMTP username |
 | `SMTP_PASS` | `replace-me` | SMTP password or application password |
-| `ADMIN_EMAIL` | `admin@example.com` | Administrative notification address |
-| `ADMIN_PASSWORD` | `replace-me` | Initial administrative credential where applicable |
+| `ADMIN_EMAIL` | `admin@example.com` | Administrative email address |
+| `ADMIN_PASSWORD` | `replace-me` | Initial administrative password |
 
-For production, use strong randomly generated values for both token secrets, use HTTPS URLs, and replace all example credentials. Never deploy with `ADMIN_PASSWORD=admin123` or another development password.
+### Object-storage variables
 
-### SQLite path consistency
-
-The runtime reads `DATABASE_FILE`, while Prisma migrations use `DATABASE_URL`. Set both variables to the same database location. On a VPS, an absolute path is safer:
+The local MinIO service uses development defaults in the storage code. For production S3 or MinIO, set explicit values rather than relying on defaults:
 
 ```dotenv
-DATABASE_FILE=/var/lib/smartlib/library.db
-DATABASE_URL=file:/var/lib/smartlib/library.db
+S3_ENDPOINT=http://localhost:9000
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=minioadmin
+S3_SECRET_ACCESS_KEY=minioadminpassword
+S3_BUCKET_NAME=book-covers
+S3_PUBLIC_URL_PREFIX=http://localhost:9000/book-covers
 ```
 
-Create the directory and assign it to the service user:
+For a public deployment, use a private or HTTPS endpoint as appropriate, rotate access keys, and ensure that the public URL prefix points to the actual object-storage endpoint. Do not expose the MinIO administration console or storage credentials to the browser.
 
-```bash
-sudo mkdir -p /var/lib/smartlib
-sudo chown -R smartlib:smartlib /var/lib/smartlib
-```
+### Production secrets
 
-Include the SQLite file in the backup plan.
+Replace all example credentials before deployment. In particular, do not use `ADMIN_PASSWORD=admin123`, the sample PostgreSQL password, the default MinIO credentials, or the example JWT secrets in a real environment. Store secrets in the hosting provider’s secret manager or protected service environment rather than in Git.
 
-## API Client and Production URLs
-
-The frontend API client is in `client/src/lib/api.ts`. It currently uses `http://localhost:5000/api`, which is suitable for local development but not for an internet-facing deployment. In a visitor's browser, `localhost` refers to the visitor's own computer, not the VPS.
-
-Before publishing, make the API base URL configurable or change it to the public backend URL. A same-domain production arrangement commonly uses `/api` with a reverse proxy. The backend CORS setting must match the public frontend URL:
-
-```dotenv
-APP_URL=https://library.example.com
-CLIENT_ORIGIN=https://library.example.com
-```
-
-## Production Build
+## Production builds
 
 ### Backend
 
@@ -229,7 +209,7 @@ npm run build
 npm start
 ```
 
-`npm run build` compiles the backend into `dist/`. `npm start` runs `dist/server.js`.
+`npm run build` performs the TypeScript build. `npm start` runs `dist/server.js`.
 
 ### Frontend
 
@@ -243,7 +223,7 @@ npm start
 
 The Next.js production server listens on port `3000` by default.
 
-## Docker Frontend Build
+### Frontend Docker image
 
 The repository includes `client/Dockerfile` for a standalone Next.js production image:
 
@@ -253,36 +233,37 @@ docker build -t smartlib-frontend .
 docker run --name smartlib-frontend --restart unless-stopped -p 3000:3000 smartlib-frontend
 ```
 
-The frontend image does not include the backend or Redis. Run those services separately or create a VPS-specific Compose file that defines all application services.
+This image contains the frontend only. PostgreSQL, Redis, MinIO, and the Express backend must run as separate services.
 
-## Linux VPS Deployment
+## Linux VPS deployment
 
-SmartLib can run on an Ubuntu or Debian VPS. A simple production layout is:
+SmartLib can run on an Ubuntu or Debian VPS. A practical production layout uses Nginx or Caddy as the public HTTPS entry point and keeps application services on localhost or a private Docker network.
 
 | Service | Internal address | Responsibility |
 |---|---|---|
 | Nginx or Caddy | `80`/`443` | HTTPS termination and reverse proxy |
-| Next.js frontend | `127.0.0.1:3000` | Browser application |
-| Express backend | `127.0.0.1:5000` | REST API and Swagger |
-| Redis | `127.0.0.1:6379` | BullMQ queue and job state |
-| SQLite | Persistent disk | Application data |
+| Next.js | `127.0.0.1:3000` | Browser application |
+| Express | `127.0.0.1:5000` | REST API and Swagger |
+| PostgreSQL | `127.0.0.1:5432` or private network | Persistent application data |
+| Redis | `127.0.0.1:6379` or private network | Queues and scheduled jobs |
+| MinIO/S3 | Private network or managed endpoint | Book-cover objects |
 
-A typical VPS setup is:
+A basic server preparation sequence is:
 
 ```bash
 sudo apt update
 sudo apt install -y git curl nginx
 # Install Node.js 20 LTS using a trusted method.
-# Install Docker Engine and Compose v2 if Redis will run in Docker.
+# Install Docker Engine and Compose v2 if Docker will run the services.
 
 sudo adduser --system --group smartlib
-sudo mkdir -p /opt/smartlib /var/lib/smartlib
-sudo chown -R smartlib:smartlib /opt/smartlib /var/lib/smartlib
+sudo mkdir -p /opt/smartlib
+sudo chown -R smartlib:smartlib /opt/smartlib
 
 sudo -u smartlib git clone https://github.com/lenoxspider/automated_library.git /opt/smartlib
 cd /opt/smartlib
 sudo -u smartlib cp .env.example .env
-# Edit /opt/smartlib/.env with production values.
+# Edit .env with production database, Redis, storage, SMTP, URL, and secret values.
 
 sudo -u smartlib npm ci
 cd client
@@ -293,10 +274,10 @@ sudo -u smartlib npx prisma migrate deploy
 sudo -u smartlib npm run build
 sudo -u smartlib npm --prefix client run build
 
-docker compose up -d redis
+docker compose up -d postgres redis minio
 ```
 
-Run the backend and frontend with systemd or PM2 so they restart after failures and reboots. For example, with PM2:
+Run the backend and frontend under systemd or PM2 so they restart after failure and reboot. For a small VPS, PM2 can be used as follows:
 
 ```bash
 sudo npm install --global pm2
@@ -307,11 +288,11 @@ pm2 save
 pm2 startup
 ```
 
-Do not expose ports `3000`, `5000`, or `6379` publicly unless there is a specific operational reason. Prefer binding application services to `127.0.0.1` and exposing only Nginx or Caddy on ports `80` and `443`.
+Do not expose PostgreSQL, Redis, or MinIO administration ports to the public internet. Expose only Nginx or Caddy on ports `80` and `443`, and configure HTTPS before enabling real user accounts or email verification.
 
 ### Reverse proxy example
 
-A minimal Nginx server block can route the public frontend and API separately:
+A minimal Nginx configuration can route the API and frontend through one public domain:
 
 ```nginx
 server {
@@ -338,61 +319,64 @@ server {
 }
 ```
 
-Enable HTTPS with Certbot or another certificate-management solution. The frontend API client must use the public API URL or `/api`; the current hardcoded `localhost:5000` value must be addressed before using this reverse-proxy arrangement.
+The current frontend API client is in `client/src/lib/api.ts`. If it uses a hardcoded `http://localhost:5000/api` value, change it to a configurable public API URL or to `/api` before deploying behind this reverse proxy. Set `APP_URL` and `CLIENT_ORIGIN` to the public HTTPS origin.
 
-## Testing and Quality Checks
+## Testing and quality checks
 
-Run the backend checks from the repository root:
+Run backend checks from the repository root:
 
 ```bash
+npx prettier --check src
 npm run lint
 npx tsc --noEmit
 npm test -- --runInBand
 ```
 
-Run the frontend checks from `client/`:
+Run frontend checks from `client/`:
 
 ```bash
-npm run build
 npm run lint
+npm run build
 ```
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` runs the repository's CI checks on pushes and pull requests. Review the workflow output for the authoritative result in a clean Linux environment.
+The workflow in `.github/workflows/ci.yml` runs the backend and frontend checks on pushes and pull requests. The backend CI job starts PostgreSQL and Redis service containers, applies Prisma migrations, runs lint and TypeScript checks, and executes the Jest suite. The frontend CI job installs dependencies and builds the Next.js application.
 
-## Backups and Operations
+## Backups and operations
 
-SQLite is a file-based database. Stop or quiesce write-heavy jobs before copying the database, keep multiple timestamped backups, and test restoring a backup. Back up the SQLite file and the `.env` configuration through a secure secrets-management process; do not publish `.env` in Git.
+PostgreSQL is the system of record and should be backed up using scheduled logical or physical backups. Test restoration rather than assuming that a backup is usable. MinIO or S3 book-cover objects must be backed up separately from PostgreSQL because the database stores application records while object storage holds the image data.
 
-Redis should be treated as queue and job state unless the application configuration explicitly relies on its persistence. Keep Redis protected from the public internet and use a password or private network when appropriate.
+Redis is used for queue and job support. Protect it from public access and configure persistence or a managed service according to operational requirements. Keep structured logs, monitor health endpoints, and configure alerts for failed background jobs, SMTP failures, database connectivity, and storage errors.
 
 Useful operational commands include:
 
 ```bash
 docker compose ps
+docker compose logs --tail=100 postgres redis minio
 pm2 logs smartlib-backend
 pm2 logs smartlib-frontend
 git log -5 --oneline --decorate
 git status -sb
 ```
 
-## Security Checklist
+## Security checklist
 
 Before exposing SmartLib publicly:
 
-- Replace all sample secrets and passwords.
-- Use HTTPS for the frontend, API, SMTP callbacks, and verification links.
+- Replace all sample passwords, secrets, and storage credentials.
+- Use HTTPS for the frontend, API, SMTP flows, and verification links.
 - Set `APP_URL` and `CLIENT_ORIGIN` to the real public origin.
-- Configure the frontend API base URL for the public deployment.
-- Keep Redis and SQLite off the public network.
+- Make the frontend API base URL deployment-configurable.
+- Keep PostgreSQL, Redis, and MinIO off the public network.
 - Use a dedicated non-root service account.
 - Restrict the VPS firewall to SSH, HTTP, and HTTPS as required.
-- Back up and protect the SQLite database.
-- Keep Node.js, npm packages, the operating system, Docker, and Redis updated.
-- Review GitHub Actions after every deployment-related change.
+- Back up PostgreSQL and object storage independently.
+- Review authorization on every administrative, export, backup, compliance, and user-management route.
+- Keep Node.js, npm packages, the operating system, Docker, PostgreSQL, Redis, and MinIO updated.
+- Review GitHub Actions after deployment-related changes.
 
 ## License
 
-This project is currently maintained as an academic and operational library-system project. Add the project license here when one is formally selected.
+SmartLib is currently maintained as an academic and operational library-system project. Add a formal project license when one is selected.
 
 ## References
 
@@ -401,3 +385,5 @@ This project is currently maintained as an academic and operational library-syst
 - [Docker Compose documentation](https://docs.docker.com/compose/)
 - [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying)
 - [Nginx documentation](https://docs.nginx.com/)
+- [MinIO documentation](https://min.io/docs/minio/linux/index.html)
+- [GitHub Actions documentation](https://docs.github.com/en/actions)
