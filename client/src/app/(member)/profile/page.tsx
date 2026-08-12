@@ -43,8 +43,8 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-mono font-bold tracking-tight">Profile & Preferences</h1>
-        <p className="opacity-60 mt-1">Manage your personal settings.</p>
+        <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">Profile & Preferences</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Manage your personal settings.</p>
       </div>
 
       {success && (
@@ -56,7 +56,7 @@ export default function ProfilePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card surface="light" className="p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-gray-100 dark:border-neutral-800 pb-2 mb-4">
+          <div className="flex items-center gap-2 border-b border-gray-100 dark:border-slate-700 pb-2 mb-4">
             <User size={18} className="opacity-50" />
             <h2 className="font-semibold">Personal Information</h2>
           </div>
@@ -78,7 +78,7 @@ export default function ProfilePage() {
                 type="email" 
                 value={user?.email || ''} 
                 disabled
-                className="w-full border-2 px-3 py-2 outline-none bg-gray-50 dark:bg-neutral-900 opacity-60 cursor-not-allowed"
+                className="w-full border-2 px-3 py-2 outline-none bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100 opacity-60 cursor-not-allowed rounded"
                 style={{ borderColor: 'var(--color-signal-border-light)' }}
               />
               <p className="text-xs opacity-50 mt-1">Email cannot be changed.</p>
@@ -87,7 +87,7 @@ export default function ProfilePage() {
         </Card>
 
         <Card surface="light" className="p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-gray-100 dark:border-neutral-800 pb-2 mb-4">
+          <div className="flex items-center gap-2 border-b border-gray-100 dark:border-slate-700 pb-2 mb-4">
             <Globe size={18} className="opacity-50" />
             <h2 className="font-semibold">Preferences</h2>
           </div>
@@ -124,7 +124,7 @@ export default function ProfilePage() {
         </Card>
 
         <Card surface="light" className="p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-gray-100 dark:border-neutral-800 pb-2 mb-4">
+          <div className="flex items-center gap-2 border-b border-gray-100 dark:border-slate-700 pb-2 mb-4">
             <Lock size={18} className="opacity-50" />
             <h2 className="font-semibold">Security</h2>
           </div>

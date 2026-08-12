@@ -15,14 +15,14 @@ export default function RecommendationsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-mono font-bold tracking-tight">For You</h1>
-        <p className="opacity-60 mt-1">Discover your next great read.</p>
+        <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">For You</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Discover your next great read.</p>
       </div>
 
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-64 animate-pulse bg-gray-100 dark:bg-neutral-800 rounded-lg"></div>
+            <div key={i} className="h-64 animate-pulse bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
           ))}
         </div>
       ) : (

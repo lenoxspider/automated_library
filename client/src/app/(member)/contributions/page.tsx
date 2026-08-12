@@ -38,8 +38,8 @@ export default function ContributionsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-mono font-bold tracking-tight">Community Contributions</h1>
-        <p className="opacity-60 mt-1">Earn Library Points by helping us improve our catalog!</p>
+        <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">Community Contributions</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Earn Library Points by helping us improve our catalog!</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -59,7 +59,7 @@ export default function ContributionsPage() {
               <span>Extended Loan Perk</span>
               <span>{isPremium ? 'Unlocked!' : `${50 - points} to go`}</span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-neutral-800 rounded-full h-3">
+            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3">
               <div 
                 className={`h-3 rounded-full transition-all duration-1000 ${isPremium ? 'bg-gradient-to-r from-green-400 to-green-500' : 'bg-gradient-to-r from-indigo-400 to-indigo-600'}`} 
                 style={{ width: `${progress}%` }}
@@ -86,11 +86,11 @@ export default function ContributionsPage() {
           >
             <div>
               <label className="block text-xs font-semibold uppercase opacity-50 mb-1">Book ID</label>
-              <input required type="number" value={bookId} onChange={e => setBookId(e.target.value)} className="w-full bg-transparent border-2 border-gray-200 dark:border-neutral-800 p-2 rounded focus:border-indigo-500 outline-none" />
+              <input required type="number" value={bookId} onChange={e => setBookId(e.target.value)} className="w-full bg-transparent border-2 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 p-2 rounded focus:border-indigo-500 outline-none" />
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase opacity-50 mb-1">Type</label>
-              <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-transparent border-2 border-gray-200 dark:border-neutral-800 p-2 rounded focus:border-indigo-500 outline-none">
+              <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-transparent border-2 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 p-2 rounded focus:border-indigo-500 outline-none">
                 <option value="correction">Metadata Correction</option>
                 <option value="review">Book Review</option>
                 <option value="tag">Add Tag</option>
@@ -98,7 +98,7 @@ export default function ContributionsPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase opacity-50 mb-1">Details</label>
-              <textarea required value={content} onChange={e => setContent(e.target.value)} className="w-full bg-transparent border-2 border-gray-200 dark:border-neutral-800 p-2 rounded focus:border-indigo-500 outline-none" rows={3}></textarea>
+              <textarea required value={content} onChange={e => setContent(e.target.value)} className="w-full bg-transparent border-2 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 p-2 rounded focus:border-indigo-500 outline-none" rows={3}></textarea>
             </div>
             <button type="submit" disabled={submitMutation.isPending} className="bg-indigo-600 text-white font-bold px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50 w-full">
               {submitMutation.isPending ? 'Submitting...' : 'Submit Contribution'}
@@ -108,11 +108,11 @@ export default function ContributionsPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold mb-4 border-b border-gray-200 dark:border-neutral-800 pb-2">History</h2>
+        <h2 className="text-xl font-bold mb-4 border-b border-gray-200 dark:border-slate-700 pb-2 text-gray-900 dark:text-slate-100">History</h2>
         <div className="space-y-3">
           {data?.contributions.length === 0 && <p className="opacity-50">No contributions yet.</p>}
           {data?.contributions.map((c: { id: number; content: string; contribution_type: string; status: string; books: { title: string } }) => (
-            <div key={c.id} className="p-4 rounded border border-gray-100 dark:border-neutral-800 flex items-start justify-between">
+            <div key={c.id} className="p-4 rounded border border-gray-100 dark:border-slate-700 flex items-start justify-between">
               <div>
                 <p className="font-semibold text-sm">Book: {c.books?.title}</p>
                 <p className="text-xs opacity-60 capitalize mb-2">{c.contribution_type}</p>
