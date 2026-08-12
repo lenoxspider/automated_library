@@ -19,7 +19,7 @@ The backend also contains authentication and verification flows, scheduled proce
 | Database | PostgreSQL 15 with Prisma ORM and `@prisma/adapter-pg` |
 | Background jobs | Redis 7, BullMQ, and scheduled jobs with `node-cron` |
 | Object storage | MinIO locally; S3-compatible storage in production |
-| Authentication | JWT access and refresh tokens with HTTP-only cookie support |
+| Authentication | JWT access and refresh tokens, set as server-side httpOnly/secure/sameSite cookies (Bearer header accepted as a fallback for non-browser clients) |
 | API documentation | Swagger UI / OpenAPI at `/api-docs` |
 | Testing | Jest, Supertest, ESLint, Prettier, and TypeScript checks |
 | Automation | GitHub Actions, Docker Compose, PM2 or systemd |

@@ -83,10 +83,17 @@ describe('POST /api/auth/login', () => {
     expect(res.status).toBe(401);
   });
 
-  it('issues access + refresh tokens and stores the refresh token in redis on success', async () => {
+  it('sets httpOnly access + refresh cookies and stores the refresh token in redis on success', async () => {
     const hash = await bcrypt.hash('correct-password', 10);
     mockFindAll.mockResolvedValue([
-      { id: 42, username: 'member1', password: hash, role: 'member' }
+      {
+        id: 42,
+        username: 'member1',
+        password: hash,
+        role: 'member',
+        name: 'Member One',
+        email: 'm1@example.com'
+      }
     ]);
 
     const res = await request(app)
@@ -94,22 +101,30 @@ describe('POST /api/auth/login', () => {
       .send({ username: 'member1', password: 'correct-password' });
 
     expect(res.status).toBe(200);
-    expect(res.body.accessToken).toBeDefined();
-    expect(res.body.refreshToken).toBeDefined();
+    expect(res.body.accessToken).toBeUndefined();
+    expect(res.body.refreshToken).toBeUndefined();
+    expect(res.body.user).toEqual({
+      id: 42,
+      username: 'member1',
+      name: 'Member One',
+      email: 'm1@example.com',
+      role: 'member'
+    });
 
-    const decoded = jwt.verify(
-      res.body.accessToken,
-      process.env.ACCESS_SECRET as string
-    ) as jwt.JwtPayload;
+    const setCookieHeader = res.headers['set-cookie'] as unknown as string[];
+    const accessCookie = setCookieHeader.find((c) => c.startsWith('accessToken='));
+    const refreshCookie = setCookieHeader.find((c) => c.startsWith('refreshToken='));
+    expect(accessCookie).toMatch(/HttpOnly/);
+    expect(refreshCookie).toMatch(/HttpOnly/);
+
+    const accessToken = accessCookie!.split(';')[0].split('=')[1];
+    const refreshToken = refreshCookie!.split(';')[0].split('=')[1];
+
+    const decoded = jwt.verify(accessToken, process.env.ACCESS_SECRET as string) as jwt.JwtPayload;
     expect(decoded.sub).toBe(42);
     expect(decoded.role).toBe('member');
 
-    expect(mockRedis.set).toHaveBeenCalledWith(
-      'rt_42',
-      res.body.refreshToken,
-      'EX',
-      30 * 24 * 60 * 60
-    );
+    expect(mockRedis.set).toHaveBeenCalledWith('rt_42', refreshToken, 'EX', 30 * 24 * 60 * 60);
   });
 
   it('rejects a payload missing required fields (zod validation)', async () => {

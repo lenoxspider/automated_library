@@ -1,12 +1,14 @@
 import 'reflect-metadata';
 import express, { Application } from 'express';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 
 // Create Express application
 export const app: Application = express();
 
 // Global middleware
 app.use(express.json());
+app.use(cookieParser());
 
 import helmet from 'helmet';
 import cors from 'cors';

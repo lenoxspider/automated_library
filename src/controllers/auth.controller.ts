@@ -6,7 +6,12 @@ import { UserRepository } from '../repositories/user.repo';
 import redisClient from '../config/redis';
 import asyncHandler from 'express-async-handler';
 import { z } from 'zod';
-import { ACCESS_SECRET, REFRESH_SECRET } from '../config/env';
+import {
+  ACCESS_SECRET,
+  REFRESH_SECRET,
+  ACCESS_TOKEN_COOKIE_OPTIONS,
+  REFRESH_TOKEN_COOKIE_OPTIONS
+} from '../config/env';
 
 const userRepo = container.resolve(UserRepository);
 
@@ -29,29 +34,33 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Issue Access Token
-  const accessToken = jwt.sign(
-    { sub: user.id, role: user.role },
-    ACCESS_SECRET,
-    { expiresIn: '15m' }
-  );
+  const accessToken = jwt.sign({ sub: user.id, role: user.role }, ACCESS_SECRET, {
+    expiresIn: '15m'
+  });
 
   // Issue Refresh Token
-  const refreshToken = jwt.sign(
-    { sub: user.id },
-    REFRESH_SECRET,
-    { expiresIn: '30d' }
-  );
+  const refreshToken = jwt.sign({ sub: user.id }, REFRESH_SECRET, { expiresIn: '30d' });
 
   // Store refresh token in Redis (or an ID related to it)
   await redisClient.set(`rt_${user.id}`, refreshToken, 'EX', 30 * 24 * 60 * 60);
 
-  res.json({ accessToken, refreshToken });
+  res.cookie('accessToken', accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+  res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+
+  res.json({
+    user: {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }
+  });
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
+  const token = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1];
+  if (token) {
     // Blacklist access token for 15 mins
     await redisClient.set(`bl_${token}`, 'true', 'EX', 15 * 60);
   }
@@ -62,11 +71,14 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
     await redisClient.del(`rt_${userId}`);
   }
 
+  res.clearCookie('accessToken', ACCESS_TOKEN_COOKIE_OPTIONS);
+  res.clearCookie('refreshToken', REFRESH_TOKEN_COOKIE_OPTIONS);
+
   res.json({ message: 'Logged out successfully' });
 });
 
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
-  const { refreshToken } = req.body;
+  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
   if (!refreshToken) {
     res.status(401).json({ error: 'No refresh token provided' });
     return;
@@ -90,13 +102,12 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
     }
 
     // Issue a new access token
-    const newAccessToken = jwt.sign(
-      { sub: user.id, role: user.role },
-      ACCESS_SECRET,
-      { expiresIn: '15m' }
-    );
+    const newAccessToken = jwt.sign({ sub: user.id, role: user.role }, ACCESS_SECRET, {
+      expiresIn: '15m'
+    });
 
-    res.json({ accessToken: newAccessToken });
+    res.cookie('accessToken', newAccessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+    res.json({ message: 'Access token refreshed' });
   } catch (error) {
     res.status(401).json({ error: 'Refresh token expired or invalid' });
   }
