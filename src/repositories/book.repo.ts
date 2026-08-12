@@ -17,18 +17,26 @@ export class BookRepository {
   async findBooks(
     query: string,
     page: number,
-    limit: number
+    limit: number,
+    genre?: string,
+    availability?: string
   ): Promise<{ data: books[]; totalCount: number }> {
     const skip = (page - 1) * limit;
-    const where = query
-      ? {
-          OR: [
-            { title: { contains: query } },
-            { author: { contains: query } },
-            { isbn: { contains: query } }
-          ]
-        }
-      : {};
+    const where: any = {};
+
+    if (query) {
+      where.OR = [
+        { title: { contains: query } },
+        { author: { contains: query } },
+        { isbn: { contains: query } }
+      ];
+    }
+    if (genre) {
+      where.genre = genre;
+    }
+    if (availability === 'available') {
+      where.available_copies = { gt: 0 };
+    }
 
     const [totalCount, data] = await this.prisma.$transaction([
       this.prisma.books.count({ where }),

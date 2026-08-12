@@ -28,9 +28,11 @@ const addCopySchema = z.object({
 export const getBooks = asyncHandler(async (req: Request, res: Response) => {
   const query = (req.query.q as string) || '';
   const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 50;
+  const limit = parseInt(req.query.limit as string) || 20;
+  const genre = (req.query.genre as string) || '';
+  const availability = (req.query.availability as string) || '';
 
-  const result = await bookRepo.findBooks(query, page, limit);
+  const result = await bookRepo.findBooks(query, page, limit, genre, availability);
 
   res.json({
     data: result.data,

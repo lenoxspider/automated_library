@@ -22,6 +22,13 @@ const router = Router();
  *         description: List of reservations
  */
 router.get(
+  '/my',
+  authenticate,
+  authorize(['member', 'librarian', 'admin']),
+  reservationsController.getMyReservations
+);
+
+router.get(
   '/',
   authenticate,
   authorize(['librarian', 'admin']),

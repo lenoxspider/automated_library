@@ -64,6 +64,43 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   res.json({ message: 'Logged out successfully' });
 });
 
+export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    res.status(401).json({ error: 'No refresh token provided' });
+    return;
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET || 'fallback_refresh_secret') as jwt.JwtPayload;
+    
+    // Check if refresh token is valid in Redis
+    const storedToken = await redisClient.get(`rt_${decoded.sub}`);
+    if (storedToken !== refreshToken) {
+      res.status(401).json({ error: 'Invalid or revoked refresh token' });
+      return;
+    }
+
+    // We need the user's role. Let's fetch it from DB to ensure it's up to date.
+    const user = await prisma.users.findUnique({ where: { id: Number(decoded.sub) } });
+    if (!user) {
+      res.status(401).json({ error: 'User no longer exists' });
+      return;
+    }
+
+    // Issue a new access token
+    const newAccessToken = jwt.sign(
+      { sub: user.id, role: user.role },
+      process.env.ACCESS_SECRET || 'fallback_secret',
+      { expiresIn: '15m' }
+    );
+
+    res.json({ accessToken: newAccessToken });
+  } catch (error) {
+    res.status(401).json({ error: 'Refresh token expired or invalid' });
+  }
+});
+
 // Import additional services
 import { UserService } from '../services/user.service';
 import { EmailService } from '../services/email.service';

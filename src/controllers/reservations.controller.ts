@@ -175,3 +175,35 @@ export const bulkUpdateReservations = asyncHandler(async (req: Request, res: Res
 
   res.json({ success: true, count: result.count });
 });
+
+// Member's own reservations with queue position - used on the catalog page
+export const getMyReservations = asyncHandler(async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const rawReservations = await prisma.reservations.findMany({
+    where: { member_id: Number(userId), status: { in: ['pending', 'approved', 'ready_for_pickup'] } },
+    include: { books: { select: { id: true, title: true } } },
+    orderBy: { reservation_date: 'asc' }
+  });
+
+  const reservations = await Promise.all(rawReservations.map(async (resItem) => {
+    let queue_position = null;
+    if (resItem.status === 'pending') {
+      const aheadCount = await prisma.reservations.count({
+        where: {
+          book_id: resItem.book_id,
+          status: 'pending',
+          reservation_date: { lt: resItem.reservation_date }
+        }
+      });
+      queue_position = aheadCount + 1;
+    }
+    return { ...resItem, queue_position };
+  }));
+
+  res.json(reservations);
+});

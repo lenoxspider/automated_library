@@ -28,7 +28,7 @@ export default function ProfilePage() {
       
       // Update local state if needed
       if (user) {
-        login(Cookies.get('accessToken') || '', { ...user, name: res.user.name });
+        login(Cookies.get('accessToken') || '', Cookies.get('refreshToken') || '', { ...user, name: res.user.name });
       }
     }
   });

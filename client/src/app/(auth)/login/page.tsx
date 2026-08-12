@@ -33,7 +33,7 @@ export default function LoginPage() {
     try {
       const response = await api.post('/auth/login', { username, password });
       const tokenPayload = JSON.parse(atob(response.data.accessToken.split('.')[1]));
-      login(response.data.accessToken, { id: tokenPayload.sub, email: username, role: tokenPayload.role });
+      login(response.data.accessToken, response.data.refreshToken, { id: tokenPayload.sub, email: username, role: tokenPayload.role });
 
       const role = tokenPayload.role;
       if (role === 'admin') router.push('/health');

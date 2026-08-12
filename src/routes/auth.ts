@@ -18,6 +18,20 @@ router.post('/login', authController.login);
 
 /**
  * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: New access token generated
+ *       401:
+ *         description: Invalid or expired refresh token
+ */
+router.post('/refresh', authController.refreshToken);
+
+/**
+ * @swagger
  * /auth/register:
  *   post:
  *     summary: Register a new user

@@ -36,3 +36,73 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
 
   res.json({ message: 'Order status updated', order });
 });
+
+export const receiveOrder = asyncHandler(async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id as string);
+  const { author, genre, isbn, branch, section, shelf } = req.body;
+
+  if (!author || !genre || !isbn) {
+    res.status(400).json({ error: 'Author, genre, and ISBN are required to receive an order into inventory' });
+    return;
+  }
+
+  const order = await prisma.purchase_orders.findUnique({ where: { id } });
+  if (!order) {
+    res.status(404).json({ error: 'Order not found' });
+    return;
+  }
+  if (order.status === 'received') {
+    res.status(400).json({ error: 'Order is already received' });
+    return;
+  }
+
+  // Use a transaction for safety
+  await prisma.$transaction(async (tx) => {
+    // 1. Mark order as received
+    await tx.purchase_orders.update({
+      where: { id },
+      data: { status: 'received' }
+    });
+
+    // 2. Upsert the Book
+    const existingBook = await tx.books.findUnique({ where: { isbn } });
+    let bookId: number;
+
+    if (existingBook) {
+      const updatedBook = await tx.books.update({
+        where: { id: existingBook.id },
+        data: {
+          total_copies: existingBook.total_copies + order.quantity,
+          available_copies: existingBook.available_copies + order.quantity
+        }
+      });
+      bookId = updatedBook.id;
+    } else {
+      const newBook = await tx.books.create({
+        data: {
+          title: order.title,
+          author,
+          genre,
+          isbn,
+          total_copies: order.quantity,
+          available_copies: order.quantity
+        }
+      });
+      bookId = newBook.id;
+    }
+
+    // 3. Create the Book Copies
+    const copiesToCreate = Array.from({ length: order.quantity }).map(() => ({
+      book_id: bookId,
+      barcode: `BC-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      status: 'Available',
+      branch: branch || null,
+      section: section || null,
+      shelf: shelf || null
+    }));
+
+    await tx.book_copies.createMany({ data: copiesToCreate });
+  });
+
+  res.json({ message: 'Order received and added to inventory' });
+});
