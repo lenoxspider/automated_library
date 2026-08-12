@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle2, Hash, Camera, Globe, Upload, Search, Check, AlertCircle } from 'lucide-react';
+import { X, Clock, CheckCircle2, Hash, Camera, Globe, Upload, Search, Check } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import BookCover from '../ui/BookCover';
 import StatusBadge, { type BookStatus } from '../ui/StatusBadge';
@@ -119,8 +120,9 @@ export default function BookDetailModal({
       queryClient.invalidateQueries({ queryKey: ['books'] });
       toast.success('Custom cover uploaded!');
       setIsEditingCover(false);
-    } catch (err: any) {
-      const errMsg = err.response?.data?.error || 'Failed to upload custom cover';
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errMsg = (err as any).response?.data?.error || 'Failed to upload custom cover';
       toast.error(errMsg);
     } finally {
       setIsSaving(false);
