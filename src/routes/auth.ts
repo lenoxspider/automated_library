@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
+import { loginRateLimiter } from '../middlewares/rateLimiters';
 import * as authController from '../controllers/auth.controller';
 
 const router = Router();
@@ -14,7 +15,7 @@ const router = Router();
  *       200:
  *         description: Successful login
  */
-router.post('/login', authController.login);
+router.post('/login', loginRateLimiter, authController.login);
 
 /**
  * @swagger
