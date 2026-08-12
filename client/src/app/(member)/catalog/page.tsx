@@ -126,66 +126,42 @@ export default function CatalogPage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">Catalog</h1>
-          <p className="text-gray-500 dark:text-slate-400 mt-1">
-            Search {totalCount > 0 ? `${totalCount.toLocaleString()} books` : 'the collection'} and place holds.
-          </p>
-        </div>
-        <Link
-          href="/loans"
-          className="inline-flex items-center gap-2 px-4 py-2.5 font-semibold text-sm border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-gray-700 dark:text-slate-300"
-        >
-          <Clock size={16} />
-          My Loans
-        </Link>
-      </div>
-
-      {/* Search bar */}
-      <div className="relative max-w-2xl">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-        <input
-          type="text"
-          placeholder="Search by title, author, or ISBN..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-        />
-      </div>
-
-      {/* New Arrivals */}
-      {newArrivals.length > 0 && (
-        <section>
-          <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <Star size={16} className="text-amber-400" /> New Arrivals
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {newArrivals.map((book) => {
-              return (
-                <button
-                  key={book.id}
-                  onClick={() => setSelectedBook(book)}
-                  className="text-left group bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3 flex gap-4 hover:shadow-md transition-shadow items-center"
-                >
-                  <BookCover title={book.title} isbn={book.isbn} src={book.cover_path} className="w-16 h-24 shrink-0 rounded shadow-sm border border-gray-100 dark:border-slate-700" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate text-gray-900 dark:text-slate-100 mb-1">{book.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{book.author}</p>
-                  </div>
-                </button>
-              );
-            })}
+    <div className="flex flex-col md:h-[calc(100vh-12rem)] md:overflow-hidden space-y-6">
+      {/* Header and Search */}
+      <div className="shrink-0 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">Catalog</h1>
+            <p className="text-gray-500 dark:text-slate-400 mt-1">
+              Search {totalCount > 0 ? `${totalCount.toLocaleString()} books` : 'the collection'} and place holds.
+            </p>
           </div>
-        </section>
-      )}
+          <Link
+            href="/loans"
+            className="inline-flex items-center gap-2 px-4 py-2.5 font-semibold text-sm border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-gray-700 dark:text-slate-300"
+          >
+            <Clock size={16} />
+            My Loans
+          </Link>
+        </div>
+
+        {/* Search bar */}
+        <div className="relative max-w-2xl">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search by title, author, or ISBN..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+          />
+        </div>
+      </div>
 
       {/* Main catalog: filters + grid */}
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-8 overflow-hidden">
         {/* Sidebar filters */}
-        <aside className="w-full md:w-56 shrink-0 space-y-8 md:sticky md:top-8 self-start">
+        <aside className="w-full md:w-56 shrink-0 space-y-8 md:overflow-y-auto pb-4">
           <div>
             <h3 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4">Genre Filters</h3>
             <div className="flex flex-wrap gap-2">
@@ -210,34 +186,62 @@ export default function CatalogPage() {
 
           <div>
             <h3 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4">Availability</h3>
-            <div className="space-y-4">
-              <button
-                type="button"
-                onClick={() => { setAvailabilityFilter('all'); setPage(1); }}
-                className="flex items-center gap-3 cursor-pointer w-full text-left"
-              >
-                <div className={`w-11 h-6 rounded-full relative transition-colors ${availabilityFilter === 'all' ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-slate-700'}`}>
-                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${availabilityFilter === 'all' ? 'translate-x-5' : ''}`}></div>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">All Books</span>
-              </button>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="availability"
+                  value="all"
+                  checked={availabilityFilter === 'all'}
+                  onChange={() => { setAvailabilityFilter('all'); setPage(1); }}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:ring-offset-slate-900"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">All Books</span>
+              </label>
               
-              <button
-                type="button"
-                onClick={() => { setAvailabilityFilter('available'); setPage(1); }}
-                className="flex items-center gap-3 cursor-pointer w-full text-left"
-              >
-                <div className={`w-11 h-6 rounded-full relative transition-colors ${availabilityFilter === 'available' ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-slate-700'}`}>
-                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${availabilityFilter === 'available' ? 'translate-x-5' : ''}`}></div>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Available Now</span>
-              </button>
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="availability"
+                  value="available"
+                  checked={availabilityFilter === 'available'}
+                  onChange={() => { setAvailabilityFilter('available'); setPage(1); }}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:ring-offset-slate-900"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Available Now</span>
+              </label>
             </div>
           </div>
         </aside>
 
-        {/* Book grid */}
-        <div className="flex-1 min-w-0 space-y-6">
+        {/* Book grid (scroll container) */}
+        <div className="flex-1 min-w-0 overflow-y-auto pr-2 pb-4 space-y-6">
+          {/* New Arrivals (inside scrolling container) */}
+          {newArrivals.length > 0 && (
+            <section>
+              <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <Star size={16} className="text-amber-400" /> New Arrivals
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {newArrivals.map((book) => {
+                  return (
+                    <button
+                      key={book.id}
+                      onClick={() => setSelectedBook(book)}
+                      className="text-left group bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3 flex gap-4 hover:shadow-md transition-shadow items-center"
+                    >
+                      <BookCover title={book.title} isbn={book.isbn} src={book.cover_path} className="w-16 h-24 shrink-0 rounded shadow-sm border border-gray-100 dark:border-slate-700" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate text-gray-900 dark:text-slate-100 mb-1">{book.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{book.author}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {[...Array(6)].map((_, i) => (
