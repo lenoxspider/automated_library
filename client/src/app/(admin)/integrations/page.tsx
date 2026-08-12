@@ -62,11 +62,11 @@ export default function IntegrationsPage() {
           <Card surface="light" className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 dark:bg-neutral-900 border-b" style={{ borderColor: 'var(--color-signal-border-light)' }}>
+                <thead className="bg-gray-100 dark:bg-slate-700 border-b" style={{ borderColor: 'var(--color-signal-border-light)' }}>
                   <tr>
-                    <th className="px-6 py-4 text-xs font-mono uppercase opacity-60">Service</th>
-                    <th className="px-6 py-4 text-xs font-mono uppercase opacity-60">Status</th>
-                    <th className="px-6 py-4 text-xs font-mono uppercase opacity-60 text-right">Actions</th>
+                    <th className="px-6 py-4 text-xs font-mono uppercase text-gray-700 dark:text-gray-400 font-bold">Service</th>
+                    <th className="px-6 py-4 text-xs font-mono uppercase text-gray-700 dark:text-gray-400 font-bold">Status</th>
+                    <th className="px-6 py-4 text-xs font-mono uppercase text-gray-700 dark:text-gray-400 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y" style={{ borderColor: 'var(--color-signal-border-light)' }}>

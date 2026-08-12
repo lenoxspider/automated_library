@@ -75,12 +75,12 @@ export default function BackupPage() {
         </div>
         
         <table className="w-full text-left">
-          <thead className="bg-gray-50 dark:bg-neutral-900 border-b" style={{ borderColor: 'var(--color-signal-border-light)' }}>
+          <thead className="bg-gray-100 dark:bg-slate-700 border-b" style={{ borderColor: 'var(--color-signal-border-light)' }}>
             <tr>
-              <th className="px-6 py-4 text-xs font-mono uppercase opacity-60">Backup File</th>
-              <th className="px-6 py-4 text-xs font-mono uppercase opacity-60">Date Created</th>
-              <th className="px-6 py-4 text-xs font-mono uppercase opacity-60">Size</th>
-              <th className="px-6 py-4 text-xs font-mono uppercase opacity-60 text-right">Action</th>
+              <th className="px-6 py-4 text-xs font-mono uppercase text-gray-700 dark:text-gray-400 font-bold">Backup File</th>
+              <th className="px-6 py-4 text-xs font-mono uppercase text-gray-700 dark:text-gray-400 font-bold">Date Created</th>
+              <th className="px-6 py-4 text-xs font-mono uppercase text-gray-700 dark:text-gray-400 font-bold">Size</th>
+              <th className="px-6 py-4 text-xs font-mono uppercase text-gray-700 dark:text-gray-400 font-bold text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y" style={{ borderColor: 'var(--color-signal-border-light)' }}>
