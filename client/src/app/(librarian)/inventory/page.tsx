@@ -4,12 +4,12 @@ import { useState, useMemo } from 'react';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  Search, MapPin, Archive, CheckSquare, Edit2, AlertTriangle, 
-  ChevronRight, ChevronDown, Download, Activity, Package, Check, X
+  Search, MapPin, Archive, CheckSquare, AlertTriangle, 
+  ChevronRight, Download, Activity, Package, Check, X
 } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useThemeStore } from '../../../store/themeStore';
 
 interface InventoryItem {
@@ -47,6 +47,16 @@ export default function InventoryPage() {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [focusedItem, setFocusedItem] = useState<InventoryItem | null>(null);
+  const [drawerEdits, setDrawerEdits] = useState({ branch: '', section: '', shelf: '' });
+
+  const openDrawer = (item: InventoryItem) => {
+    setDrawerEdits({
+      branch: item.branch || '',
+      section: item.section || '',
+      shelf: item.shelf || ''
+    });
+    setFocusedItem(item);
+  };
 
   const { data, isLoading } = useQuery<InventoryResponse>({
     queryKey: ['inventory', { branch, section, shelf, statusFilter, search, page }],
@@ -71,6 +81,16 @@ export default function InventoryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       setSelectedIds(new Set());
+    }
+  });
+
+  const updateSingleMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Record<string, string> }) => {
+      await api.patch(`/inventory/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      setFocusedItem(null);
     }
   });
 
@@ -322,7 +342,7 @@ export default function InventoryPage() {
                       <tr 
                         key={item.id} 
                         className={`hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors ${selectedIds.has(item.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}
-                        onClick={() => setFocusedItem(item)}
+                        onClick={() => openDrawer(item)}
                       >
                         <td className="p-4 text-center" onClick={e => e.stopPropagation()}>
                           <input 
@@ -437,20 +457,39 @@ export default function InventoryPage() {
               <div className="space-y-3 text-sm">
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Branch</label>
-                  <input type="text" defaultValue={focusedItem.branch || ''} className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-md text-gray-900 dark:text-slate-100" />
+                  <input
+                    type="text"
+                    value={drawerEdits.branch}
+                    onChange={e => setDrawerEdits(prev => ({ ...prev, branch: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-md text-gray-900 dark:text-slate-100"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Section</label>
-                  <input type="text" defaultValue={focusedItem.section || ''} className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-md text-gray-900 dark:text-slate-100" />
+                  <input
+                    type="text"
+                    value={drawerEdits.section}
+                    onChange={e => setDrawerEdits(prev => ({ ...prev, section: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-md text-gray-900 dark:text-slate-100"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Shelf</label>
-                  <input type="text" defaultValue={focusedItem.shelf || ''} className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-md text-gray-900 dark:text-slate-100" />
+                  <input
+                    type="text"
+                    value={drawerEdits.shelf}
+                    onChange={e => setDrawerEdits(prev => ({ ...prev, shelf: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-md text-gray-900 dark:text-slate-100"
+                  />
                 </div>
               </div>
               
-              <button className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md transition-colors text-sm shadow-sm flex justify-center items-center gap-2">
-                <Check size={16} /> Save Changes
+              <button
+                disabled={updateSingleMutation.isPending}
+                onClick={() => focusedItem && updateSingleMutation.mutate({ id: focusedItem.id, data: drawerEdits })}
+                className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-medium py-2 rounded-md transition-colors text-sm shadow-sm flex justify-center items-center gap-2"
+              >
+                <Check size={16} /> {updateSingleMutation.isPending ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

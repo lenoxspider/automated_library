@@ -75,3 +75,21 @@ export async function updateBulkInventory(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to update inventory' });
   }
 }
+
+export async function updateSingleInventory(req: Request, res: Response) {
+  try {
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
+
+    const { branch, section, shelf, status } = req.body;
+    const updated = await prisma.book_copies.update({
+      where: { id },
+      data: { branch, section, shelf, status }
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    console.error('Inventory single PATCH error:', error);
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+}
