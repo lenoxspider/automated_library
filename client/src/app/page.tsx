@@ -445,7 +445,7 @@ export default function Home() {
           </div>
         ) : (
           <div className={`rounded-xl border py-16 text-center ${card}`}>
-            <div className="text-4xl mb-4">ðŸ“š</div>
+            <div className="text-4xl mb-4">📚</div>
             <p className={`font-medium mb-1 ${dark ? 'text-white' : 'text-slate-900'}`}>
               No results found
             </p>
@@ -468,19 +468,19 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
-              icon: 'ðŸŽ“',
+              icon: '🎓',
               title: 'Course Reserves',
               desc: 'Find required texts for your enrolled courses.',
               action: 'Browse reserves'
             },
             {
-              icon: 'ðŸ”¬',
+              icon: '🔬',
               title: 'Research Databases',
               desc: 'Access 40+ academic databases and journals.',
               action: 'Explore databases'
             },
             {
-              icon: 'ðŸ“‹',
+              icon: '📋',
               title: 'My Loans',
               desc: 'Track your borrowed items, due dates, and history.',
               action: 'View account'
