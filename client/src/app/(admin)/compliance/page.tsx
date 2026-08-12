@@ -22,8 +22,8 @@ export default function CompliancePage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-mono font-bold tracking-tight">Compliance & GDPR</h1>
-        <p className="opacity-60 mt-1">Handle data subject privacy requests and retention policies.</p>
+        <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">Compliance &amp; GDPR</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Handle data subject privacy requests and retention policies.</p>
       </div>
 
       <Card surface="light" className="overflow-hidden">
@@ -40,7 +40,7 @@ export default function CompliancePage() {
             ) : requests?.length === 0 ? (
               <p className="text-center opacity-50 py-4">No active compliance requests.</p>
             ) : requests?.map((req: { id: number; member_id: number; request_type: string; status: string; created_at: string }) => (
-              <div key={req.id} className={`border rounded-lg p-4 flex items-center justify-between ${req.status === 'completed' ? 'opacity-50' : 'bg-white dark:bg-neutral-900'}`} style={{ borderColor: 'var(--color-signal-border-light)' }}>
+              <Card key={req.id} surface="light" className={`p-4 flex items-center justify-between ${req.status === 'completed' ? 'opacity-50' : ''}`}>
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-full ${req.request_type === 'ACCOUNT_DELETION' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
                     {req.request_type === 'ACCOUNT_DELETION' ? <UserX size={24} /> : <DownloadCloud size={24} />}
@@ -52,7 +52,7 @@ export default function CompliancePage() {
                         {req.status}
                       </span>
                     </div>
-                    <p className="text-sm opacity-70">Member ID: {req.member_id} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Submitted: {new Date(req.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm opacity-70">Member ID: {req.member_id} &bull; Submitted: {new Date(req.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
                 
@@ -70,7 +70,7 @@ export default function CompliancePage() {
                   </button>
                 )}
                 {req.status === 'completed' && <CheckCircle className="text-green-500" />}
-              </div>
+              </Card>
             ))}
           </div>
         </div>

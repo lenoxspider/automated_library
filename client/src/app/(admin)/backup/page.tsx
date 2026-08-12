@@ -50,8 +50,8 @@ export default function BackupPage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-mono font-bold tracking-tight">Database Backup & Restore</h1>
-        <p className="opacity-60 mt-1">Manage physical snapshots of the SQLite database.</p>
+        <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">Database Backup & Restore</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Manage physical snapshots of the SQLite database.</p>
       </div>
 
       <Card surface="light" className="p-8 text-center border-dashed border-2">
@@ -89,7 +89,7 @@ export default function BackupPage() {
             ) : backups?.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-8 opacity-50">No backups found on disk.</td></tr>
             ) : backups?.map((bk: { filename: string; created_at: string; size: number }) => (
-              <tr key={bk.filename} className="hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors">
+              <tr key={bk.filename} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
                 <td className="px-6 py-4 font-mono text-sm font-bold">{bk.filename}</td>
                 <td className="px-6 py-4 text-sm opacity-70">{new Date(bk.created_at).toLocaleString()}</td>
                 <td className="px-6 py-4 text-sm opacity-70">{(bk.size / 1024).toFixed(2)} KB</td>
@@ -110,7 +110,7 @@ export default function BackupPage() {
       
       {restoring && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-neutral-900 p-8 rounded-xl shadow-2xl flex flex-col items-center">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-8 rounded-xl shadow-2xl flex flex-col items-center">
             <RefreshCw size={40} className="animate-spin text-indigo-600 mb-4" />
             <h3 className="text-xl font-bold font-mono">MAINTENANCE MODE ACTIVE</h3>
             <p className="opacity-70 mt-2">Restoring database snapshot. Please do not close this window...</p>
