@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import BookCover from '../components/ui/BookCover';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface DbBook {
@@ -16,6 +17,7 @@ interface DbBook {
   genre: string;
   isbn: string;
   available_copies: number;
+  cover_path?: string | null;
 }
 
 interface Book {
@@ -27,6 +29,7 @@ interface Book {
   year: number;
   available: boolean;
   cover: string;
+  cover_path?: string | null;
   rating: number;
 }
 
@@ -83,12 +86,15 @@ function BookCard({ book, dark }: { book: Book; dark: boolean }) {
     >
       {/* Cover */}
       <div
-        className="rounded-t-xl h-28 flex items-center justify-center relative"
+        className="rounded-t-xl h-28 relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${bg}ee, ${bg}99)` }}
       >
-        <span className="text-white text-2xl font-bold tracking-wider opacity-80">
-          {book.cover}
-        </span>
+        <BookCover
+          title={book.title}
+          isbn={book.isbn}
+          src={book.cover_path}
+          className="h-full w-full rounded-t-xl"
+        />
         <span
           className={`absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full ${book.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}
         >
@@ -213,6 +219,7 @@ export default function Home() {
       year: 2024, // DB doesn't have publication_year
       available: b.available_copies > 0,
       cover: b.genre ? b.genre.substring(0, 2).toUpperCase() : 'BK',
+      cover_path: b.cover_path,
       rating: 4.5 // Mock rating as DB doesn't have it natively
     }));
   }, [dbBooks]);
