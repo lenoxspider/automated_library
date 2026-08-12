@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, Truck, Clock, Plus, X, BookMarked, MapPin } from 'lucide-react';
+import { CheckCircle2, Truck, Clock, Plus, X, BookMarked, MapPin, Search } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
 
@@ -60,6 +61,22 @@ export default function AcquisitionsPage() {
       queryClient.invalidateQueries({ queryKey: ['acquisitions'] });
       setReceivingOrder(null);
       setReceiveForm({ author: '', genre: '', isbn: '', branch: '', section: '', shelf: '' });
+      toast.success('Order received and books added to catalog/inventory');
+    }
+  });
+
+  const lookupIsbn = useMutation({
+    mutationFn: async (isbn: string) => (await api.get(`/books/lookup/${isbn}`)).data,
+    onSuccess: (data) => {
+      setReceiveForm(prev => ({
+        ...prev,
+        author: data.author || prev.author,
+        genre: data.genre || prev.genre
+      }));
+      toast.success('Metadata found and auto-filled!');
+    },
+    onError: () => {
+      toast.error('Could not find metadata for this ISBN.');
     }
   });
 
@@ -305,14 +322,32 @@ export default function AcquisitionsPage() {
                     </div>
                     <div className="col-span-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">ISBN</label>
-                      <input 
-                        required 
-                        type="text" 
-                        value={receiveForm.isbn} 
-                        onChange={e => setReceiveForm({...receiveForm, isbn: e.target.value})} 
-                        className="w-full rounded-lg border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm font-mono"
-                        placeholder="e.g. 978-3-16-148410-0"
-                      />
+                      <div className="flex gap-2">
+                        <input 
+                          required 
+                          type="text" 
+                          value={receiveForm.isbn} 
+                          onChange={e => setReceiveForm({...receiveForm, isbn: e.target.value})} 
+                          className="flex-1 rounded-lg border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm font-mono"
+                          placeholder="e.g. 978-3-16-148410-0"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!receiveForm.isbn) {
+                              toast.error('Please enter an ISBN first');
+                              return;
+                            }
+                            lookupIsbn.mutate(receiveForm.isbn);
+                          }}
+                          disabled={lookupIsbn.isPending}
+                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium transition-colors border border-gray-300 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {lookupIsbn.isPending ? <LoadingSpinner /> : <Search size={16} />}
+                          Lookup
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1.5">Type an ISBN and click Lookup to auto-fill metadata for brand new books.</p>
                     </div>
                   </div>
                 </div>

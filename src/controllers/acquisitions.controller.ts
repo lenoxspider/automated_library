@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import prisma from '../config/prisma';
+import { getOrFetchCoverPath } from '../services/bookCover.service';
+import logger from '../config/logger';
 
 export const getOrders = asyncHandler(async (req: Request, res: Response) => {
   const orders = await prisma.purchase_orders.findMany({
@@ -56,6 +58,15 @@ export const receiveOrder = asyncHandler(async (req: Request, res: Response) => 
     return;
   }
 
+  // Fetch cover path before starting the transaction so we don't hold the DB lock
+  // during a network request to OpenLibrary.
+  let coverPath: string | null = null;
+  try {
+    coverPath = await getOrFetchCoverPath(isbn);
+  } catch (err) {
+    logger.warn({ err, isbn }, 'Cover lookup failed during order receipt');
+  }
+
   // Use a transaction for safety
   await prisma.$transaction(async (tx) => {
     // 1. Mark order as received
@@ -85,7 +96,8 @@ export const receiveOrder = asyncHandler(async (req: Request, res: Response) => 
           genre,
           isbn,
           total_copies: order.quantity,
-          available_copies: order.quantity
+          available_copies: order.quantity,
+          cover_path: coverPath
         }
       });
       bookId = newBook.id;
