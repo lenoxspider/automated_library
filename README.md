@@ -45,7 +45,8 @@ librarySys/
 │   ├── services/           # Business logic, email, covers, jobs, and storage
 │   └── server.ts           # Backend entry point
 ├── .github/workflows/      # Backend and frontend CI pipeline
-├── docker-compose.yml      # PostgreSQL, Redis, and MinIO services
+├── Dockerfile               # Standalone Express/Prisma backend production image
+├── docker-compose.yml      # App, PostgreSQL, Redis, and MinIO services
 ├── package.json            # Backend scripts and dependencies
 └── README.md
 ```
@@ -225,6 +226,23 @@ npm start
 ```
 
 The Next.js production server listens on port `3000` by default.
+
+### Backend Docker image
+
+The repository includes a root `Dockerfile` for a standalone Express/Prisma backend production image, using the same multi-stage, non-root pattern as the frontend's:
+
+```bash
+docker build -t smartlib-backend .
+docker run --name smartlib-backend --restart unless-stopped --env-file .env -p 5000:5000 smartlib-backend
+```
+
+Or, to run the whole stack (app + PostgreSQL + Redis + MinIO) together:
+
+```bash
+docker compose up -d --build app
+```
+
+The `app` service in `docker-compose.yml` overrides `DATABASE_URL`, `REDIS_URL`, and `S3_ENDPOINT` to point at the `postgres`/`redis`/`minio` service names instead of `localhost`, since `.env` is written for host-mode `npm run dev` where those services' ports are published to the host. Apply migrations against the running database with `docker compose exec app npx prisma migrate deploy`.
 
 ### Frontend Docker image
 
