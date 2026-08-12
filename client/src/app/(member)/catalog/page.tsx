@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { Search, BookOpen, Clock, Star, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, BookOpen, Clock, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 import BookCover from '../../../components/ui/BookCover';
@@ -159,28 +159,22 @@ export default function CatalogPage() {
       {/* New Arrivals */}
       {newArrivals.length > 0 && (
         <section>
-          <h2 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <Star size={14} className="text-amber-400" /> New Arrivals
+          <h2 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+            <Star size={16} className="text-amber-400" /> New Arrivals
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {newArrivals.map((book) => {
-              const hasReservation = reservationMap.has(book.id);
               return (
                 <button
                   key={book.id}
                   onClick={() => setSelectedBook(book)}
-                  className="text-left group"
+                  className="text-left group bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-3 flex gap-4 hover:shadow-md transition-shadow items-center"
                 >
-                  <div className="relative rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-slate-700 mb-2 hover:shadow-md transition-shadow">
-                    <BookCover title={book.title} isbn={book.isbn} src={book.cover_path} className="w-full h-32" />
-                    {hasReservation && (
-                      <div className="absolute top-1.5 right-1.5 bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                        Reserved
-                      </div>
-                    )}
+                  <BookCover title={book.title} isbn={book.isbn} src={book.cover_path} className="w-16 h-24 shrink-0 rounded shadow-sm border border-gray-100 dark:border-slate-700" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate text-gray-900 dark:text-slate-100 mb-1">{book.title}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{book.author}</p>
                   </div>
-                  <p className="text-sm font-bold truncate text-gray-900 dark:text-slate-100">{book.title}</p>
-                  <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{book.author}</p>
                 </button>
               );
             })}
@@ -191,44 +185,53 @@ export default function CatalogPage() {
       {/* Main catalog: filters + grid */}
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar filters */}
-        <aside className="w-full md:w-52 shrink-0 space-y-6">
+        <aside className="w-full md:w-56 shrink-0 space-y-8">
           <div>
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Filter size={12} /> Genre
-            </h3>
-            <div className="space-y-0.5">
-              {['all', ...(genres ?? [])].map((g) => (
-                <button
-                  key={g}
-                  onClick={() => { setGenreFilter(g); setPage(1); }}
-                  className={`block w-full text-left text-sm px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    genreFilter === g
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                      : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {g === 'all' ? 'All Genres' : g}
-                </button>
-              ))}
+            <h3 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4">Genre Filters</h3>
+            <div className="flex flex-wrap gap-2">
+              {['all', ...(genres ?? [])].map((g) => {
+                const isActive = genreFilter === g;
+                return (
+                  <button
+                    key={g}
+                    onClick={() => { setGenreFilter(g); setPage(1); }}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                      isActive
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {g === 'all' ? 'All' : g}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-3">Availability</h3>
-            <div className="space-y-0.5">
-              {(['all', 'available'] as const).map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => { setAvailabilityFilter(opt); setPage(1); }}
-                  className={`block w-full text-left text-sm px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    availabilityFilter === opt
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                      : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {opt === 'all' ? 'All Books' : 'Available Now'}
-                </button>
-              ))}
+            <h3 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4">Availability</h3>
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => { setAvailabilityFilter('all'); setPage(1); }}
+                className="flex items-center gap-3 cursor-pointer w-full text-left"
+              >
+                <div className={`w-11 h-6 rounded-full relative transition-colors ${availabilityFilter === 'all' ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-slate-700'}`}>
+                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${availabilityFilter === 'all' ? 'translate-x-5' : ''}`}></div>
+                </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">All Books</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => { setAvailabilityFilter('available'); setPage(1); }}
+                className="flex items-center gap-3 cursor-pointer w-full text-left"
+              >
+                <div className={`w-11 h-6 rounded-full relative transition-colors ${availabilityFilter === 'available' ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-slate-700'}`}>
+                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${availabilityFilter === 'available' ? 'translate-x-5' : ''}`}></div>
+                </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Available Now</span>
+              </button>
             </div>
           </div>
         </aside>
@@ -252,33 +255,55 @@ export default function CatalogPage() {
               {books.map((book) => {
                 const status = statusFor(book);
                 const myRes = reservationMap.get(book.id);
+                
+                let bannerBg = '';
+                let bannerText = '';
+                let bannerDot = '';
+                let bannerMsg = '';
+                
+                if (myRes) {
+                  if (myRes.status === 'ready_for_pickup') {
+                    bannerBg = 'bg-green-50 dark:bg-green-900/20';
+                    bannerText = 'text-green-700 dark:text-green-400';
+                    bannerDot = 'bg-green-600 dark:bg-green-400';
+                    bannerMsg = 'Ready! — ready for pickup';
+                  } else if (myRes.status === 'approved') {
+                    bannerBg = 'bg-blue-50 dark:bg-blue-900/20';
+                    bannerText = 'text-blue-700 dark:text-blue-400';
+                    bannerDot = 'bg-blue-600 dark:bg-blue-400';
+                    bannerMsg = 'Approved — reservation approved';
+                  } else {
+                    bannerBg = 'bg-indigo-50 dark:bg-indigo-900/20';
+                    bannerText = 'text-indigo-700 dark:text-indigo-400';
+                    bannerDot = 'bg-indigo-600 dark:bg-indigo-400';
+                    bannerMsg = `Queue #${myRes.queue_position} — pending reservation with position`;
+                  }
+                }
+
                 return (
-                  <Card key={book.id} className="flex flex-col overflow-hidden hover:shadow-md transition-shadow cursor-pointer border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl">
+                  <Card key={book.id} className="flex flex-col overflow-hidden hover:shadow-md transition-shadow cursor-pointer border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl relative">
                     <button onClick={() => setSelectedBook(book)} className="text-left flex flex-col flex-1">
-                      <div className="relative">
-                        <BookCover title={book.title} isbn={book.isbn} src={book.cover_path} className="w-full h-44" />
-                        {myRes && (
-                          <div className={`absolute top-2 right-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            myRes.status === 'ready_for_pickup' ? 'bg-green-600' :
-                            myRes.status === 'approved' ? 'bg-blue-600' : 'bg-indigo-600'
-                          }`}>
-                            {myRes.status === 'ready_for_pickup' ? '✓ Ready!' :
-                             myRes.status === 'approved' ? 'Approved' :
-                             myRes.queue_position ? `Queue #${myRes.queue_position}` : 'Reserved'}
+                      <div className="p-4 flex flex-row gap-4 flex-1">
+                        <BookCover title={book.title} isbn={book.isbn} src={book.cover_path} className="w-[72px] h-[108px] shrink-0 rounded shadow-sm border border-gray-100 dark:border-slate-700" />
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <p className="text-[11px] text-gray-500 dark:text-slate-400 uppercase tracking-wider font-semibold mb-0.5">{book.genre}</p>
+                          <h3 className="font-bold text-gray-900 dark:text-slate-100 leading-tight mb-1 line-clamp-2">{book.title}</h3>
+                          <p className="text-xs text-gray-500 dark:text-slate-400 mb-3 truncate">{book.author}</p>
+                          <div className="mt-auto flex items-center justify-between gap-2 flex-wrap">
+                            <StatusBadge status={status} />
+                            <span className="text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">
+                              {book.available_copies}/{book.total_copies} available
+                            </span>
                           </div>
-                        )}
-                      </div>
-                      <div className="p-4 flex flex-col flex-1">
-                        <p className="text-xs text-gray-500 dark:text-slate-400 mb-1 uppercase tracking-wide">{book.genre}</p>
-                        <h3 className="font-bold leading-tight mb-1 line-clamp-2 text-gray-900 dark:text-slate-100">{book.title}</h3>
-                        <p className="text-sm text-gray-500 dark:text-slate-400 mb-3">{book.author}</p>
-                        <div className="mt-auto flex items-center justify-between gap-2">
-                          <StatusBadge status={status} />
-                          <span className="text-xs text-gray-400 dark:text-slate-500">
-                            {book.available_copies}/{book.total_copies} avail.
-                          </span>
                         </div>
                       </div>
+                      
+                      {myRes && (
+                        <div className={`w-full px-4 py-2.5 text-xs flex items-center gap-2 ${bannerBg} ${bannerText} border-t border-gray-100 dark:border-slate-800`}>
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${bannerDot}`}></div>
+                          <span className="font-medium truncate">{bannerMsg}</span>
+                        </div>
+                      )}
                     </button>
                   </Card>
                 );
@@ -288,22 +313,22 @@ export default function CatalogPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4">
-              <p className="text-sm text-gray-500 dark:text-slate-400">
+            <div className="flex items-center relative pt-8 pb-4">
+              <div className="absolute left-1/2 -translate-x-1/2 text-sm text-gray-500 dark:text-slate-400 font-medium whitespace-nowrap">
                 Page {page} of {totalPages} &mdash; {totalCount} books
-              </p>
-              <div className="flex gap-2">
+              </div>
+              <div className="ml-auto flex gap-2 relative z-10 bg-white dark:bg-slate-950 px-2 rounded-lg">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm"
                 >
                   <ChevronLeft size={16} /> Prev
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm"
                 >
                   Next <ChevronRight size={16} />
                 </button>
