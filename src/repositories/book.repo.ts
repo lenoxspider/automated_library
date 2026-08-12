@@ -14,15 +14,21 @@ export class BookRepository {
     return this.prisma.books.findMany();
   }
 
-  async findBooks(query: string, page: number, limit: number): Promise<{ data: books[], totalCount: number }> {
+  async findBooks(
+    query: string,
+    page: number,
+    limit: number
+  ): Promise<{ data: books[]; totalCount: number }> {
     const skip = (page - 1) * limit;
-    const where = query ? {
-      OR: [
-        { title: { contains: query } },
-        { author: { contains: query } },
-        { isbn: { contains: query } }
-      ]
-    } : {};
+    const where = query
+      ? {
+          OR: [
+            { title: { contains: query } },
+            { author: { contains: query } },
+            { isbn: { contains: query } }
+          ]
+        }
+      : {};
 
     const [totalCount, data] = await this.prisma.$transaction([
       this.prisma.books.count({ where }),
@@ -74,6 +80,6 @@ export class BookRepository {
       select: { genre: true },
       distinct: ['genre']
     });
-    return books.map(b => b.genre).filter(Boolean);
+    return books.map((b) => b.genre).filter(Boolean);
   }
 }

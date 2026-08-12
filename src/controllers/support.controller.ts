@@ -11,7 +11,7 @@ export const getTickets = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const createTicket = asyncHandler(async (req: Request, res: Response) => {
-  // @ts-ignore
+  // @ts-expect-error - req.user is provided by authentication middleware
   const userId = req.user.id;
   const { subject, message } = req.body;
 

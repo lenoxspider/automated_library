@@ -11,7 +11,7 @@ export const getOrders = asyncHandler(async (req: Request, res: Response) => {
 
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   const { title, vendor, quantity, total_price } = req.body;
-  
+
   const order = await prisma.purchase_orders.create({
     data: {
       title,

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import {
   BookOpen,
   Library,
@@ -34,9 +35,12 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const { dark } = useThemeStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const saved = localStorage.getItem('sidebarCollapsed');
     if (saved) setIsCollapsed(JSON.parse(saved));
   }, []);
@@ -93,7 +97,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 ${isCollapsed ? 'w-20' : 'w-64'} flex flex-col justify-between bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-50 ${isCollapsed ? 'w-20' : 'w-64'} flex flex-col justify-between transform transition-all duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${mounted && dark ? 'bg-slate-900/80 backdrop-blur-md border-r border-slate-700' : 'bg-white border-r border-gray-200'}`}
       >
         <div className="p-6">
           <div className={`flex items-center gap-3 mb-10 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
@@ -103,8 +107,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               </div>
               {!isCollapsed && (
                 <div className="overflow-hidden">
-                  <h1 className="font-bold text-lg tracking-tight text-gray-900 whitespace-nowrap">SmartLib</h1>
-                  <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider whitespace-nowrap">{user.role}</p>
+                  <h1 className={`font-bold text-lg tracking-tight whitespace-nowrap ${mounted && dark ? 'text-white' : 'text-gray-900'}`}>SmartLib</h1>
+                  <p className={`text-xs uppercase font-semibold tracking-wider whitespace-nowrap ${mounted && dark ? 'text-slate-400' : 'text-gray-500'}`}>{user.role}</p>
                 </div>
               )}
             </div>
@@ -120,7 +124,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
           <button 
             onClick={toggleCollapse} 
-            className="hidden md:flex text-gray-400 hover:text-gray-900 absolute -right-3 top-8 bg-white border border-gray-200 rounded-full p-1.5 z-50 shadow-sm transition-transform hover:scale-110"
+            className={`hidden md:flex absolute -right-3 top-8 border rounded-full p-1.5 z-50 shadow-sm transition-transform hover:scale-110 ${mounted && dark ? 'bg-slate-800 border-slate-600 text-slate-300 hover:text-white' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-900'}`}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -140,11 +144,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 title={isCollapsed ? link.name : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isCollapsed ? 'justify-center' : ''} ${
                   isActive 
-                    ? 'bg-indigo-50 text-indigo-700' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? (mounted && dark ? 'bg-indigo-900/50 text-indigo-300' : 'bg-indigo-50 text-indigo-700')
+                    : (mounted && dark ? 'text-slate-400 hover:bg-slate-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900')
                 }`}
               >
-                <Icon size={isCollapsed ? 22 : 18} className={`shrink-0 transition-transform ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+                <Icon size={isCollapsed ? 22 : 18} className={`shrink-0 transition-transform ${isActive ? (mounted && dark ? 'text-indigo-400' : 'text-indigo-600') : (mounted && dark ? 'text-slate-500' : 'text-gray-400')}`} />
                 {!isCollapsed && <span className="whitespace-nowrap">{link.name}</span>}
               </Link>
             );
@@ -157,9 +161,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           onClick={logout}
           aria-label="Log out of SmartLib"
           title={isCollapsed ? "Log out" : undefined}
-          className={`flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors ${isCollapsed ? 'justify-center' : 'text-left'}`}
+          className={`flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors ${isCollapsed ? 'justify-center' : 'text-left'} ${mounted && dark ? 'text-red-400 hover:bg-red-900/30' : 'text-red-600 hover:bg-red-50'}`}
         >
-          <LogOut size={isCollapsed ? 22 : 18} aria-hidden="true" className="text-red-500 shrink-0" />
+          <LogOut size={isCollapsed ? 22 : 18} aria-hidden="true" className={`shrink-0 ${mounted && dark ? 'text-red-400' : 'text-red-500'}`} />
           {!isCollapsed && <span className="whitespace-nowrap">Log out</span>}
         </button>
       </div>

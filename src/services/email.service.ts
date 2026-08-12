@@ -21,10 +21,18 @@ function getLocalIpAddress(): string {
 
 // Load templates once
 const templateDir = path.join(process.cwd(), 'templates', 'email');
-const baseTemplate = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'base.hbs'), 'utf8'));
-const verifyBody = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'verify.hbs'), 'utf8'));
-const reminderBody = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'reminder.hbs'), 'utf8'));
-const overdueBody = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'overdue.hbs'), 'utf8'));
+const baseTemplate = Handlebars.compile(
+  fs.readFileSync(path.join(templateDir, 'base.hbs'), 'utf8')
+);
+const verifyBody = Handlebars.compile(
+  fs.readFileSync(path.join(templateDir, 'verify.hbs'), 'utf8')
+);
+const reminderBody = Handlebars.compile(
+  fs.readFileSync(path.join(templateDir, 'reminder.hbs'), 'utf8')
+);
+const overdueBody = Handlebars.compile(
+  fs.readFileSync(path.join(templateDir, 'overdue.hbs'), 'utf8')
+);
 
 @injectable()
 export class EmailService {
@@ -52,46 +60,46 @@ export class EmailService {
     new Worker(
       'email-queue',
       async (job) => {
-          const localIp = getLocalIpAddress();
-          const baseUrl = `http://${localIp}:3000`;
-          const unsubscribeUrl = `${baseUrl}/unsubscribe`;
-          const year = new Date().getFullYear();
+        const localIp = getLocalIpAddress();
+        const baseUrl = `http://${localIp}:3000`;
+        const unsubscribeUrl = `${baseUrl}/unsubscribe`;
+        const year = new Date().getFullYear();
 
-          if (job.name === 'sendVerification') {
-            const { email, name, token } = job.data;
-            const verificationLink = `${baseUrl}/verify?token=${token}`;
-            const body = verifyBody({ name, verificationLink });
-            const html = baseTemplate({ body, year, unsubscribeUrl });
+        if (job.name === 'sendVerification') {
+          const { email, name, token } = job.data;
+          const verificationLink = `${baseUrl}/verify?token=${token}`;
+          const body = verifyBody({ name, verificationLink });
+          const html = baseTemplate({ body, year, unsubscribeUrl });
 
-            await this.transporter.sendMail({
-              from: `"SmartLib" <${process.env.SMTP_USER}>`,
-              to: email,
-              subject: 'Activate Your SmartLib Account',
-              html
-            });
-          } else if (job.name === 'dueSoonReminder') {
-            const { email, name, bookTitle, dueDate } = job.data;
-            const body = reminderBody({ name, bookTitle, dueDate });
-            const html = baseTemplate({ body, year, unsubscribeUrl });
+          await this.transporter.sendMail({
+            from: `"SmartLib" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: 'Activate Your SmartLib Account',
+            html
+          });
+        } else if (job.name === 'dueSoonReminder') {
+          const { email, name, bookTitle, dueDate } = job.data;
+          const body = reminderBody({ name, bookTitle, dueDate });
+          const html = baseTemplate({ body, year, unsubscribeUrl });
 
-            await this.transporter.sendMail({
-              from: `"SmartLib" <${process.env.SMTP_USER}>`,
-              to: email,
-              subject: `Reminder: "${bookTitle}" is due soon`,
-              html
-            });
-          } else if (job.name === 'overdueReminder') {
-            const { email, name, bookTitle, dueDate, daysOverdue, fineAmount } = job.data;
-            const body = overdueBody({ name, bookTitle, dueDate, daysOverdue, fineAmount });
-            const html = baseTemplate({ body, year, unsubscribeUrl });
+          await this.transporter.sendMail({
+            from: `"SmartLib" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: `Reminder: "${bookTitle}" is due soon`,
+            html
+          });
+        } else if (job.name === 'overdueReminder') {
+          const { email, name, bookTitle, dueDate, daysOverdue, fineAmount } = job.data;
+          const body = overdueBody({ name, bookTitle, dueDate, daysOverdue, fineAmount });
+          const html = baseTemplate({ body, year, unsubscribeUrl });
 
-            await this.transporter.sendMail({
-              from: `"SmartLib" <${process.env.SMTP_USER}>`,
-              to: email,
-              subject: `Overdue: "${bookTitle}"`,
-              html
-            });
-          }
+          await this.transporter.sendMail({
+            from: `"SmartLib" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: `Overdue: "${bookTitle}"`,
+            html
+          });
+        }
       },
       { connection: redisClient as any }
     );

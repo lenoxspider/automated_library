@@ -19,7 +19,7 @@ export const getPopularBooks = asyncHandler(async (req: Request, res: Response) 
 
   const bookCounts: Record<string, { title: string; trueCount: number }> = {};
 
-  borrowings.forEach(b => {
+  borrowings.forEach((b) => {
     if (!b.book_copies?.books) return;
     const title = b.book_copies.books.title;
     if (!bookCounts[title]) {
@@ -29,7 +29,7 @@ export const getPopularBooks = asyncHandler(async (req: Request, res: Response) 
   });
 
   const results = Object.values(bookCounts)
-    .map(bc => ({
+    .map((bc) => ({
       title: bc.title,
       // trueCount is hidden from the final output for privacy!
       borrow_count: addLaplaceNoise(bc.trueCount, EPSILON)
@@ -47,7 +47,7 @@ export const getPeakSearchTimes = asyncHandler(async (req: Request, res: Respons
 
   const hourCounts = new Array(24).fill(0);
 
-  searches.forEach(s => {
+  searches.forEach((s) => {
     const date = new Date(s.timestamp);
     const hour = date.getHours(); // 0 to 23
     hourCounts[hour]++;
@@ -56,7 +56,8 @@ export const getPeakSearchTimes = asyncHandler(async (req: Request, res: Respons
   const results = hourCounts.map((trueCount, hour) => ({
     hour,
     // Convert to 12-hour format for readability
-    label: hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`,
+    label:
+      hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`,
     search_volume: addLaplaceNoise(trueCount, EPSILON)
   }));
 
@@ -69,9 +70,9 @@ export const getPublicStats = asyncHandler(async (req: Request, res: Response) =
     prisma.users.count(),
     prisma.reservations.count()
   ]);
-  
+
   const uptimeHours = process.uptime() / 3600;
-  const uptimePercent = Math.min(99.99, 99.0 + (uptimeHours / 24)).toFixed(2);
+  const uptimePercent = Math.min(99.99, 99.0 + uptimeHours / 24).toFixed(2);
 
   res.json({
     totalBooks: trueTotalBooks, // Catalog size isn't sensitive PII

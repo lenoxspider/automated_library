@@ -7,10 +7,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const exportCatalog = asyncHandler(async (req: Request, res: Response) => {
   const books = await prisma.books.findMany();
-  
+
   // Exclude some internal fields if necessary, or just stringify the objects
   const csv = Papa.unparse(books);
-  
+
   res.header('Content-Type', 'text/csv');
   res.attachment('catalog-export.csv');
   res.send(csv);
@@ -23,7 +23,7 @@ export const importCatalog = asyncHandler(async (req: Request, res: Response) =>
   }
 
   const fileContent = fs.readFileSync(req.file.path, 'utf-8');
-  
+
   // Parse CSV
   const parsed = Papa.parse(fileContent, { header: true, skipEmptyLines: true });
   const rows = parsed.data as any[];
@@ -44,7 +44,7 @@ export const importCatalog = asyncHandler(async (req: Request, res: Response) =>
 
     // Check if book exists
     let book = await prisma.books.findUnique({ where: { isbn } });
-    
+
     if (!book) {
       book = await prisma.books.create({
         data: {
@@ -86,5 +86,7 @@ export const importCatalog = asyncHandler(async (req: Request, res: Response) =>
   // Cleanup temp file
   fs.unlinkSync(req.file.path);
 
-  res.json({ message: `Successfully imported ${importedCount} new books and generated ${copyCount} unique copies.` });
+  res.json({
+    message: `Successfully imported ${importedCount} new books and generated ${copyCount} unique copies.`
+  });
 });

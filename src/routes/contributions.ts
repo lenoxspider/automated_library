@@ -1,5 +1,11 @@
 import { Router } from 'express';
-import { getMyContributions, submitContribution, getQueue, approveContribution, rejectContribution } from '../controllers/contributions.controller';
+import {
+  getMyContributions,
+  submitContribution,
+  getQueue,
+  approveContribution,
+  rejectContribution
+} from '../controllers/contributions.controller';
 import { authenticate, authorize } from '../middlewares/auth';
 
 const router = Router();

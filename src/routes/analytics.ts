@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { getPopularBooks, getPeakSearchTimes, getPublicStats } from '../controllers/analytics.controller';
+import {
+  getPopularBooks,
+  getPeakSearchTimes,
+  getPublicStats
+} from '../controllers/analytics.controller';
 
 const router = Router();
 

@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { getIntegrations, createIntegration, deleteIntegration } from '../controllers/integrations.controller';
+import {
+  getIntegrations,
+  createIntegration,
+  deleteIntegration
+} from '../controllers/integrations.controller';
 import { authenticate, authorize } from '../middlewares/auth';
 
 const router = Router();

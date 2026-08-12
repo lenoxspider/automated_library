@@ -16,13 +16,13 @@ export function laplaceNoise(scale: number): number {
 export function addLaplaceNoise(trueCount: number, epsilon: number): number {
   const sensitivity = 1;
   const scale = sensitivity / epsilon;
-  
+
   const noise = laplaceNoise(scale);
   let noisyCount = Math.round(trueCount + noise);
-  
+
   // Counts can't be negative in reality, though technically bounding breaks pure DP slightly.
   // For practical public dashboards, bounding to 0 is standard.
   if (noisyCount < 0) noisyCount = 0;
-  
+
   return noisyCount;
 }

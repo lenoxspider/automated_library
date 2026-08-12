@@ -133,7 +133,7 @@ export default function Home() {
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'admin') router.push('/users');
+      if (user.role === 'admin') router.push('/health');
       else if (user.role === 'librarian') router.push('/circulation');
       else router.push('/catalog');
     }

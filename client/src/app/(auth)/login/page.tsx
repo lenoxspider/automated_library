@@ -36,7 +36,7 @@ export default function LoginPage() {
       login(response.data.accessToken, { id: tokenPayload.sub, email: username, role: tokenPayload.role });
 
       const role = tokenPayload.role;
-      if (role === 'admin') router.push('/users');
+      if (role === 'admin') router.push('/health');
       else if (role === 'librarian') router.push('/circulation');
       else router.push('/catalog');
     } catch (err: unknown) {

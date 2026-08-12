@@ -3,7 +3,7 @@ import asyncHandler from 'express-async-handler';
 import prisma from '../config/prisma';
 
 export const logSearchQuery = asyncHandler(async (req: Request, res: Response) => {
-  // @ts-ignore
+  // @ts-expect-error - req.user is provided by authentication middleware
   const userId = req.user.id;
   const { query } = req.body;
 
@@ -24,7 +24,7 @@ export const logSearchQuery = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const getSearchHistory = asyncHandler(async (req: Request, res: Response) => {
-  // @ts-ignore
+  // @ts-expect-error - req.user is provided by authentication middleware
   const userId = req.user.id;
 
   const history = await prisma.search_history.findMany({

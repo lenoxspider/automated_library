@@ -56,14 +56,16 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 
   await emailService.queueVerificationEmail(newUser.email, newUser.name, verifyToken);
 
-  res.status(201).json({ message: 'User created successfully. Verification email sent.', user: newUser });
+  res
+    .status(201)
+    .json({ message: 'User created successfully. Verification email sent.', user: newUser });
 });
 
 export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
-  // @ts-ignore - Assuming req.user is set by auth middleware
+  // @ts-expect-error - req.user is provided by authentication middleware - Assuming req.user is set by auth middleware
   const userId = req.user.id;
   const { language, emailNotifications, password, name } = req.body;
-  
+
   const updateData: any = {};
   if (language) updateData.language = language;
   if (emailNotifications !== undefined) updateData.email_notifications = emailNotifications;
@@ -73,5 +75,12 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
   }
 
   const updatedUser = await userRepo.update(userId, updateData);
-  res.json({ message: 'Profile updated successfully', user: { name: updatedUser.name, language: updatedUser.language, emailNotifications: updatedUser.email_notifications } });
+  res.json({
+    message: 'Profile updated successfully',
+    user: {
+      name: updatedUser.name,
+      language: updatedUser.language,
+      emailNotifications: updatedUser.email_notifications
+    }
+  });
 });

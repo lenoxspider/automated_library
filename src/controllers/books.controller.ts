@@ -29,11 +29,11 @@ export const getBooks = asyncHandler(async (req: Request, res: Response) => {
   const query = (req.query.q as string) || '';
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 50;
-  
+
   const result = await bookRepo.findBooks(query, page, limit);
-  
-  res.json({ 
-    data: result.data, 
+
+  res.json({
+    data: result.data,
     totalCount: result.totalCount,
     page,
     limit,
@@ -149,7 +149,7 @@ export const addBookCopy = asyncHandler(async (req: Request, res: Response) => {
   // Increment total_copies and available_copies for the book
   const public_id = req.params.id as string;
   const book = await bookRepo.findByPublicId(public_id);
-  
+
   if (book && book.public_id) {
     await bookRepo.update(book.public_id, {
       total_copies: book.total_copies + 1,

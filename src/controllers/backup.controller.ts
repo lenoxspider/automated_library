@@ -13,16 +13,18 @@ if (!fs.existsSync(BACKUP_DIR)) {
 }
 
 export const getBackups = asyncHandler(async (req: Request, res: Response) => {
-  const files = fs.readdirSync(BACKUP_DIR).filter(f => f.endsWith('.db'));
-  const backups = files.map(f => {
-    const stats = fs.statSync(path.join(BACKUP_DIR, f));
-    return {
-      filename: f,
-      size: stats.size,
-      created_at: stats.mtime.toISOString()
-    };
-  }).sort((a, b) => b.created_at.localeCompare(a.created_at));
-  
+  const files = fs.readdirSync(BACKUP_DIR).filter((f) => f.endsWith('.db'));
+  const backups = files
+    .map((f) => {
+      const stats = fs.statSync(path.join(BACKUP_DIR, f));
+      return {
+        filename: f,
+        size: stats.size,
+        created_at: stats.mtime.toISOString()
+      };
+    })
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+
   res.json(backups);
 });
 
@@ -33,10 +35,15 @@ export const createBackup = asyncHandler(async (req: Request, res: Response) => 
 
   fs.copyFileSync(DB_PATH, backupPath);
 
-  // @ts-ignore
+  // @ts-expect-error - req.user is provided by authentication middleware
   const adminId = req.user.id;
   await prisma.audit_logs.create({
-    data: { admin_id: adminId, action: 'CREATE_BACKUP', details: `Created ${filename}`, timestamp: new Date().toISOString() }
+    data: {
+      admin_id: adminId,
+      action: 'CREATE_BACKUP',
+      details: `Created ${filename}`,
+      timestamp: new Date().toISOString()
+    }
   });
 
   res.status(201).json({ message: 'Backup created successfully', filename });
@@ -68,10 +75,15 @@ export const restoreBackup = asyncHandler(async (req: Request, res: Response) =>
     setMaintenanceMode(false);
 
     // Note: Logging this might be tricky since the DB just swapped, but let's log it in the newly restored DB.
-    // @ts-ignore
+    // @ts-expect-error - req.user is provided by authentication middleware
     const adminId = req.user.id;
     await prisma.audit_logs.create({
-      data: { admin_id: adminId, action: 'RESTORE_BACKUP', details: `Restored from ${filename}`, timestamp: new Date().toISOString() }
+      data: {
+        admin_id: adminId,
+        action: 'RESTORE_BACKUP',
+        details: `Restored from ${filename}`,
+        timestamp: new Date().toISOString()
+      }
     });
 
     res.json({ message: 'Database restored successfully' });

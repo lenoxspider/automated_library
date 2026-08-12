@@ -30,10 +30,15 @@ export const processRequest = asyncHandler(async (req: Request, res: Response) =
   });
 
   // Log audit action
-  // @ts-ignore
+  // @ts-expect-error - req.user is provided by authentication middleware
   const adminId = req.user.id;
   await prisma.audit_logs.create({
-    data: { admin_id: adminId, action: 'PROCESS_COMPLIANCE', details: `Processed ${request.request_type} for member ${request.member_id}`, timestamp: new Date().toISOString() }
+    data: {
+      admin_id: adminId,
+      action: 'PROCESS_COMPLIANCE',
+      details: `Processed ${request.request_type} for member ${request.member_id}`,
+      timestamp: new Date().toISOString()
+    }
   });
 
   res.json({ message: 'Compliance request processed successfully' });
