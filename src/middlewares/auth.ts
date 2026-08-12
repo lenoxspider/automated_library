@@ -1,15 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import redisClient from '../config/redis';
+import { ACCESS_SECRET } from '../config/env';
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
+    // Cookie is the source of truth for the browser client; the Bearer header
+    // fallback keeps Swagger UI and non-browser API callers working.
+    const token = (req as any).cookies?.accessToken || bearerToken;
+    if (!token) {
       return res.status(401).json({ error: 'Unauthorized. Please log in.' });
     }
-
-    const token = authHeader.split(' ')[1];
 
     // Check if token is blacklisted in Redis (optional, usually done for access tokens on logout)
     const isBlacklisted = await redisClient.get(`bl_${token}`);
@@ -17,7 +20,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return res.status(401).json({ error: 'Session expired. Please log in again.' });
     }
 
-    const decoded = jwt.verify(token, process.env.ACCESS_SECRET || 'fallback_secret') as JwtPayload;
+    const decoded = jwt.verify(token, ACCESS_SECRET) as JwtPayload;
     (req as any).user = { id: decoded.sub, role: decoded.role };
 
     next();

@@ -52,8 +52,11 @@ describe('GET /api/reports/weekly-activity', () => {
 
   it('buckets checkouts, returns, and paid fines into the correct day', async () => {
     mockPrisma.borrowings.findMany
-      .mockResolvedValueOnce([{ borrow_date: isoDaysAgo(1) }, { borrow_date: isoDaysAgo(1) }])
-      .mockResolvedValueOnce([{ return_date: isoDaysAgo(2) }]);
+      .mockResolvedValueOnce([
+        { borrow_date: new Date(isoDaysAgo(1)) },
+        { borrow_date: new Date(isoDaysAgo(1)) }
+      ])
+      .mockResolvedValueOnce([{ return_date: new Date(isoDaysAgo(2)) }]);
     mockPrisma.fines.findMany.mockResolvedValue([
       { payment_date: isoDaysAgo(1), amount: 5 },
       { payment_date: isoDaysAgo(1), amount: 2.5 }
@@ -78,7 +81,7 @@ describe('GET /api/reports/weekly-activity', () => {
     const sevenDaysAgo = isoDaysAgo(6, '00:00:00').slice(0, 10);
     expect(mockPrisma.borrowings.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { borrow_date: { gte: `${sevenDaysAgo}T00:00:00.000Z` } }
+        where: { borrow_date: { gte: new Date(`${sevenDaysAgo}T00:00:00.000Z`) } }
       })
     );
   });

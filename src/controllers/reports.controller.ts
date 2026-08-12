@@ -129,14 +129,15 @@ function lastNDays(n: number): string[] {
 export const getWeeklyActivity = asyncHandler(async (req: Request, res: Response) => {
   const days = lastNDays(7);
   const rangeStart = `${days[0]}T00:00:00.000Z`;
+  const rangeStartDate = new Date(rangeStart);
 
   const [checkedOut, returned, paidFines] = await Promise.all([
     prisma.borrowings.findMany({
-      where: { borrow_date: { gte: rangeStart } },
+      where: { borrow_date: { gte: rangeStartDate } },
       select: { borrow_date: true }
     }),
     prisma.borrowings.findMany({
-      where: { return_date: { gte: rangeStart } },
+      where: { return_date: { gte: rangeStartDate } },
       select: { return_date: true }
     }),
     prisma.fines.findMany({
@@ -150,12 +151,12 @@ export const getWeeklyActivity = asyncHandler(async (req: Request, res: Response
   );
 
   checkedOut.forEach((b) => {
-    const day = b.borrow_date.slice(0, 10);
+    const day = b.borrow_date.toISOString().slice(0, 10);
     if (byDay[day]) byDay[day].checkouts += 1;
   });
   returned.forEach((b) => {
     if (!b.return_date) return;
-    const day = b.return_date.slice(0, 10);
+    const day = b.return_date.toISOString().slice(0, 10);
     if (byDay[day]) byDay[day].returns += 1;
   });
   paidFines.forEach((f) => {

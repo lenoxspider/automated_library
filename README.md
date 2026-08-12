@@ -19,7 +19,7 @@ The backend also contains authentication and verification flows, scheduled proce
 | Database | PostgreSQL 15 with Prisma ORM and `@prisma/adapter-pg` |
 | Background jobs | Redis 7, BullMQ, and scheduled jobs with `node-cron` |
 | Object storage | MinIO locally; S3-compatible storage in production |
-| Authentication | JWT access and refresh tokens with HTTP-only cookie support |
+| Authentication | JWT access and refresh tokens, set as server-side httpOnly/secure/sameSite cookies (Bearer header accepted as a fallback for non-browser clients) |
 | API documentation | Swagger UI / OpenAPI at `/api-docs` |
 | Testing | Jest, Supertest, ESLint, Prettier, and TypeScript checks |
 | Automation | GitHub Actions, Docker Compose, PM2 or systemd |
@@ -45,7 +45,8 @@ librarySys/
 │   ├── services/           # Business logic, email, covers, jobs, and storage
 │   └── server.ts           # Backend entry point
 ├── .github/workflows/      # Backend and frontend CI pipeline
-├── docker-compose.yml      # PostgreSQL, Redis, and MinIO services
+├── Dockerfile               # Standalone Express/Prisma backend production image
+├── docker-compose.yml      # App, PostgreSQL, Redis, and MinIO services
 ├── package.json            # Backend scripts and dependencies
 └── README.md
 ```
@@ -147,8 +148,11 @@ Open a second terminal:
 
 ```bash
 cd client
+cp .env.example .env
 npm run dev
 ```
+
+`NEXT_PUBLIC_API_BASE_URL` in `client/.env` controls which backend the frontend talks to; it defaults to `http://localhost:5000/api` if unset.
 
 The frontend is normally available at:
 
@@ -223,15 +227,34 @@ npm start
 
 The Next.js production server listens on port `3000` by default.
 
+### Backend Docker image
+
+The repository includes a root `Dockerfile` for a standalone Express/Prisma backend production image, using the same multi-stage, non-root pattern as the frontend's:
+
+```bash
+docker build -t smartlib-backend .
+docker run --name smartlib-backend --restart unless-stopped --env-file .env -p 5000:5000 smartlib-backend
+```
+
+Or, to run the whole stack (app + PostgreSQL + Redis + MinIO) together:
+
+```bash
+docker compose up -d --build app
+```
+
+The `app` service in `docker-compose.yml` overrides `DATABASE_URL`, `REDIS_URL`, and `S3_ENDPOINT` to point at the `postgres`/`redis`/`minio` service names instead of `localhost`, since `.env` is written for host-mode `npm run dev` where those services' ports are published to the host. Apply migrations against the running database with `docker compose exec app npx prisma migrate deploy`.
+
 ### Frontend Docker image
 
 The repository includes `client/Dockerfile` for a standalone Next.js production image:
 
 ```bash
 cd client
-docker build -t smartlib-frontend .
+docker build --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.example.com/api -t smartlib-frontend .
 docker run --name smartlib-frontend --restart unless-stopped -p 3000:3000 smartlib-frontend
 ```
+
+`NEXT_PUBLIC_API_BASE_URL` is inlined into the client bundle at build time (standard Next.js behavior for `NEXT_PUBLIC_*` vars), so it must be passed as a `--build-arg`, not a `docker run -e`. Omit it to keep the `http://localhost:5000/api` default.
 
 This image contains the frontend only. PostgreSQL, Redis, MinIO, and the Express backend must run as separate services.
 
@@ -319,7 +342,7 @@ server {
 }
 ```
 
-The current frontend API client is in `client/src/lib/api.ts`. If it uses a hardcoded `http://localhost:5000/api` value, change it to a configurable public API URL or to `/api` before deploying behind this reverse proxy. Set `APP_URL` and `CLIENT_ORIGIN` to the public HTTPS origin.
+The frontend API client (`client/src/lib/api.ts`) reads its backend URL from `NEXT_PUBLIC_API_BASE_URL`. Set it to the public API URL (or `/api` if proxied under the same origin) before deploying behind this reverse proxy. Set `APP_URL` and `CLIENT_ORIGIN` to the public HTTPS origin.
 
 ## Testing and quality checks
 

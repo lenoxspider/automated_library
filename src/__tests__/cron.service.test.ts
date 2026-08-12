@@ -37,7 +37,7 @@ const makeLoan = (overrides: Partial<Record<string, any>> = {}) => ({
   id: 1,
   copy_id: 5,
   member_id: 1,
-  due_date: new Date().toISOString(),
+  due_date: new Date(),
   return_date: null,
   users: { name: 'Jane Doe', email: 'jane@library.com' },
   book_copies: { books: { title: 'Clean Code' } },
@@ -73,7 +73,7 @@ describe('CronService', () => {
 
     it('upserts a fine and queues an overdue reminder for each overdue loan', async () => {
       const dueDate = new Date('2026-01-01T00:00:00.000Z');
-      const loan = makeLoan({ id: 42, due_date: dueDate.toISOString() });
+      const loan = makeLoan({ id: 42, due_date: dueDate });
       mockPrisma.borrowings.findMany.mockResolvedValue([loan]);
       mockPrisma.library_settings.findUnique.mockResolvedValue({ key: 'fine_rate', value: '1.5' });
 

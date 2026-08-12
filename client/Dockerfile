@@ -12,6 +12,12 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time, so this
+# must be a build ARG (not a runtime ENV on the final image) to be configurable.
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+
 RUN npm run build
 
 # Production image, copy all the files and run next

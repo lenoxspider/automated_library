@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { User, Bell, Globe, Lock, Save, CheckCircle } from 'lucide-react';
-import Cookies from 'js-cookie';
 import api from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 import Card from '../../../components/ui/Card';
@@ -28,10 +27,7 @@ export default function ProfilePage() {
 
       // Update local state if needed
       if (user) {
-        login(Cookies.get('accessToken') || '', Cookies.get('refreshToken') || '', {
-          ...user,
-          name: res.user.name
-        });
+        login({ ...user, name: res.user.name });
       }
     }
   });

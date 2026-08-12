@@ -48,8 +48,8 @@ export class CirculationService {
       data: {
         copy_id: copyId,
         member_id: memberId,
-        borrow_date: borrowDate.toISOString(),
-        due_date: dueDate.toISOString(),
+        borrow_date: borrowDate,
+        due_date: dueDate,
         status: 'borrowed'
       }
     });
@@ -77,7 +77,7 @@ export class CirculationService {
     }
 
     const returnDate = new Date();
-    const dueDate = new Date(borrowing.due_date);
+    const dueDate = borrowing.due_date;
     let fineAmount = 0;
     let fine = null;
 
@@ -102,7 +102,7 @@ export class CirculationService {
 
     const updatedBorrowing = await prisma.borrowings.update({
       where: { id: borrowingId },
-      data: { return_date: returnDate.toISOString(), status: 'returned' }
+      data: { return_date: returnDate, status: 'returned' }
     });
 
     const copy = await prisma.book_copies.findUnique({ where: { id: borrowing.copy_id } });

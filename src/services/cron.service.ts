@@ -39,7 +39,7 @@ export class CronService {
     // Find all overdue loans that haven't been returned
     const overdueLoans = await prisma.borrowings.findMany({
       where: {
-        due_date: { lt: new Date().toISOString() },
+        due_date: { lt: new Date() },
         return_date: null
       },
       include: {
@@ -60,7 +60,7 @@ export class CronService {
     const fineRate = fineRateSetting ? parseFloat(fineRateSetting.value) : 1.0;
 
     for (const loan of overdueLoans) {
-      const dueDate = new Date(loan.due_date);
+      const dueDate = loan.due_date;
       const daysOverdue = Math.ceil((Date.now() - dueDate.getTime()) / (1000 * 3600 * 24));
       const amount = daysOverdue * fineRate;
 
@@ -101,7 +101,7 @@ export class CronService {
     const dueSoonLoans = await prisma.borrowings.findMany({
       where: {
         return_date: null,
-        due_date: { gte: now.toISOString(), lte: twoDaysFromNow.toISOString() }
+        due_date: { gte: now, lte: twoDaysFromNow }
       },
       include: {
         users: { select: { name: true, email: true } },
@@ -120,7 +120,7 @@ export class CronService {
           loan.users.email,
           loan.users.name,
           loan.book_copies.books.title,
-          new Date(loan.due_date).toLocaleDateString()
+          loan.due_date.toLocaleDateString()
         );
       } catch (err) {
         logger.warn({ err, borrowingId: loan.id }, 'Failed to queue due-soon reminder email');

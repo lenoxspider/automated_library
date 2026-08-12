@@ -14,6 +14,10 @@ jest.mock('../services/bookCover.service', () => ({
   getOrFetchCoverPath: jest.fn().mockResolvedValue(null)
 }));
 
+jest.mock('../services/s3.service', () => ({
+  uploadCover: jest.fn().mockResolvedValue('http://localhost:9000/book-covers/mock.jpg')
+}));
+
 jest.mock('../config/prisma', () => {
   const mockP = {
     books: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
