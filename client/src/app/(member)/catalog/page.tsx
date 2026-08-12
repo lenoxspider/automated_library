@@ -185,7 +185,7 @@ export default function CatalogPage() {
       {/* Main catalog: filters + grid */}
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar filters */}
-        <aside className="w-full md:w-56 shrink-0 space-y-8">
+        <aside className="w-full md:w-56 shrink-0 space-y-8 md:sticky md:top-8 self-start">
           <div>
             <h3 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4">Genre Filters</h3>
             <div className="flex flex-wrap gap-2">
