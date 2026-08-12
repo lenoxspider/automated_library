@@ -9,18 +9,78 @@ const createReservationSchema = z.object({
 });
 
 export const getReservations = asyncHandler(async (req: Request, res: Response) => {
-  const { status } = req.query;
+  const { status, search, page = '1', limit = '50' } = req.query;
+  const pageNumber = parseInt(page as string, 10);
+  const limitNumber = parseInt(limit as string, 10);
+  const skip = (pageNumber - 1) * limitNumber;
 
-  const reservations = await prisma.reservations.findMany({
-    where: status ? { status: status as string } : undefined,
-    include: {
-      books: { select: { title: true, author: true } },
-      users: { select: { name: true, email: true } }
-    },
-    orderBy: { reservation_date: 'desc' }
-  });
+  const where: any = {};
 
-  res.json({ data: reservations, totalCount: reservations.length });
+  if (status) {
+    const statuses = (status as string).split(',').map(s => s.trim());
+    where.status = { in: statuses };
+  }
+
+  if (search) {
+    const searchStr = search as string;
+    where.OR = [
+      { books: { title: { contains: searchStr } } },
+      { books: { author: { contains: searchStr } } },
+      { books: { isbn: { contains: searchStr } } },
+      { users: { name: { contains: searchStr } } },
+      { users: { email: { contains: searchStr } } },
+      { users: { student_id: { contains: searchStr } } }
+    ];
+  }
+
+  const [rawReservations, totalCount] = await Promise.all([
+    prisma.reservations.findMany({
+      where,
+      skip,
+      take: limitNumber,
+      include: {
+        books: { select: { id: true, title: true, author: true, isbn: true, cover_path: true } },
+        users: { select: { id: true, name: true, email: true, student_id: true } }
+      },
+      orderBy: { reservation_date: 'desc' }
+    }),
+    prisma.reservations.count({ where })
+  ]);
+
+  // Compute queue_position and expiration date for each reservation
+  const reservations = await Promise.all(rawReservations.map(async (resItem) => {
+    let queue_position = null;
+    let expiration_date = null;
+
+    if (resItem.status === 'pending') {
+      const count = await prisma.reservations.count({
+        where: {
+          book_id: resItem.book_id,
+          status: 'pending',
+          reservation_date: { lt: resItem.reservation_date }
+        }
+      });
+      queue_position = count + 1;
+    }
+
+    // Expiration date simulated as 7 days after request, or 3 days after ready for pickup
+    const baseDate = new Date(resItem.reservation_date);
+    if (resItem.status === 'pending') {
+      baseDate.setDate(baseDate.getDate() + 14); // e.g. expires in 14 days if not picked up
+      expiration_date = baseDate.toISOString();
+    } else if (resItem.status === 'ready_for_pickup' || resItem.status === 'approved') {
+      baseDate.setDate(baseDate.getDate() + 3);
+      expiration_date = baseDate.toISOString();
+    }
+
+    return {
+      ...resItem,
+      queue_position,
+      expiration_date
+    };
+  }));
+
+  res.json({ data: reservations, count: totalCount });
 });
 
 export const createReservation = asyncHandler(async (req: Request, res: Response) => {
@@ -89,4 +149,29 @@ export const approveReservation = asyncHandler(async (req: Request, res: Respons
   });
 
   res.json(updated);
+});
+
+export const bulkUpdateReservations = asyncHandler(async (req: Request, res: Response) => {
+  const { ids, action } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: 'No IDs provided' });
+    return;
+  }
+
+  let newStatus = '';
+  if (action === 'approve') newStatus = 'approved';
+  else if (action === 'cancel') newStatus = 'cancelled';
+  else if (action === 'ready') newStatus = 'ready_for_pickup';
+  else if (action === 'expire') newStatus = 'expired';
+  else {
+    res.status(400).json({ error: 'Invalid action' });
+    return;
+  }
+
+  const result = await prisma.reservations.updateMany({
+    where: { id: { in: ids } },
+    data: { status: newStatus }
+  });
+
+  res.json({ success: true, count: result.count });
 });

@@ -60,6 +60,22 @@ router.post(
 
 /**
  * @swagger
+ * /reservations/bulk:
+ *   patch:
+ *     summary: Bulk update reservations (staff)
+ *     tags: [Reservations]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch(
+  '/bulk',
+  authenticate,
+  authorize(['librarian', 'admin']),
+  reservationsController.bulkUpdateReservations
+);
+
+/**
+ * @swagger
  * /reservations/{id}:
  *   delete:
  *     summary: Cancel a reservation
