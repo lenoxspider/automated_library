@@ -1,48 +1,21 @@
-import fs from 'fs';
-import fs_promises from 'fs/promises';
-import path from 'path';
 import logger from '../config/logger';
+import sharp from 'sharp';
+import { uploadCover } from './s3.service';
 
-// Covers are written into the Next.js frontend's public/ dir so they're
-// served directly by the frontend at /covers/{isbn}.jpg - no separate
-// static route needed on the API. The stored cover_path is that
-// frontend-relative URL, not a filesystem path or the external OpenLibrary
-// URL, so a book's cover keeps working entirely offline (including during a
-// live presentation) once it has been fetched once.
-const COVERS_DIR = path.join(process.cwd(), 'client', 'public', 'covers');
-// 3s (the original spec figure) proved too tight in practice - a real
-// fetch to OpenLibrary from this environment measured ~3.1s. 5s keeps
-// book creation snappy while giving real-world TLS/connection latency
-// enough headroom to actually succeed instead of always falling back.
 const FETCH_TIMEOUT_MS = 5000;
 
-function coverUrlFor(isbn: string): string {
-  return `/covers/${isbn}.jpg`;
-}
-
-function coverFilePathFor(isbn: string): string {
-  return path.join(COVERS_DIR, `${isbn}.jpg`);
-}
-
-async function fetchCoverBuffer(isbn: string): Promise<Buffer | null> {
+async function fetchBufferWithTimeout(url: string): Promise<Buffer | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const res = await fetch(`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`, {
-      signal: controller.signal
-    });
-
-    // OpenLibrary returns a 200 with a tiny 1x1 placeholder GIF (~807 bytes)
-    // when it has no cover for the ISBN, instead of a 404 - filter that out
-    // so we don't cache their "no cover" placeholder as a real cover.
+    const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) return null;
     const buffer = Buffer.from(await res.arrayBuffer());
-    if (buffer.length < 1000) return null;
-
+    if (buffer.length < 1000) return null; // Reject tiny default images / placeholders
     return buffer;
   } catch (err) {
-    logger.warn({ err, isbn }, 'Cover fetch failed or timed out');
+    logger.warn({ err, url }, 'Cover download failed or timed out');
     return null;
   } finally {
     clearTimeout(timeout);
@@ -50,32 +23,56 @@ async function fetchCoverBuffer(isbn: string): Promise<Buffer | null> {
 }
 
 /**
- * Returns a frontend-relative cover URL (/covers/{isbn}.jpg) for the given
- * ISBN, using a locally cached file if one already exists, otherwise
- * fetching it from OpenLibrary and caching it to disk. Returns null (never
- * throws) if no ISBN is given or no cover could be fetched - callers should
- * treat null as "no cover", which the frontend already renders as a
- * generated placeholder (see client/src/components/ui/BookCover.tsx), so
- * there's never a broken image icon.
+ * Tries to fetch cover from OpenLibrary (Large version), falling back to Google Books if not found.
+ */
+async function fetchCoverBuffer(isbn: string): Promise<Buffer | null> {
+  // 1. Try Open Library
+  const olUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
+  const olBuffer = await fetchBufferWithTimeout(olUrl);
+  if (olBuffer) return olBuffer;
+
+  // 2. Try Google Books Fallback
+  try {
+    const gbUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
+    const res = await fetch(gbUrl);
+    if (res.ok) {
+      const data = await res.json() as any;
+      const thumbnail = data.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
+      if (thumbnail) {
+        const secureUrl = thumbnail.replace('http://', 'https://');
+        const gbBuffer = await fetchBufferWithTimeout(secureUrl);
+        if (gbBuffer) return gbBuffer;
+      }
+    }
+  } catch (err) {
+    logger.warn({ err, isbn }, 'Google Books lookup fallback failed');
+  }
+
+  return null;
+}
+
+/**
+ * Automatically fetches cover online, processes it via sharp, uploads it to MinIO,
+ * and returns the public MinIO URL.
  */
 export async function getOrFetchCoverPath(isbn: string | undefined | null): Promise<string | null> {
   if (!isbn) return null;
 
-  const filePath = coverFilePathFor(isbn);
-
-  if (fs.existsSync(filePath)) {
-    return coverUrlFor(isbn);
-  }
-
-  const buffer = await fetchCoverBuffer(isbn);
-  if (!buffer) return null;
-
   try {
-    await fs_promises.mkdir(COVERS_DIR, { recursive: true });
-    await fs_promises.writeFile(filePath, buffer);
-    return coverUrlFor(isbn);
+    const buffer = await fetchCoverBuffer(isbn);
+    if (!buffer) return null;
+
+    // Resize to max 400px wide, compress as progressive JPEG
+    const resizedBuffer = await sharp(buffer)
+      .resize({ width: 400, withoutEnlargement: true })
+      .jpeg({ quality: 85, progressive: true })
+      .toBuffer();
+
+    // Use a temporary key suffix or the ISBN itself
+    const minioUrl = await uploadCover(isbn, resizedBuffer, 'image/jpeg');
+    return minioUrl;
   } catch (err) {
-    logger.warn({ err, isbn }, 'Failed to write cover file to disk');
+    logger.error({ err, isbn }, 'Failed during getOrFetchCoverPath S3 pipeline');
     return null;
   }
 }

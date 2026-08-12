@@ -7,6 +7,8 @@ import crypto from 'crypto';
 import { getOrFetchCoverPath } from '../services/bookCover.service';
 import { lookupBookByIsbn } from '../services/bookLookup.service';
 import logger from '../config/logger';
+import sharp from 'sharp';
+import { uploadCover } from '../services/s3.service';
 
 const bookRepo = container.resolve(BookRepository);
 
@@ -160,4 +162,126 @@ export const addBookCopy = asyncHandler(async (req: Request, res: Response) => {
   }
 
   res.status(201).json(copy);
+});
+
+export const searchCovers = asyncHandler(async (req: Request, res: Response) => {
+  const query = req.query.q as string;
+  if (!query) {
+    res.status(400).json({ error: 'Query parameter q is required' });
+    return;
+  }
+
+  const candidates: { url: string; source: string; title?: string }[] = [];
+
+  try {
+    const olUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,cover_i`;
+    const olRes = await fetch(olUrl);
+    if (olRes.ok) {
+      const data = await olRes.json() as any;
+      data.docs?.forEach((doc: any) => {
+        if (doc.cover_i) {
+          candidates.push({
+            url: `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`,
+            source: 'Open Library',
+            title: doc.title
+          });
+        }
+      });
+    }
+  } catch (err) {
+    logger.warn({ err }, 'Open Library cover search failed');
+  }
+
+  try {
+    const gbUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=8`;
+    const gbRes = await fetch(gbUrl);
+    if (gbRes.ok) {
+      const data = await gbRes.json() as any;
+      data.items?.forEach((item: any) => {
+        const links = item.volumeInfo?.imageLinks;
+        const thumbnail = links?.thumbnail || links?.smallThumbnail;
+        if (thumbnail) {
+          const secureUrl = thumbnail.replace('http://', 'https://');
+          candidates.push({
+            url: secureUrl,
+            source: 'Google Books',
+            title: item.volumeInfo.title
+          });
+        }
+      });
+    }
+  } catch (err) {
+    logger.warn({ err }, 'Google Books cover search failed');
+  }
+
+  const uniqueCandidates = Array.from(new Map(candidates.map(item => [item.url, item])).values());
+  res.json(uniqueCandidates);
+});
+
+export const selectCover = asyncHandler(async (req: Request, res: Response) => {
+  const public_id = req.params.id as string;
+  const { coverUrl } = req.body;
+
+  if (!coverUrl) {
+    res.status(400).json({ error: 'coverUrl is required' });
+    return;
+  }
+
+  const book = await bookRepo.findByPublicId(public_id);
+  if (!book) {
+    res.status(404).json({ error: 'Book not found' });
+    return;
+  }
+
+  const response = await fetch(coverUrl);
+  if (!response.ok) {
+    res.status(400).json({ error: 'Failed to download selected cover image' });
+    return;
+  }
+
+  const originalBuffer = Buffer.from(await response.arrayBuffer());
+  const resizedBuffer = await sharp(originalBuffer)
+    .resize({ width: 400, withoutEnlargement: true })
+    .jpeg({ quality: 85, progressive: true })
+    .toBuffer();
+
+  const minioUrl = await uploadCover(book.id, resizedBuffer, 'image/jpeg');
+  const updatedBook = await bookRepo.update(public_id, { cover_path: minioUrl });
+  res.json(updatedBook);
+});
+
+export const uploadCoverFile = asyncHandler(async (req: Request, res: Response) => {
+  const public_id = req.params.id as string;
+  const file = req.file;
+
+  if (!file) {
+    res.status(400).json({ error: 'No image file uploaded' });
+    return;
+  }
+
+  const book = await bookRepo.findByPublicId(public_id);
+  if (!book) {
+    res.status(404).json({ error: 'Book not found' });
+    return;
+  }
+
+  if (!file.mimetype.startsWith('image/')) {
+    res.status(400).json({ error: 'Uploaded file must be an image' });
+    return;
+  }
+
+  const metadata = await sharp(file.buffer).metadata();
+  if (!metadata.width || metadata.width < 300) {
+    res.status(400).json({ error: 'Cover image must be at least 300px wide' });
+    return;
+  }
+
+  const resizedBuffer = await sharp(file.buffer)
+    .resize({ width: 400, withoutEnlargement: true })
+    .jpeg({ quality: 85, progressive: true })
+    .toBuffer();
+
+  const minioUrl = await uploadCover(book.id, resizedBuffer, 'image/jpeg');
+  const updatedBook = await bookRepo.update(public_id, { cover_path: minioUrl });
+  res.json(updatedBook);
 });

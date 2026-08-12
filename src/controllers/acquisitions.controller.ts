@@ -3,6 +3,8 @@ import asyncHandler from 'express-async-handler';
 import prisma from '../config/prisma';
 import { getOrFetchCoverPath } from '../services/bookCover.service';
 import logger from '../config/logger';
+import sharp from 'sharp';
+import { uploadCover } from '../services/s3.service';
 
 export const getOrders = asyncHandler(async (req: Request, res: Response) => {
   const orders = await prisma.purchase_orders.findMany({
@@ -14,17 +16,23 @@ export const getOrders = asyncHandler(async (req: Request, res: Response) => {
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   const { title, vendor, quantity, total_price } = req.body;
 
+  if (!title || !vendor || !quantity || !total_price) {
+    res.status(400).json({ error: 'Title, vendor, quantity, and total_price are required' });
+    return;
+  }
+
   const order = await prisma.purchase_orders.create({
     data: {
       title,
       vendor,
       quantity: Number(quantity),
       total_price: Number(total_price),
+      status: 'pending',
       order_date: new Date().toISOString()
     }
   });
 
-  res.status(201).json({ message: 'Purchase order created', order });
+  res.status(201).json(order);
 });
 
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
@@ -41,7 +49,7 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
 
 export const receiveOrder = asyncHandler(async (req: Request, res: Response) => {
   const id = parseInt(req.params.id as string);
-  const { author, genre, isbn, branch, section, shelf } = req.body;
+  const { author, genre, isbn, branch, section, shelf, coverUrl } = req.body;
 
   if (!author || !genre || !isbn) {
     res
@@ -61,12 +69,31 @@ export const receiveOrder = asyncHandler(async (req: Request, res: Response) => 
   }
 
   // Fetch cover path before starting the transaction so we don't hold the DB lock
-  // during a network request to OpenLibrary.
+  // during a network request.
   let coverPath: string | null = null;
-  try {
-    coverPath = await getOrFetchCoverPath(isbn);
-  } catch (err) {
-    logger.warn({ err, isbn }, 'Cover lookup failed during order receipt');
+
+  if (coverUrl) {
+    try {
+      const response = await fetch(coverUrl);
+      if (response.ok) {
+        const originalBuffer = Buffer.from(await response.arrayBuffer());
+        const resizedBuffer = await sharp(originalBuffer)
+          .resize({ width: 400, withoutEnlargement: true })
+          .jpeg({ quality: 85, progressive: true })
+          .toBuffer();
+        coverPath = await uploadCover(isbn, resizedBuffer, 'image/jpeg');
+      }
+    } catch (err) {
+      logger.warn({ err, coverUrl }, 'Custom cover download failed during receipt, falling back to auto-fetch');
+    }
+  }
+
+  if (!coverPath) {
+    try {
+      coverPath = await getOrFetchCoverPath(isbn);
+    } catch (err) {
+      logger.warn({ err, isbn }, 'Cover lookup failed during order receipt');
+    }
   }
 
   // Use a transaction for safety

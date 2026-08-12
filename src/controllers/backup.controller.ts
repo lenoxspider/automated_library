@@ -2,10 +2,12 @@ import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import fs from 'fs';
 import path from 'path';
+import { exec } from 'child_process';
+import util from 'util';
 import { setMaintenanceMode } from '../config/state';
 import prisma from '../config/prisma';
 
-const DB_PATH = path.join(__dirname, '../../prisma/library.db');
+const execPromise = util.promisify(exec);
 const BACKUP_DIR = path.join(__dirname, '../../backups');
 
 if (!fs.existsSync(BACKUP_DIR)) {
@@ -13,7 +15,7 @@ if (!fs.existsSync(BACKUP_DIR)) {
 }
 
 export const getBackups = asyncHandler(async (req: Request, res: Response) => {
-  const files = fs.readdirSync(BACKUP_DIR).filter((f) => f.endsWith('.db'));
+  const files = fs.readdirSync(BACKUP_DIR).filter((f) => f.endsWith('.sql'));
   const backups = files
     .map((f) => {
       const stats = fs.statSync(path.join(BACKUP_DIR, f));
@@ -30,10 +32,13 @@ export const getBackups = asyncHandler(async (req: Request, res: Response) => {
 
 export const createBackup = asyncHandler(async (req: Request, res: Response) => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const filename = `library-${timestamp}.db`;
+  const filename = `library-${timestamp}.sql`;
   const backupPath = path.join(BACKUP_DIR, filename);
 
-  fs.copyFileSync(DB_PATH, backupPath);
+  // Use docker exec to run pg_dump inside the container.
+  // Note: -i is used without -t to avoid adding terminal carriage returns on Windows.
+  const command = `docker exec -i smartlib-postgres pg_dump -U smartlib -d library > "${backupPath}"`;
+  await execPromise(command);
 
   // @ts-expect-error - req.user is provided by authentication middleware
   const adminId = req.user.id;
@@ -62,11 +67,12 @@ export const restoreBackup = asyncHandler(async (req: Request, res: Response) =>
   setMaintenanceMode(true);
 
   try {
-    // 2. Disconnect Prisma to release the file lock
+    // 2. Disconnect Prisma to release connections
     await prisma.$disconnect();
 
-    // 3. Overwrite the database file
-    fs.copyFileSync(backupPath, DB_PATH);
+    // 3. Restore database schema and data using psql inside the docker container
+    const command = `docker exec -i smartlib-postgres psql -U smartlib -d library < "${backupPath}"`;
+    await execPromise(command);
 
     // 4. Reconnect Prisma
     await prisma.$connect();
@@ -74,7 +80,6 @@ export const restoreBackup = asyncHandler(async (req: Request, res: Response) =>
     // 5. Exit Maintenance Mode
     setMaintenanceMode(false);
 
-    // Note: Logging this might be tricky since the DB just swapped, but let's log it in the newly restored DB.
     // @ts-expect-error - req.user is provided by authentication middleware
     const adminId = req.user.id;
     await prisma.audit_logs.create({

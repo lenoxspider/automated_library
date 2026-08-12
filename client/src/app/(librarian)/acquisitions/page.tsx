@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, Truck, Clock, Plus, X, BookMarked, MapPin, Search } from 'lucide-react';
+import { CheckCircle2, Truck, Clock, Plus, X, BookMarked, MapPin, Search, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
@@ -20,6 +20,7 @@ type Order = {
 
 export default function AcquisitionsPage() {
   const queryClient = useQueryClient();
+  const setNewOrderWrapper = (val: typeof newOrder) => setNewOrder(val);
   const [newOrder, setNewOrder] = useState({ title: '', vendor: '', quantity: 1, total_price: 0 });
   
   // Receive Modal State
@@ -30,8 +31,33 @@ export default function AcquisitionsPage() {
     isbn: '',
     branch: '',
     section: '',
-    shelf: ''
+    shelf: '',
+    coverUrl: ''
   });
+
+  const [coverCandidates, setCoverCandidates] = useState<{ url: string; source: string; title?: string }[]>([]);
+  const [isSearchingCovers, setIsSearchingCovers] = useState(false);
+
+  const fetchCovers = async (title: string) => {
+    setIsSearchingCovers(true);
+    try {
+      const res = await api.get(`/books/search-covers?q=${encodeURIComponent(title)}`);
+      setCoverCandidates(res.data);
+    } catch {
+      toast.error('Failed to search online covers');
+    } finally {
+      setIsSearchingCovers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (receivingOrder) {
+      fetchCovers(receivingOrder.title);
+    } else {
+      setCoverCandidates([]);
+      setReceiveForm({ author: '', genre: '', isbn: '', branch: '', section: '', shelf: '', coverUrl: '' });
+    }
+  }, [receivingOrder]);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['acquisitions'],
@@ -42,7 +68,7 @@ export default function AcquisitionsPage() {
     mutationFn: async (data: unknown) => await api.post('/acquisitions', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['acquisitions'] });
-      setNewOrder({ title: '', vendor: '', quantity: 1, total_price: 0 });
+      setNewOrderWrapper({ title: '', vendor: '', quantity: 1, total_price: 0 });
     }
   });
 
@@ -60,7 +86,7 @@ export default function AcquisitionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['acquisitions'] });
       setReceivingOrder(null);
-      setReceiveForm({ author: '', genre: '', isbn: '', branch: '', section: '', shelf: '' });
+      setReceiveForm({ author: '', genre: '', isbn: '', branch: '', section: '', shelf: '', coverUrl: '' });
       toast.success('Order received and books added to catalog/inventory');
     }
   });
@@ -350,6 +376,43 @@ export default function AcquisitionsPage() {
                       <p className="text-xs text-gray-500 mt-1.5">Type an ISBN and click Lookup to auto-fill metadata for brand new books.</p>
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-slate-100 uppercase tracking-wider mb-3 border-b border-gray-200 dark:border-slate-800 pb-2">Select Book Cover</h3>
+                  {isSearchingCovers ? (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 py-3 font-mono">
+                      <LoadingSpinner /> Searching online covers...
+                    </div>
+                  ) : coverCandidates.length === 0 ? (
+                    <p className="text-xs text-gray-400 dark:text-slate-500 py-2">No online covers found. Auto-fetch will resolve a cover on submit if available.</p>
+                  ) : (
+                    <div className="flex gap-4 overflow-x-auto pb-3 pt-1 scrollbar-thin">
+                      {coverCandidates.map((cand) => {
+                        const isSelected = receiveForm.coverUrl === cand.url;
+                        return (
+                          <button
+                            key={cand.url}
+                            type="button"
+                            onClick={() => setReceiveForm(prev => ({ ...prev, coverUrl: isSelected ? '' : cand.url }))}
+                            className={`relative flex-shrink-0 w-24 border-2 rounded-lg overflow-hidden transition-all ${
+                              isSelected ? 'border-indigo-600 ring-2 ring-indigo-500 scale-95 shadow-md' : 'border-gray-200 dark:border-slate-800 hover:border-indigo-400'
+                            }`}
+                          >
+                            <img src={cand.url} alt={cand.title || 'Cover candidate'} className="w-full h-32 object-cover" />
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-[9px] text-white p-1 text-center truncate">
+                              {cand.source}
+                            </div>
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 bg-indigo-600 text-white rounded-full p-0.5">
+                                <Check size={10} />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div>

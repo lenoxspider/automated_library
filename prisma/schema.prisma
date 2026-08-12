@@ -3,13 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model book_copies {
   id         Int          @id @default(autoincrement())
   book_id    Int
-  barcode    String       @unique(map: "sqlite_autoindex_book_copies_1")
+  barcode    String       @unique
   status     String       @default("Available")
   branch     String?
   section    String?
@@ -24,7 +24,7 @@ model books {
   title            String
   author           String
   genre            String
-  isbn             String         @unique(map: "sqlite_autoindex_books_1")
+  isbn             String         @unique
   total_copies     Int            @default(1)
   available_copies Int            @default(1)
   cover_path       String?
@@ -51,7 +51,7 @@ model borrowings {
 
 model fines {
   id           Int        @id @default(autoincrement())
-  borrowing_id Int        @unique(map: "sqlite_autoindex_fines_1")
+  borrowing_id Int        @unique
   amount       Float      @default(0.0)
   status       String     @default("unpaid")
   payment_date String?
@@ -81,14 +81,14 @@ model site_visits {
 model student_roster {
   id           Int    @id @default(autoincrement())
   name         String
-  student_id   String @unique(map: "sqlite_autoindex_student_roster_1")
-  index_number String @unique(map: "sqlite_autoindex_student_roster_2")
+  student_id   String @unique
+  index_number String @unique
 }
 
 model users {
   id                 Int            @id @default(autoincrement())
   public_id          String?        @unique @default(uuid())
-  username           String         @unique(map: "sqlite_autoindex_users_1")
+  username           String         @unique
   password           String
   role               String
   name               String

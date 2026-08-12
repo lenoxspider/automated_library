@@ -60,6 +60,31 @@ router.get(
   bookController.lookupBook
 );
 
+router.get(
+  '/search-covers',
+  authenticate,
+  authorize(['librarian', 'admin']),
+  bookController.searchCovers
+);
+
+router.post(
+  '/:id/select-cover',
+  authenticate,
+  authorize(['librarian', 'admin']),
+  bookController.selectCover
+);
+
+import multer from 'multer';
+const upload = multer({ storage: multer.memoryStorage() });
+
+router.post(
+  '/:id/cover',
+  authenticate,
+  authorize(['librarian', 'admin']),
+  upload.single('cover'),
+  bookController.uploadCoverFile
+);
+
 router.get('/:id', bookController.getBookById);
 
 /**
