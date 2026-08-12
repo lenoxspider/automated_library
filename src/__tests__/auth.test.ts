@@ -16,11 +16,14 @@ jest.mock('../config/redis', () => {
   return { __esModule: true, default: mockRedis };
 });
 
-const mockFindAll = jest.fn();
+const mockFindByUsername = jest.fn();
+const mockRepoUpdate = jest.fn();
 jest.mock('../repositories/user.repo', () => {
   return {
     UserRepository: jest.fn().mockImplementation(() => ({
-      findAll: mockFindAll
+      findByUsername: mockFindByUsername,
+      findById: jest.fn(),
+      update: mockRepoUpdate
     }))
   };
 });
@@ -62,7 +65,7 @@ describe('POST /api/auth/login', () => {
   });
 
   it('returns 401 for a username that does not exist', async () => {
-    mockFindAll.mockResolvedValue([]);
+    mockFindByUsername.mockResolvedValue(null);
 
     const res = await request(app)
       .post('/api/auth/login')
@@ -74,7 +77,12 @@ describe('POST /api/auth/login', () => {
 
   it('returns 401 for a wrong password', async () => {
     const hash = await bcrypt.hash('correct-password', 10);
-    mockFindAll.mockResolvedValue([{ id: 1, username: 'member1', password: hash, role: 'member' }]);
+    mockFindByUsername.mockResolvedValue({
+      id: 1,
+      username: 'member1',
+      password: hash,
+      role: 'member'
+    });
 
     const res = await request(app)
       .post('/api/auth/login')
@@ -85,16 +93,14 @@ describe('POST /api/auth/login', () => {
 
   it('sets httpOnly access + refresh cookies and stores the refresh token in redis on success', async () => {
     const hash = await bcrypt.hash('correct-password', 10);
-    mockFindAll.mockResolvedValue([
-      {
-        id: 42,
-        username: 'member1',
-        password: hash,
-        role: 'member',
-        name: 'Member One',
-        email: 'm1@example.com'
-      }
-    ]);
+    mockFindByUsername.mockResolvedValue({
+      id: 42,
+      username: 'member1',
+      password: hash,
+      role: 'member',
+      name: 'Member One',
+      email: 'm1@example.com'
+    });
 
     const res = await request(app)
       .post('/api/auth/login')
