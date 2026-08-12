@@ -7,24 +7,33 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import {
-  BookOpen,
-  Library,
-  Clock,
-  CreditCard,
+  Book,
   Settings,
-  Users,
   ShieldAlert,
   
   LogOut,
-  Book,
   X,
   Activity,
   ClipboardList,
   Database,
   Webhook,
-  Star,
   ChevronLeft,
   ChevronRight,
+  LibraryBig,
+  History,
+  Sparkles,
+  BookMarked,
+  ReceiptText,
+  HandHeart,
+  UserRound,
+  ArrowLeftRight,
+  CalendarClock,
+  CircleDollarSign,
+  Boxes,
+  PackagePlus,
+  RefreshCw,
+  Headset,
+  ListChecks,
   BarChart3
 } from 'lucide-react';
 
@@ -54,24 +63,24 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   if (!user) return null;
 
   const memberLinks = [
-    { name: 'Catalog', href: '/catalog', icon: BookOpen },
-    { name: 'Search History', href: '/search-history', icon: Book },
-    { name: 'For You', href: '/recommendations', icon: Activity },
-    { name: 'My Loans', href: '/loans', icon: Clock },
-    { name: 'Fines', href: '/fines', icon: CreditCard },
-    { name: 'Contributions', href: '/contributions', icon: Star },
-    { name: 'Profile', href: '/profile', icon: Settings },
+    { name: 'Catalog', href: '/catalog', icon: LibraryBig },
+    { name: 'Search History', href: '/search-history', icon: History },
+    { name: 'For You', href: '/recommendations', icon: Sparkles },
+    { name: 'My Loans', href: '/loans', icon: BookMarked },
+    { name: 'Fines', href: '/fines', icon: ReceiptText },
+    { name: 'Contributions', href: '/contributions', icon: HandHeart },
+    { name: 'Profile', href: '/profile', icon: UserRound },
   ];
 
   const librarianLinks = [
-    { name: 'Circulation', href: '/circulation', icon: Library },
-    { name: 'Reservations', href: '/reservations', icon: Clock },
-    { name: 'Manage Fines', href: '/manage-fines', icon: CreditCard },
-    { name: 'Inventory', href: '/inventory', icon: Library },
-    { name: 'Acquisitions', href: '/acquisitions', icon: Book },
-    { name: 'Catalog Sync', href: '/catalog-sync', icon: Activity },
-    { name: 'User Support', href: '/support-tickets', icon: Users },
-    { name: 'Contributions Queue', href: '/contributions-queue', icon: ClipboardList },
+    { name: 'Circulation', href: '/circulation', icon: ArrowLeftRight },
+    { name: 'Reservations', href: '/reservations', icon: CalendarClock },
+    { name: 'Manage Fines', href: '/manage-fines', icon: CircleDollarSign },
+    { name: 'Inventory', href: '/inventory', icon: Boxes },
+    { name: 'Acquisitions', href: '/acquisitions', icon: PackagePlus },
+    { name: 'Catalog Sync', href: '/catalog-sync', icon: RefreshCw },
+    { name: 'User Support', href: '/support-tickets', icon: Headset },
+    { name: 'Contributions Queue', href: '/contributions-queue', icon: ListChecks },
     { name: 'Reports', href: '/reports', icon: BarChart3 },
   ];
 
