@@ -48,6 +48,7 @@ export default function InventoryPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [focusedItem, setFocusedItem] = useState<InventoryItem | null>(null);
   const [drawerEdits, setDrawerEdits] = useState({ branch: '', section: '', shelf: '' });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const openDrawer = (item: InventoryItem) => {
     setDrawerEdits({
@@ -143,57 +144,71 @@ export default function InventoryPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
       
-      {/* LEFT PANEL: Locations */}
-      <div className="w-64 border-r border-gray-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-y-auto p-4 hidden md:block shrink-0 transition-colors">
-        <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100 flex items-center gap-2 mb-4 uppercase tracking-wider">
-          <MapPin size={16} className="text-indigo-500" /> Locations
-        </h3>
-        <button 
-          onClick={() => { setBranch(''); setSection(''); setShelf(''); setPage(1); }}
-          className={`text-sm w-full text-left px-2 py-1.5 rounded mb-2 ${!branch ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 font-bold' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
+      {/* LEFT PANEL: Locations - Collapsible */}
+      <div className={`relative border-r border-gray-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden shrink-0 transition-all duration-300 ease-in-out hidden md:flex flex-col ${sidebarOpen ? 'w-56' : 'w-10'}`}>
+        {/* Toggle button */}
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          className="flex items-center justify-center w-10 h-10 shrink-0 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
         >
-          All Locations
+          <MapPin size={16} className={`transition-transform duration-300 ${sidebarOpen ? 'text-indigo-500' : ''}`} />
         </button>
-        <div className="space-y-1">
-          {Object.entries(locationTree).map(([b, sections]: [string, Record<string, Record<string, number>>]) => (
-            <div key={b}>
-              <div 
-                className={`text-sm font-semibold cursor-pointer px-2 py-1.5 rounded flex items-center justify-between ${branch === b && !section ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' : 'text-gray-800 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
-                onClick={() => { setBranch(b); setSection(''); setShelf(''); setPage(1); }}
-              >
-                {b}
-              </div>
-              {branch === b && (
-                <div className="ml-3 pl-2 border-l border-gray-200 dark:border-slate-700 space-y-1 mt-1">
-                  {Object.entries(sections).map(([sec, shelves]: [string, Record<string, number>]) => (
-                    <div key={sec}>
-                      <div 
-                        className={`text-xs cursor-pointer px-2 py-1 rounded ${section === sec && !shelf ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'}`}
-                        onClick={() => { setSection(sec); setShelf(''); setPage(1); }}
-                      >
-                        {sec}
-                      </div>
-                      {section === sec && (
-                        <div className="ml-3 space-y-0.5 mt-0.5">
-                          {Object.entries(shelves).map(([sh, count]: [string, number]) => (
-                            <div 
-                              key={sh}
-                              className={`text-[11px] flex justify-between cursor-pointer px-2 py-0.5 rounded ${shelf === sh ? 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-200 font-semibold' : 'text-gray-500 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-300'}`}
-                              onClick={() => { setShelf(sh); setPage(1); }}
-                            >
-                              <span>{sh}</span>
-                              <span className="opacity-50">{count}</span>
+
+        {/* Sidebar content — only rendered when open */}
+        {sidebarOpen && (
+          <div className="flex-1 overflow-y-auto px-3 pb-4">
+            <h3 className="font-bold text-xs text-gray-900 dark:text-slate-100 flex items-center gap-2 mb-3 uppercase tracking-wider">
+              Locations
+            </h3>
+            <button 
+              onClick={() => { setBranch(''); setSection(''); setShelf(''); setPage(1); }}
+              className={`text-sm w-full text-left px-2 py-1.5 rounded mb-2 ${!branch ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 font-bold' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
+            >
+              All Locations
+            </button>
+            <div className="space-y-1">
+              {Object.entries(locationTree).map(([b, sections]: [string, Record<string, Record<string, number>>]) => (
+                <div key={b}>
+                  <div 
+                    className={`text-sm font-semibold cursor-pointer px-2 py-1.5 rounded flex items-center justify-between ${branch === b && !section ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' : 'text-gray-800 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
+                    onClick={() => { setBranch(b); setSection(''); setShelf(''); setPage(1); }}
+                  >
+                    {b}
+                  </div>
+                  {branch === b && (
+                    <div className="ml-3 pl-2 border-l border-gray-200 dark:border-slate-700 space-y-1 mt-1">
+                      {Object.entries(sections).map(([sec, shelves]: [string, Record<string, number>]) => (
+                        <div key={sec}>
+                          <div 
+                            className={`text-xs cursor-pointer px-2 py-1 rounded ${section === sec && !shelf ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'}`}
+                            onClick={() => { setSection(sec); setShelf(''); setPage(1); }}
+                          >
+                            {sec}
+                          </div>
+                          {section === sec && (
+                            <div className="ml-3 space-y-0.5 mt-0.5">
+                              {Object.entries(shelves).map(([sh, count]: [string, number]) => (
+                                <div 
+                                  key={sh}
+                                  className={`text-[11px] flex justify-between cursor-pointer px-2 py-0.5 rounded ${shelf === sh ? 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-200 font-semibold' : 'text-gray-500 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-300'}`}
+                                  onClick={() => { setShelf(sh); setPage(1); }}
+                                >
+                                  <span>{sh}</span>
+                                  <span className="opacity-50">{count}</span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          )}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* MAIN CONTENT */}
