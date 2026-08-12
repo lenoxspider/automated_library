@@ -6,10 +6,13 @@ async function main() {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
   const librarianEmail = process.env.LIBRARIAN_EMAIL || 'librarian@smartlib.com';
-  const librarianPassword = process.env.LIBRARIAN_PASSWORD || 'librarian123';
+  const librarianPassword = process.env.LIBRARIAN_PASSWORD;
 
   if (!adminEmail || !adminPassword) {
     throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set in the environment to seed the admin user.');
+  }
+  if (!librarianPassword) {
+    throw new Error('LIBRARIAN_PASSWORD must be set in the environment to seed the librarian user.');
   }
 
   // 1. Seed Admin
