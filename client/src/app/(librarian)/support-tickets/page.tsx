@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageSquare, CheckCircle, Mail } from 'lucide-react';
+import { CheckCircle, Mail } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
 
@@ -34,7 +33,7 @@ export default function SupportTicketsPage() {
             <CheckCircle size={48} className="mx-auto mb-4 opacity-30" />
             <p>Inbox zero! No pending support tickets.</p>
           </div>
-        ) : tickets?.map((ticket: any) => (
+        ) : tickets?.map((ticket: { id: number; subject: string; message: string; status: string; created_at: string; users: { name: string; email: string } }) => (
           <Card key={ticket.id} surface="light" className={`p-6 border-l-4 ${ticket.status === 'open' ? 'border-amber-500' : 'border-gray-300'}`}>
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div>

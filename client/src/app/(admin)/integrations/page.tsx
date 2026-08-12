@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Key, Trash2, Webhook } from 'lucide-react';
+import { Trash2, Webhook } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
 
@@ -17,7 +17,7 @@ export default function IntegrationsPage() {
   });
 
   const createKey = useMutation({
-    mutationFn: async (data: any) => await api.post('/integrations', data),
+    mutationFn: async (data: unknown) => await api.post('/integrations', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
       setServiceName('');
@@ -71,7 +71,7 @@ export default function IntegrationsPage() {
                 <tbody className="divide-y" style={{ borderColor: 'var(--color-signal-border-light)' }}>
                   {isLoading ? (
                     <tr><td colSpan={3} className="text-center py-8 opacity-50">Loading keys...</td></tr>
-                  ) : keys?.map((k: any) => (
+                  ) : keys?.map((k: { id: number; service_name: string; status: string; created_at: string }) => (
                     <tr key={k.id} className={`hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors ${k.status === 'revoked' ? 'opacity-50' : ''}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">

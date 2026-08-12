@@ -32,7 +32,7 @@ export default function RecommendationsPage() {
               <>
                 <Sparkles size={20} />
                 <p className="font-medium text-sm">
-                  Because you enjoy <strong>{data.topGenres.join(' and ')}</strong>, we think you'll love these:
+                  Because you enjoy <strong>{data.topGenres.join(' and ')}</strong>, we think you&apos;ll love these:
                 </p>
               </>
             ) : (
@@ -46,7 +46,7 @@ export default function RecommendationsPage() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
-            {data?.books.map((book: any) => (
+            {data?.books.map((book: { id: number; title: string; author: string; isbn?: string; cover_path?: string | null }) => (
               <Card key={book.id} surface="light" className="flex flex-col overflow-hidden hover:ring-2 ring-indigo-500 transition-all cursor-pointer">
                 <BookCover title={book.title} isbn={book.isbn} src={book.cover_path} className="w-full h-48" />
                 <div className="p-3">

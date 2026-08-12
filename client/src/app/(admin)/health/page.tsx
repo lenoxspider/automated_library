@@ -18,14 +18,15 @@ export default function SystemHealthPage() {
       queryClient.invalidateQueries({ queryKey: ['system-health-advanced'] });
       alert(data.message || 'Action executed successfully');
     },
-    onError: (err: any) => {
-      alert(err.response?.data?.message || 'Failed to execute action');
+    onError: (err: unknown) => {
+      alert(err instanceof Error ? err.message : 'Failed to execute action');
     }
   });
 
   useEffect(() => {
     const saved = localStorage.getItem('smartlib-pinned-health-widgets');
     if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPinnedWidgets(JSON.parse(saved));
     }
   }, []);
@@ -86,10 +87,11 @@ export default function SystemHealthPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getColorClass = (type: 'cpu' | 'memory' | 'db' | 'disk' | 'network' | 'uptime', val: any) => {
-    switch (type) {
-      case 'cpu': return val > 85 ? 'text-red-600 bg-red-50' : val > 70 ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50';
-      case 'memory': return val > 90 ? 'text-red-600 bg-red-50' : val > 80 ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50';
+  const getColorClass = (type: 'cpu' | 'memory' | 'db' | 'disk' | 'network' | 'uptime', val: number | string | null | undefined) => {
+    const numericVal = typeof val === 'number' ? val : Number(val ?? 0);
+  switch (type) {
+      case 'cpu': return numericVal > 85 ? 'text-red-600 bg-red-50' : numericVal > 70 ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50';
+      case 'memory': return numericVal > 90 ? 'text-red-600 bg-red-50' : numericVal > 80 ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50';
       case 'db': return val === 'degraded' ? 'text-amber-600 bg-amber-50' : val === 'critical' ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50';
       case 'disk': return val === 'critical' ? 'text-red-600 bg-red-50' : val === 'warning' ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50';
       case 'network': return val === 'degraded' ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50';
@@ -221,7 +223,7 @@ export default function SystemHealthPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {processes.map((p: any) => (
+                  {processes.map((p: { name: string; pid: number; cpu: number }) => (
                     <tr key={p.pid} className="border-b border-gray-50 last:border-0">
                       <td className="py-2 text-sm text-gray-500 font-mono">{p.pid}</td>
                       <td className="py-2 text-sm font-medium text-gray-900 truncate max-w-sm" title={p.name}>{p.name}</td>

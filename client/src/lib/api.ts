@@ -31,7 +31,7 @@ api.interceptors.response.use(
       // For now, if we get 401, we'll clear the token and redirect to login.
       Cookies.remove('accessToken');
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+        window.location.replace('/login');
       }
     }
     return Promise.reject(error);

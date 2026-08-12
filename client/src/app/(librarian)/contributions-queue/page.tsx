@@ -39,7 +39,7 @@ export default function ContributionsQueuePage() {
           </Card>
         )}
 
-        {queue?.map((item: any) => (
+        {queue?.map((item: { id: number; content: string; contribution_type: string; books?: { title?: string } | null; users: { name: string; library_points: number } }) => (
           <Card key={item.id} surface="light" className="p-5 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center border-l-4 border-indigo-500">
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-3">

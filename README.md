@@ -2,11 +2,11 @@
 
 SmartLib is a modernized, robust, and scalable library management system backend. Originally a monolithic Node.js application, it has been completely refactored into a clean, modular TypeScript MVC architecture using modern tooling and best practices.
 
-## 🚀 Technologies Used
+## Ã°Å¸Å¡â‚¬ Technologies Used
 
 - **Runtime & Language**: Node.js, TypeScript (Backend & Frontend)
 - **Backend Framework**: Express.js
-- **Frontend Framework**: Next.js 14 (App Router)
+- **Frontend Framework**: Next.js 16 (App Router)
 - **Frontend Styling**: Tailwind CSS, Framer Motion (Glassmorphism design)
 - **State Management & Data Fetching**: Zustand, TanStack React Query
 - **Database & ORM**: SQLite, Prisma ORM
@@ -19,35 +19,35 @@ SmartLib is a modernized, robust, and scalable library management system backend
 - **Testing**: Jest, Supertest
 - **CI/CD**: GitHub Actions, Docker
 
-## 📁 Project Structure
+## Ã°Å¸â€œÂ Project Structure
 
 ```
 librarySys/
-├── client/                   # Next.js 14 Frontend Application
-│   ├── src/
-│   │   ├── app/              # Next.js App Router & Routes (Auth, Member, Admin, Librarian)
-│   │   ├── components/       # Reusable React components (Auth, Navigation, UI)
-│   │   ├── lib/              # API clients and utilities (Axios, React Query)
-│   │   └── store/            # Zustand global state (authStore)
-│   └── Dockerfile            # Production multi-stage Docker build for frontend
-├── prisma/
-│   └── schema.prisma         # Prisma database schema
-├── src/                      # Express.js Backend Application
-│   ├── config/               # Configuration (Prisma, Swagger, env, etc.)
-│   ├── controllers/          # Route handlers (Auth, Books, Borrowings, Settings, etc.)
-│   ├── middlewares/          # Express middlewares (Auth, Error handling)
-│   ├── repositories/         # Database access layer
-│   ├── routes/               # Express route definitions
-│   ├── services/             # Core business logic (Circulation, Cron, Email, Auth)
-│   ├── utils/                # Helper functions (CSV Parser, etc.)
-│   ├── __tests__/            # Jest unit and integration tests
-│   ├── app.ts                # Express app setup and middleware registration
-│   └── server.ts             # Application entry point
-├── plan/                     # Legacy scripts and migration planning documents
-└── .env.example              # Example environment configuration
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ client/                   # Next.js 16 Frontend Application
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ src/
+Ã¢â€â€š   Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ app/              # Next.js App Router & Routes (Auth, Member, Admin, Librarian)
+Ã¢â€â€š   Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ components/       # Reusable React components (Auth, Navigation, UI)
+Ã¢â€â€š   Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ lib/              # API clients and utilities (Axios, React Query)
+Ã¢â€â€š   Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ store/            # Zustand global state (authStore)
+Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ Dockerfile            # Production multi-stage Docker build for frontend
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ prisma/
+Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ schema.prisma         # Prisma database schema
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ src/                      # Express.js Backend Application
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ config/               # Configuration (Prisma, Swagger, env, etc.)
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ controllers/          # Route handlers (Auth, Books, Borrowings, Settings, etc.)
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ middlewares/          # Express middlewares (Auth, Error handling)
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ repositories/         # Database access layer
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ routes/               # Express route definitions
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ services/             # Core business logic (Circulation, Cron, Email, Auth)
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ utils/                # Helper functions (CSV Parser, etc.)
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ __tests__/            # Jest unit and integration tests
+Ã¢â€â€š   Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ app.ts                # Express app setup and middleware registration
+Ã¢â€â€š   Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ server.ts             # Application entry point
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ plan/                     # Legacy scripts and migration planning documents
+Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ .env.example              # Example environment configuration
 ```
 
-## ✨ Key Features
+## Ã¢Å“Â¨ Key Features
 
 - **Robust Authentication**: Secure registration with `student_roster` ID verification, dynamic JWT tokens, and secure HTTP-only cookie flows. Frontend guarded by Role-Based Access Control (RBAC).
 - **Premium User Interface**: A state-of-the-art Next.js frontend utilizing glassmorphism, responsive tailwind styling, and Framer Motion micro-animations.
@@ -59,7 +59,7 @@ librarySys/
 - **Differential Privacy Analytics**: Publishes aggregate usage statistics (like popular books and peak search times) while protecting individual patron privacy by injecting mathematical noise via the Laplace mechanism.
 - **Automated Cron Jobs**: Background service runs daily at midnight to scan active loans and automatically upsert fine records for overdue books.
 
-## 🛠️ Setup Instructions
+## Ã°Å¸â€ºÂ Ã¯Â¸Â Setup Instructions
 
 ### 1. Prerequisites
 Ensure you have the following installed on your machine:
@@ -84,6 +84,8 @@ Generate the Prisma client and apply migrations:
 ```bash
 npx prisma generate
 npx prisma migrate deploy
+
+If an existing development database was created before Prisma migrations were enabled, first back it up and verify it matches `prisma/schema.prisma`; then baseline the existing migration history with `npx prisma migrate resolve --applied <migration_name>`. Do not use `migrate reset` on a database containing required data.
 ```
 
 (For local development, `npx prisma migrate dev` will additionally create a new
@@ -120,16 +122,18 @@ docker build -t smartlib-frontend .
 docker run -p 3000:3000 smartlib-frontend
 ```
 
-## 🧪 Testing
+## Ã°Å¸Â§Âª Testing
 
 The project uses Jest and Supertest for unit and integration testing.
 
 ```bash
+- Run the backend lint check with `npm run lint` before testing.
+
 # Run the complete test suite
 npm test
 ```
 
-## 📚 API Documentation
+## Ã°Å¸â€œÅ¡ API Documentation
 
 Once the server is running, you can interact with the API and view the full documentation via the Swagger UI interface:
 

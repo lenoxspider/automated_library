@@ -41,6 +41,11 @@ export const getBooks = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+export const getGenres = asyncHandler(async (req: Request, res: Response) => {
+  const genres = await bookRepo.getDistinctGenres();
+  res.json(genres);
+});
+
 export const createBook = asyncHandler(async (req: Request, res: Response) => {
   const validatedData = createBookSchema.parse(req.body);
 

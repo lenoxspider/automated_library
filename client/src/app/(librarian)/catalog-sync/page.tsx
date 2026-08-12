@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UploadCloud, Download, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { UploadCloud, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
 
@@ -20,7 +20,7 @@ export default function CatalogSyncPage() {
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
-    } catch (err) {
+    } catch {
       alert('Failed to export catalog');
     }
   };
@@ -39,8 +39,8 @@ export default function CatalogSyncPage() {
       });
       setResult({ type: 'success', msg: res.data.message });
       setFile(null);
-    } catch (err: any) {
-      setResult({ type: 'error', msg: err.response?.data?.message || 'Import failed' });
+    } catch (err: unknown) {
+      setResult({ type: 'error', msg: err instanceof Error ? err.message : 'Import failed' });
     } finally {
       setIsUploading(false);
     }

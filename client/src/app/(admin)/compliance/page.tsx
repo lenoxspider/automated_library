@@ -38,7 +38,7 @@ export default function CompliancePage() {
               <p className="text-center opacity-50 py-4">Loading requests...</p>
             ) : requests?.length === 0 ? (
               <p className="text-center opacity-50 py-4">No active compliance requests.</p>
-            ) : requests?.map((req: any) => (
+            ) : requests?.map((req: { id: number; member_id: number; request_type: string; status: string; created_at: string }) => (
               <div key={req.id} className={`border rounded-lg p-4 flex items-center justify-between ${req.status === 'completed' ? 'opacity-50' : 'bg-white dark:bg-neutral-900'}`} style={{ borderColor: 'var(--color-signal-border-light)' }}>
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-full ${req.request_type === 'ACCOUNT_DELETION' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
@@ -51,7 +51,7 @@ export default function CompliancePage() {
                         {req.status}
                       </span>
                     </div>
-                    <p className="text-sm opacity-70">Member ID: {req.member_id} • Submitted: {new Date(req.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm opacity-70">Member ID: {req.member_id} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Submitted: {new Date(req.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
                 

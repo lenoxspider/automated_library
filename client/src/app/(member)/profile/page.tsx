@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { User, Bell, Globe, Lock, Save, CheckCircle } from 'lucide-react';
 import Cookies from 'js-cookie';
 import api from '../../../lib/api';
@@ -19,7 +19,7 @@ export default function ProfilePage() {
   const [password, setPassword] = useState('');
 
   const updateProfile = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: unknown) => {
       return (await api.put('/users/profile', data)).data;
     },
     onSuccess: (res) => {
@@ -35,7 +35,7 @@ export default function ProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: any = { name, language, emailNotifications };
+    const payload: Record<string, string | boolean> = { name, language, emailNotifications };
     if (password) payload.password = password;
     updateProfile.mutate(payload);
   };
@@ -75,8 +75,8 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-1 opacity-70">Email Address</label>
               <input 
-                type="text" 
-                value={user?.email} 
+                type="email" 
+                value={user?.email || ''} 
                 disabled
                 className="w-full border-2 px-3 py-2 outline-none bg-gray-50 dark:bg-neutral-900 opacity-60 cursor-not-allowed"
                 style={{ borderColor: 'var(--color-signal-border-light)' }}
@@ -102,8 +102,8 @@ export default function ProfilePage() {
                 style={{ borderColor: 'var(--color-signal-border-light)' }}
               >
                 <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
+                <option value="es">EspaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â±ol</option>
+                <option value="fr">FranÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ais</option>
               </select>
             </div>
             

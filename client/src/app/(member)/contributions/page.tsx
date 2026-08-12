@@ -18,7 +18,7 @@ export default function ContributionsPage() {
   });
 
   const submitMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: unknown) => {
       return (await api.post('/contributions', payload)).data;
     },
     onSuccess: () => {
@@ -110,7 +110,7 @@ export default function ContributionsPage() {
         <h2 className="text-xl font-bold mb-4 border-b border-gray-200 dark:border-neutral-800 pb-2">History</h2>
         <div className="space-y-3">
           {data?.contributions.length === 0 && <p className="opacity-50">No contributions yet.</p>}
-          {data?.contributions.map((c: any) => (
+          {data?.contributions.map((c: { id: number; content: string; contribution_type: string; status: string; books: { title: string } }) => (
             <div key={c.id} className="p-4 rounded border border-gray-100 dark:border-neutral-800 flex items-start justify-between">
               <div>
                 <p className="font-semibold text-sm">Book: {c.books?.title}</p>

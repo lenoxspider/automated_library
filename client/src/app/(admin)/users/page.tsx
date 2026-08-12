@@ -60,7 +60,7 @@ export default function UsersPage() {
 
   const saveUser = useMutation({
     mutationFn: async () => {
-      const payload: any = {
+      const payload: Record<string, string | boolean> = {
         username: form.username,
         password: form.password,
         name: form.name,
@@ -226,7 +226,7 @@ export default function UsersPage() {
                 </label>
                 <select
                   value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value as any })}
+                  onChange={(e) => setForm({ ...form, role: e.target.value as UserForm['role'] })}
                   className="w-full bg-transparent border-2 px-3 py-2 outline-none font-mono text-sm"
                   style={{ borderColor: 'var(--color-signal-border-dark)' }}
                 >

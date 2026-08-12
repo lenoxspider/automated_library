@@ -15,6 +15,7 @@ const router = Router();
  *         description: A list of books
  */
 router.get('/', bookController.getBooks);
+router.get('/genres', bookController.getGenres);
 
 /**
  * @swagger

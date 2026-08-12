@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from '../navigation/Sidebar';
 import TopBar from '../navigation/TopBar';
-import { useAuthStore } from '../../store/authStore';
 import Footer from './Footer';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,7 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuthStore();
+
 
   if (isAuthPage) {
     return (

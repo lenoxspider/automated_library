@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Search, Clock } from 'lucide-react';
-import Link from 'next/link';
+
 import api from '../../../lib/api';
 
 export default function SearchHistoryPage() {
@@ -29,11 +29,11 @@ export default function SearchHistoryPage() {
           {history?.length === 0 ? (
             <div className="p-8 text-center text-gray-500 font-mono text-sm">
               <Search size={32} className="mx-auto mb-3 opacity-30" />
-              <p>You haven't searched for anything yet.</p>
+              <p>You haven&apos;t searched for anything yet.</p>
             </div>
           ) : (
             <ul className="divide-y divide-gray-100 dark:divide-neutral-800">
-              {history?.map((item: any) => (
+              {history?.map((item: { id: number; query: string; timestamp: string }) => (
                 <li key={item.id} className="p-4 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Search className="text-indigo-600 opacity-60" size={18} />

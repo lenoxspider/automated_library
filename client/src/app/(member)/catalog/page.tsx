@@ -46,14 +46,14 @@ export default function CatalogPage() {
       }
     }, 1500);
     return () => clearTimeout(timeoutId);
-  }, [search]);
+  }, [search, logSearch]);
 
   const { data, isLoading, error } = useQuery<BooksResponse>({
     queryKey: ['books'],
     queryFn: async () => (await api.get('/books')).data,
   });
 
-  const books = data?.data ?? [];
+  const books = useMemo(() => data?.data ?? [], [data]);
 
   const genres = useMemo(() => {
     const unique = new Set(books.map((b) => b.genre).filter(Boolean));

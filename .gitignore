@@ -8,3 +8,4 @@ library.db
 # Book cover cache - downloaded on demand, not source; see
 # src/services/bookCover.service.ts
 client/public/covers/
+/dist/

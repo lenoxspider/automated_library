@@ -68,4 +68,12 @@ export class BookRepository {
       where: { book_id: bookId }
     });
   }
+
+  async getDistinctGenres(): Promise<string[]> {
+    const books = await this.prisma.books.findMany({
+      select: { genre: true },
+      distinct: ['genre']
+    });
+    return books.map(b => b.genre).filter(Boolean);
+  }
 }

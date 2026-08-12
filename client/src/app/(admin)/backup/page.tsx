@@ -2,15 +2,21 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Database, Download, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Database, RefreshCw, AlertTriangle } from 'lucide-react';
 import api from '../../../lib/api';
 import Card from '../../../components/ui/Card';
+
+interface BackupEntry {
+  filename: string;
+  created_at: string;
+  size: number;
+}
 
 export default function BackupPage() {
   const queryClient = useQueryClient();
   const [restoring, setRestoring] = useState(false);
 
-  const { data: backups, isLoading } = useQuery({
+  const { data: backups, isLoading } = useQuery<BackupEntry[]>({
     queryKey: ['backups'],
     queryFn: async () => (await api.get('/backup')).data
   });
@@ -81,7 +87,7 @@ export default function BackupPage() {
               <tr><td colSpan={4} className="text-center py-8 opacity-50">Loading backups...</td></tr>
             ) : backups?.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-8 opacity-50">No backups found on disk.</td></tr>
-            ) : backups?.map((bk: any) => (
+            ) : backups?.map((bk: { filename: string; created_at: string; size: number }) => (
               <tr key={bk.filename} className="hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors">
                 <td className="px-6 py-4 font-mono text-sm font-bold">{bk.filename}</td>
                 <td className="px-6 py-4 text-sm opacity-70">{new Date(bk.created_at).toLocaleString()}</td>

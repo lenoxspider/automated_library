@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 // Visual due-date progress bar for a loan: fills from borrow_date to
 // due_date, color escalates as the due date approaches / passes.
 export default function DueDateProgress({
@@ -9,7 +11,12 @@ export default function DueDateProgress({
 }) {
   const start = new Date(borrowDate).getTime();
   const end = new Date(dueDate).getTime();
-  const now = Date.now();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const total = Math.max(end - start, 1);
   const elapsed = Math.min(Math.max(now - start, 0), total);

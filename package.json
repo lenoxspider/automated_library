@@ -7,7 +7,7 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "npx tsc",
-    "lint": "eslint 'src/**/*.{js,ts}'",
+    "lint": "eslint src",
     "test": "jest",
     "seed": "ts-node prisma/seed.ts",
     "seed:books": "ts-node prisma/seed-books.ts"

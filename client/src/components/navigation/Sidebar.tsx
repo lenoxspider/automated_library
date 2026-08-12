@@ -1,5 +1,7 @@
 'use client';
+/* eslint-disable react-hooks/set-state-in-effect */
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
@@ -11,7 +13,7 @@ import {
   Settings,
   Users,
   ShieldAlert,
-  BarChart,
+  
   LogOut,
   Book,
   X,
@@ -19,7 +21,9 @@ import {
   ClipboardList,
   Database,
   Webhook,
-  Star
+  Star,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,6 +34,17 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    if (saved) setIsCollapsed(JSON.parse(saved));
+  }, []);
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(!isCollapsed));
+  };
 
   if (!user) return null;
 
@@ -56,7 +71,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   const adminLinks = [
     { name: 'System Health', href: '/health', icon: Activity },
-    { name: 'Accounts', href: '/accounts', icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Audit Log', href: '/audit', icon: ClipboardList },
     { name: 'Backup & Restore', href: '/backup', icon: Database },
@@ -79,18 +93,20 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col justify-between bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-50 ${isCollapsed ? 'w-20' : 'w-64'} flex flex-col justify-between bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-6">
-          <div className="flex items-center justify-between gap-3 mb-10">
-            <div className="flex items-center gap-3">
-              <div className="text-indigo-600">
+          <div className={`flex items-center gap-3 mb-10 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+            <div className="flex items-center gap-3 relative">
+              <div className="text-indigo-600 shrink-0">
                 <Book size={28} />
               </div>
-              <div>
-                <h1 className="font-bold text-lg tracking-tight text-gray-900">SmartLib</h1>
-                <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{user.role}</p>
-              </div>
+              {!isCollapsed && (
+                <div className="overflow-hidden">
+                  <h1 className="font-bold text-lg tracking-tight text-gray-900 whitespace-nowrap">SmartLib</h1>
+                  <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider whitespace-nowrap">{user.role}</p>
+                </div>
+              )}
             </div>
             <button
               className="md:hidden text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-1"
@@ -101,6 +117,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               <X size={20} aria-hidden="true" />
             </button>
           </div>
+
+          <button 
+            onClick={toggleCollapse} 
+            className="hidden md:flex text-gray-400 hover:text-gray-900 absolute -right-3 top-8 bg-white border border-gray-200 rounded-full p-1.5 z-50 shadow-sm transition-transform hover:scale-110"
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          </button>
 
           <nav className="space-y-1">
           {activeLinks.map((link) => {
@@ -113,14 +137,15 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 href={link.href}
                 onClick={() => setIsOpen(false)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                title={isCollapsed ? link.name : undefined}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isCollapsed ? 'justify-center' : ''} ${
                   isActive 
                     ? 'bg-indigo-50 text-indigo-700' 
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                <Icon size={18} className={isActive ? 'text-indigo-600' : 'text-gray-400'} />
-                <span>{link.name}</span>
+                <Icon size={isCollapsed ? 22 : 18} className={`shrink-0 transition-transform ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
+                {!isCollapsed && <span className="whitespace-nowrap">{link.name}</span>}
               </Link>
             );
           })}
@@ -131,10 +156,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         <button
           onClick={logout}
           aria-label="Log out of SmartLib"
-          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-left text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+          title={isCollapsed ? "Log out" : undefined}
+          className={`flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors ${isCollapsed ? 'justify-center' : 'text-left'}`}
         >
-          <LogOut size={18} aria-hidden="true" className="text-red-500" />
-          <span>Log out</span>
+          <LogOut size={isCollapsed ? 22 : 18} aria-hidden="true" className="text-red-500 shrink-0" />
+          {!isCollapsed && <span className="whitespace-nowrap">Log out</span>}
         </button>
       </div>
     </aside>

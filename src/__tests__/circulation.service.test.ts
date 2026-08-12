@@ -1,4 +1,4 @@
-import 'reflect-metadata';
+﻿import 'reflect-metadata';
 import { CirculationService } from '../services/circulation.service';
 
 jest.mock('../config/prisma', () => {
@@ -7,6 +7,7 @@ jest.mock('../config/prisma', () => {
     library_settings: { findUnique: jest.fn() },
     borrowings: { count: jest.fn(), create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     fines: { count: jest.fn(), create: jest.fn() },
+  users: { findUnique: jest.fn() },
     books: { findUnique: jest.fn(), update: jest.fn() }
   };
   return {
@@ -69,3 +70,4 @@ describe('CirculationService', () => {
     });
   });
 });
+
