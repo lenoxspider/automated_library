@@ -9,9 +9,10 @@ import { Star, Plus, CheckCircle, Clock, XCircle, Gift } from 'lucide-react';
 
 export default function ContributionsPage() {
   const queryClient = useQueryClient();
-  const [bookId, setBookId] = useState('');
+  const [bookIdentifier, setBookIdentifier] = useState('');
   const [type, setType] = useState('correction');
   const [content, setContent] = useState('');
+  const [submitError, setSubmitError] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['my-contributions'],
@@ -24,8 +25,12 @@ export default function ContributionsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-contributions'] });
-      setBookId('');
+      setBookIdentifier('');
       setContent('');
+      setSubmitError('');
+    },
+    onError: (err: any) => {
+      setSubmitError(err.response?.data?.error || 'Failed to submit contribution.');
     }
   });
 
@@ -81,12 +86,18 @@ export default function ContributionsPage() {
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
-              submitMutation.mutate({ book_id: bookId, contribution_type: type, content });
+              setSubmitError('');
+              submitMutation.mutate({ book_identifier: bookIdentifier, contribution_type: type, content });
             }}
           >
+            {submitError && (
+              <div className="p-3 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 rounded text-sm font-mono border border-red-200 dark:border-red-800/30">
+                {submitError}
+              </div>
+            )}
             <div>
-              <label className="block text-xs font-semibold uppercase opacity-50 mb-1">Book ID</label>
-              <input required type="number" value={bookId} onChange={e => setBookId(e.target.value)} className="w-full bg-transparent border-2 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 p-2 rounded focus:border-indigo-500 outline-none" />
+              <label className="block text-xs font-semibold uppercase opacity-50 mb-1">Book ISBN or Title</label>
+              <input required type="text" placeholder="e.g. 9780132350884 or 'Clean Code'" value={bookIdentifier} onChange={e => setBookIdentifier(e.target.value)} className="w-full bg-transparent border-2 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 p-2 rounded focus:border-indigo-500 outline-none" />
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase opacity-50 mb-1">Type</label>

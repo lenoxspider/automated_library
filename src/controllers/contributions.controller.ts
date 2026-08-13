@@ -22,12 +22,26 @@ export const getMyContributions = asyncHandler(async (req: Request, res: Respons
 export const submitContribution = asyncHandler(async (req: Request, res: Response) => {
   // @ts-expect-error - req.user is provided by authentication middleware
   const userId = req.user.id;
-  const { book_id, contribution_type, content } = req.body;
+  const { book_identifier, contribution_type, content } = req.body;
+
+  const book = await prisma.books.findFirst({
+    where: {
+      OR: [
+        { isbn: book_identifier },
+        { title: { contains: book_identifier } }
+      ]
+    }
+  });
+
+  if (!book) {
+    res.status(404).json({ error: 'Could not find a book matching that ISBN or title.' });
+    return;
+  }
 
   const contribution = await prisma.contributions.create({
     data: {
       member_id: userId,
-      book_id: parseInt(book_id as string),
+      book_id: book.id,
       contribution_type,
       content,
       created_at: new Date().toISOString()
