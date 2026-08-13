@@ -26,10 +26,7 @@ export const submitContribution = asyncHandler(async (req: Request, res: Respons
 
   const book = await prisma.books.findFirst({
     where: {
-      OR: [
-        { isbn: book_identifier },
-        { title: { contains: book_identifier } }
-      ]
+      OR: [{ isbn: book_identifier }, { title: { contains: book_identifier } }]
     }
   });
 

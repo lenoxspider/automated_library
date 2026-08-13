@@ -105,7 +105,10 @@ export class AuthService {
   }
 
   async register(data: RegisterInput): Promise<users> {
-    const isLibrarian = !!data.librarianCode && !!LIBRARIAN_SIGNUP_CODE && data.librarianCode === LIBRARIAN_SIGNUP_CODE;
+    const isLibrarian =
+      !!data.librarianCode &&
+      !!LIBRARIAN_SIGNUP_CODE &&
+      data.librarianCode === LIBRARIAN_SIGNUP_CODE;
 
     // The roster only covers students; librarian signups authenticate via
     // the access code instead and skip student verification entirely.

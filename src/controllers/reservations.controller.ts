@@ -193,7 +193,10 @@ export const bulkUpdateReservations = asyncHandler(async (req: Request, res: Res
   if (newStatus === 'ready_for_pickup') {
     const toNotify = await prisma.reservations.findMany({
       where: { id: { in: ids } },
-      include: { books: { select: { title: true } }, users: { select: { name: true, email: true } } }
+      include: {
+        books: { select: { title: true } },
+        users: { select: { name: true, email: true } }
+      }
     });
     await Promise.all(
       toNotify.map((r) =>

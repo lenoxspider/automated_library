@@ -33,12 +33,8 @@ const reminderBody = Handlebars.compile(
 const overdueBody = Handlebars.compile(
   fs.readFileSync(path.join(templateDir, 'overdue.hbs'), 'utf8')
 );
-const resetBody = Handlebars.compile(
-  fs.readFileSync(path.join(templateDir, 'reset.hbs'), 'utf8')
-);
-const readyBody = Handlebars.compile(
-  fs.readFileSync(path.join(templateDir, 'ready.hbs'), 'utf8')
-);
+const resetBody = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'reset.hbs'), 'utf8'));
+const readyBody = Handlebars.compile(fs.readFileSync(path.join(templateDir, 'ready.hbs'), 'utf8'));
 
 @injectable()
 export class EmailService {

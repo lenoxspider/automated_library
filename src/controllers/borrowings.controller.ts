@@ -26,7 +26,6 @@ export const getBorrowings = asyncHandler(async (req: Request, res: Response) =>
 
 export const createBorrowing = asyncHandler(async (req: Request, res: Response) => {
   const { copy_barcode, member_identifier } = createBorrowingSchema.parse(req.body);
-  
   try {
     // Resolve copy
     const copy = await prisma.book_copies.findUnique({ where: { barcode: copy_barcode } });
@@ -59,7 +58,6 @@ export const returnBorrowing = asyncHandler(async (req: Request, res: Response) 
     // Check if they passed a borrowing ID (purely numeric) or a barcode.
     // In real libraries, you scan the book's barcode to return it.
     let borrowingId = parseInt(barcodeOrId, 10);
-    
     // First, try to resolve it as a barcode
     const copy = await prisma.book_copies.findUnique({ where: { barcode: barcodeOrId } });
     if (copy) {
@@ -70,9 +68,8 @@ export const returnBorrowing = asyncHandler(async (req: Request, res: Response) 
       if (!activeBorrowing) throw new Error('No active borrowing found for this book copy');
       borrowingId = activeBorrowing.id;
     } else if (isNaN(borrowingId)) {
-       throw new Error('Book copy not found for barcode: ' + barcodeOrId);
+      throw new Error('Book copy not found for barcode: ' + barcodeOrId);
     }
-    
     const result = await circulationService.returnBook(borrowingId);
     res.json(result);
   } catch (error: any) {
