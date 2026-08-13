@@ -232,14 +232,7 @@ export default function RegisterPage() {
                   }
                 </button>
 
-                {/* Librarian toggle */}
-                <label className="flex items-center gap-2.5 cursor-pointer select-none -mt-1">
-                  <div onClick={() => setIsLibrarian((v) => !v)}
-                    className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${isLibrarian ? 'bg-indigo-600 border-indigo-600' : dark ? 'border-slate-500' : 'border-slate-300'}`}>
-                    {isLibrarian && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                  </div>
-                  <span className={`text-sm ${muted}`}>I&apos;m a librarian, not a student</span>
-                </label>
+        
               </form>
             ) : (
               <form onSubmit={handleRegister} className="flex flex-col gap-5">

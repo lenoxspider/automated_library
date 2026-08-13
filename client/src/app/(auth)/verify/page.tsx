@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -22,12 +22,17 @@ function VerifyContent() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
 
+  const hasFired = useRef(false);
+
   useEffect(() => {
     if (!token) {
       setStatus('error');
       setMessage('No verification token provided in the URL.');
       return;
     }
+
+    if (hasFired.current) return;
+    hasFired.current = true;
 
     api.get(`/auth/verify/${token}`)
       .then((res) => {

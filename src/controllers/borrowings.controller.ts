@@ -54,7 +54,7 @@ export const createBorrowing = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const returnBorrowing = asyncHandler(async (req: Request, res: Response) => {
-  const barcodeOrId = req.params.id;
+  const barcodeOrId = req.params.id as string;
   try {
     // Check if they passed a borrowing ID (purely numeric) or a barcode.
     // In real libraries, you scan the book's barcode to return it.
