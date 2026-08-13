@@ -22,7 +22,6 @@ export default function AcquisitionsPage() {
   const queryClient = useQueryClient();
   const setNewOrderWrapper = (val: typeof newOrder) => setNewOrder(val);
   const [newOrder, setNewOrder] = useState({ title: '', vendor: '', quantity: 1, total_price: 0 });
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
   // Receive Modal State
   const [receivingOrder, setReceivingOrder] = useState<Order | null>(null);
@@ -70,8 +69,6 @@ export default function AcquisitionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['acquisitions'] });
       setNewOrderWrapper({ title: '', vendor: '', quantity: 1, total_price: 0 });
-      setIsCreateModalOpen(false);
-      toast.success('Purchase order submitted successfully!');
     }
   });
 
@@ -146,117 +143,22 @@ export default function AcquisitionsPage() {
 
   return (
     <div className="space-y-8 relative">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">Acquisitions</h1>
-          <p className="text-gray-500 dark:text-slate-400 mt-1">Manage purchase orders and receive inventory.</p>
-        </div>
-        <div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <Plus size={18} />
-            <span>New Purchase Order</span>
-          </button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-mono font-bold tracking-tight text-gray-900 dark:text-slate-100">Acquisitions</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Manage purchase orders and receive inventory.</p>
       </div>
 
-      <div className="w-full relative min-h-[400px]">
-        <Card className="overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 h-full flex flex-col shadow-sm">
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-gray-50 dark:bg-slate-800/50 text-gray-500 dark:text-slate-400 border-b border-gray-200 dark:border-slate-800 sticky top-0">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">Order ID</th>
-                  <th className="px-6 py-4 font-semibold">Title & Vendor</th>
-                  <th className="px-6 py-4 font-semibold">Details</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-slate-800">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="h-64">
-                      <div className="flex justify-center items-center h-full">
-                        <LoadingSpinner />
-                      </div>
-                    </td>
-                  </tr>
-                ) : orders?.map((order: Order) => (
-                  <tr key={order.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors group">
-                    <td className="px-6 py-4 font-mono text-xs text-gray-500">#{order.id}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-semibold text-gray-900 dark:text-slate-100">{order.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-slate-400">{order.vendor}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-gray-900 dark:text-slate-300">{order.quantity} copies</p>
-                      <p className="text-xs text-gray-500 dark:text-slate-400">${order.total_price.toFixed(2)}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(order.status)}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      {order.status === 'pending' && (
-                        <button 
-                          onClick={() => updateStatus.mutate({ id: order.id, status: 'approved' })} 
-                          className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium text-sm bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 px-3 py-1.5 rounded transition-colors"
-                        >
-                          Approve
-                        </button>
-                      )}
-                      {order.status === 'approved' && (
-                        <button 
-                          onClick={() => {
-                            setReceiveForm(prev => ({ ...prev, author: '', genre: '', isbn: '', branch: '', section: '', shelf: '' }));
-                            setReceivingOrder(order);
-                          }} 
-                          className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium text-sm bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 px-3 py-1.5 rounded transition-colors"
-                        >
-                          Receive into Inventory
-                        </button>
-                      )}
-                      {order.status === 'received' && (
-                        <span className="text-gray-400 dark:text-slate-600 text-sm font-medium">Completed</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {orders?.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="py-16 text-center text-gray-500 dark:text-slate-400">
-                      No purchase orders found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
-
-      {/* New Purchase Order Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-slate-800 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
-                  <Plus size={20} />
-                </div>
-                <h2 className="font-bold text-gray-900 dark:text-slate-100">New Purchase Order</h2>
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1">
+          <Card className="p-6 sticky top-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                <Plus size={20} />
               </div>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <X size={20} />
-              </button>
+              <h2 className="font-bold text-gray-900 dark:text-slate-100">New Purchase Order</h2>
             </div>
             
-            <form onSubmit={handleCreateSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleCreateSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Book Title</label>
                 <input 
@@ -304,26 +206,91 @@ export default function AcquisitionsPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button 
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 font-medium py-2.5 px-4 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={createOrder.isPending} 
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {createOrder.isPending ? <LoadingSpinner /> : 'Submit Order'}
-                </button>
-              </div>
+              <button 
+                disabled={createOrder.isPending} 
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+              >
+                {createOrder.isPending ? <LoadingSpinner /> : 'Submit Order'}
+              </button>
             </form>
-          </div>
+          </Card>
         </div>
-      )}
+
+        <div className="lg:col-span-2 relative min-h-[400px]">
+          <Card className="overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 h-full flex flex-col shadow-sm">
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-gray-50 dark:bg-slate-800/50 text-gray-500 dark:text-slate-400 border-b border-gray-200 dark:border-slate-800 sticky top-0">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Order ID</th>
+                    <th className="px-6 py-4 font-semibold">Title & Vendor</th>
+                    <th className="px-6 py-4 font-semibold">Details</th>
+                    <th className="px-6 py-4 font-semibold">Status</th>
+                    <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-slate-800">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={5} className="h-64">
+                        <div className="flex justify-center items-center h-full">
+                          <LoadingSpinner />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : orders?.map((order: Order) => (
+                    <tr key={order.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+                      <td className="px-6 py-4 font-mono text-xs text-gray-500">#{order.id}</td>
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-gray-900 dark:text-slate-100">{order.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{order.vendor}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-gray-900 dark:text-slate-300">{order.quantity} copies</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">${order.total_price.toFixed(2)}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        {getStatusBadge(order.status)}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {order.status === 'pending' && (
+                          <button 
+                            onClick={() => updateStatus.mutate({ id: order.id, status: 'approved' })} 
+                            className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium text-sm bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 px-3 py-1.5 rounded transition-colors"
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {order.status === 'approved' && (
+                          <button 
+                            onClick={() => {
+                              setReceiveForm(prev => ({ ...prev, author: '', genre: '', isbn: '', branch: '', section: '', shelf: '' }));
+                              setReceivingOrder(order);
+                            }} 
+                            className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium text-sm bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 px-3 py-1.5 rounded transition-colors"
+                          >
+                            Receive into Inventory
+                          </button>
+                        )}
+                        {order.status === 'received' && (
+                          <span className="text-gray-400 dark:text-slate-600 text-sm font-medium">Completed</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {orders?.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-16 text-center text-gray-500 dark:text-slate-400">
+                        No purchase orders found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      </div>
 
       {/* Receive Order Modal */}
       {receivingOrder && (
