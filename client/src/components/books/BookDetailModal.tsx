@@ -306,14 +306,20 @@ export default function BookDetailModal({
                   )}
                 </div>
               ) : (
-                <Button
-                  onClick={onReserve}
-                  isLoading={isReserving}
-                  disabled={false}
-                  className="w-full"
-                >
-                  {status === 'available' ? 'Reserve Now' : 'Join Waitlist'}
-                </Button>
+                <>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 mb-3">
+                    Late returns are fined per day overdue, and every loan and reservation is tied to your
+                    student credentials — please return borrowed books on time.
+                  </p>
+                  <Button
+                    onClick={onReserve}
+                    isLoading={isReserving}
+                    disabled={false}
+                    className="w-full"
+                  >
+                    {status === 'available' ? 'Reserve Now' : 'Join Waitlist'}
+                  </Button>
+                </>
               )}
             </div>
           </div>

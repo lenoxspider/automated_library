@@ -8,7 +8,8 @@ import { UserService } from './user.service';
 import { EmailService } from './email.service';
 import redisClient from '../config/redis';
 import prisma from '../config/prisma';
-import { ACCESS_SECRET, REFRESH_SECRET } from '../config/env';
+import { ACCESS_SECRET, REFRESH_SECRET, LIBRARIAN_SIGNUP_CODE } from '../config/env';
+import { generateUsernameFromName } from './username.util';
 
 export class AuthError extends Error {
   constructor(
@@ -20,12 +21,12 @@ export class AuthError extends Error {
 }
 
 interface RegisterInput {
-  username: string;
   password: string;
   name: string;
   email: string;
-  studentId: string;
-  indexNumber: string;
+  studentId?: string;
+  indexNumber?: string;
+  librarianCode?: string;
 }
 
 @injectable()
@@ -96,18 +97,28 @@ export class AuthService {
   }
 
   async register(data: RegisterInput): Promise<users> {
-    const isValidStudent = await this.userService.verifyRoster(data.studentId, data.indexNumber);
-    if (!isValidStudent) {
-      throw new AuthError(400, 'Roster verification failed. Invalid Student ID or Index Number.');
+    const isLibrarian = !!data.librarianCode && !!LIBRARIAN_SIGNUP_CODE && data.librarianCode === LIBRARIAN_SIGNUP_CODE;
+
+    // The roster only covers students; librarian signups authenticate via
+    // the access code instead and skip student verification entirely.
+    if (!isLibrarian) {
+      if (!data.studentId || !data.indexNumber) {
+        throw new AuthError(400, 'Student ID and Index Number are required.');
+      }
+      const isValidStudent = await this.userService.verifyRoster(data.studentId, data.indexNumber);
+      if (!isValidStudent) {
+        throw new AuthError(400, 'Roster verification failed. Invalid Student ID or Index Number.');
+      }
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const verifyToken = crypto.randomBytes(32).toString('hex');
+    const username = await generateUsernameFromName(data.name);
 
     const newUser = await this.userRepo.create({
-      username: data.username,
+      username,
       password: hashedPassword,
-      role: 'member',
+      role: isLibrarian ? 'librarian' : 'member',
       name: data.name,
       email: data.email,
       student_id: data.studentId,

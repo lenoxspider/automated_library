@@ -12,10 +12,13 @@ export default function RegisterPage() {
     password: '',
     studentId: '',
     indexNumber: '',
+    librarianCode: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLibrarian, setIsLibrarian] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [createdUsername, setCreatedUsername] = useState('');
   const [loading, setLoading] = useState(false);
   
   // Local dark mode state -> now global
@@ -31,18 +34,36 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password || !formData.studentId || !formData.indexNumber) {
+
+    if (!formData.name || !formData.email || !formData.password) {
       setError('Please fill in all fields.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!isLibrarian && (!formData.studentId || !formData.indexNumber)) {
+      setError('Student ID and Index Number are required.');
+      return;
+    }
+    if (isLibrarian && !formData.librarianCode) {
+      setError('Librarian access code is required.');
       return;
     }
     setError('');
     setLoading(true);
 
     try {
-      await api.post('/auth/register', {
-        ...formData,
-        username: formData.email,
+      const res = await api.post('/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        studentId: isLibrarian ? undefined : formData.studentId,
+        indexNumber: isLibrarian ? undefined : formData.indexNumber,
+        librarianCode: isLibrarian ? formData.librarianCode : undefined,
       });
+      setCreatedUsername(res.data.username);
       setSuccess(true);
     } catch (err: unknown) {
       const message =
@@ -96,8 +117,11 @@ export default function RegisterPage() {
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             </div>
             <h2 className={`text-2xl font-bold mb-3 ${dark ? 'text-white' : 'text-slate-900'}`}>Account Created!</h2>
-            <p className={`text-sm mb-8 ${muted}`}>
-              Check your email to verify your account, then you can log in and start borrowing books.
+            <p className={`text-sm mb-2 ${muted}`}>
+              Check your email to verify your account, then log in with:
+            </p>
+            <p className={`text-sm font-mono font-bold mb-8 px-3 py-1.5 rounded-lg inline-block ${dark ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-900'}`}>
+              {createdUsername}
             </p>
             <Link href="/login" className="inline-flex w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-colors items-center justify-center">
               Go to Login
@@ -180,38 +204,62 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Flex row for IDs */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Student ID */}
-                <div>
-                  <label className={`block text-sm font-medium mb-1.5 ${label}`}>Student ID</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="studentId"
-                      value={formData.studentId}
-                      onChange={handleChange}
-                      placeholder="2024001234"
-                      className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
-                    />
-                  </div>
+              {/* Librarian toggle */}
+              <label className="flex items-center gap-2.5 cursor-pointer select-none -mb-1">
+                <div onClick={() => setIsLibrarian((v) => !v)}
+                  className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${isLibrarian ? 'bg-indigo-600 border-indigo-600' : dark ? 'border-slate-500' : 'border-slate-300'}`}>
+                  {isLibrarian && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                 </div>
+                <span className={`text-sm ${muted}`}>I&apos;m a librarian, not a student</span>
+              </label>
 
-                {/* Index Number */}
+              {isLibrarian ? (
+                /* Librarian access code */
                 <div>
-                  <label className={`block text-sm font-medium mb-1.5 ${label}`}>Index Number</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="indexNumber"
-                      value={formData.indexNumber}
-                      onChange={handleChange}
-                      placeholder="00123"
-                      className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
-                    />
+                  <label className={`block text-sm font-medium mb-1.5 ${label}`}>Librarian Access Code</label>
+                  <input
+                    type="text"
+                    name="librarianCode"
+                    value={formData.librarianCode}
+                    onChange={handleChange}
+                    placeholder="Provided by library administration"
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
+                  />
+                </div>
+              ) : (
+                /* Flex row for IDs */
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Student ID */}
+                  <div>
+                    <label className={`block text-sm font-medium mb-1.5 ${label}`}>Student ID</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="studentId"
+                        value={formData.studentId}
+                        onChange={handleChange}
+                        placeholder="2024001234"
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Index Number */}
+                  <div>
+                    <label className={`block text-sm font-medium mb-1.5 ${label}`}>Index Number</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="indexNumber"
+                        value={formData.indexNumber}
+                        onChange={handleChange}
+                        placeholder="00123"
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Submit */}
               <button type="submit" disabled={loading}

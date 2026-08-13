@@ -10,7 +10,8 @@
     "lint": "eslint src",
     "test": "jest",
     "seed": "ts-node prisma/seed.ts",
-    "seed:books": "ts-node prisma/seed-books.ts"
+    "seed:books": "ts-node prisma/seed-books.ts",
+    "seed:roster": "ts-node prisma/seed-roster.ts"
   },
   "keywords": [],
   "type": "commonjs",
