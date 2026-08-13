@@ -34,7 +34,8 @@ import {
   RefreshCw,
   Headset,
   ListChecks,
-  BarChart3
+  BarChart3,
+  HelpCircle
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -70,6 +71,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Fines', href: '/fines', icon: ReceiptText },
     { name: 'Contributions', href: '/contributions', icon: HandHeart },
     { name: 'Profile', href: '/profile', icon: UserRound },
+    { name: 'Help', href: '/help', icon: HelpCircle },
   ];
 
   const librarianLinks = [
@@ -82,6 +84,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'User Support', href: '/support-tickets', icon: Headset },
     { name: 'Contributions Queue', href: '/contributions-queue', icon: ListChecks },
     { name: 'Reports', href: '/reports', icon: BarChart3 },
+    { name: 'Help', href: '/help', icon: HelpCircle },
   ];
 
   const adminLinks = [
@@ -91,6 +94,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Backup & Restore', href: '/backup', icon: Database },
     { name: 'Integrations', href: '/integrations', icon: Webhook },
     { name: 'Compliance', href: '/compliance', icon: ShieldAlert },
+    { name: 'Help', href: '/help', icon: HelpCircle },
   ];
 
   let activeLinks = memberLinks;

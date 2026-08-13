@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
-import { loginRateLimiter } from '../middlewares/rateLimiters';
+import { loginRateLimiter, registerRateLimiter, forgotPasswordRateLimiter } from '../middlewares/rateLimiters';
 import * as authController from '../controllers/auth.controller';
 
 const router = Router();
@@ -41,7 +41,7 @@ router.post('/refresh', authController.refreshToken);
  *       201:
  *         description: User registered successfully
  */
-router.post('/register', authController.register);
+router.post('/register', registerRateLimiter, authController.register);
 
 /**
  * @swagger
@@ -71,7 +71,7 @@ router.get('/verify/:token', authController.verifyEmail);
  *       200:
  *         description: Reset email sent
  */
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', forgotPasswordRateLimiter, authController.forgotPassword);
 
 /**
  * @swagger

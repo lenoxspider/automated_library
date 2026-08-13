@@ -33,6 +33,12 @@ const reminderBody = Handlebars.compile(
 const overdueBody = Handlebars.compile(
   fs.readFileSync(path.join(templateDir, 'overdue.hbs'), 'utf8')
 );
+const resetBody = Handlebars.compile(
+  fs.readFileSync(path.join(templateDir, 'reset.hbs'), 'utf8')
+);
+const readyBody = Handlebars.compile(
+  fs.readFileSync(path.join(templateDir, 'ready.hbs'), 'utf8')
+);
 
 @injectable()
 export class EmailService {
@@ -99,6 +105,29 @@ export class EmailService {
             subject: `Overdue: "${bookTitle}"`,
             html
           });
+        } else if (job.name === 'reservationReady') {
+          const { email, name, bookTitle } = job.data;
+          const body = readyBody({ name, bookTitle });
+          const html = baseTemplate({ body, year, unsubscribeUrl });
+
+          await this.transporter.sendMail({
+            from: `"SmartLib" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: `"${bookTitle}" is ready for pickup`,
+            html
+          });
+        } else if (job.name === 'resetPassword') {
+          const { email, name, token } = job.data;
+          const resetLink = `${baseUrl}/reset-password?token=${token}`;
+          const body = resetBody({ name, resetLink });
+          const html = baseTemplate({ body, year, unsubscribeUrl });
+
+          await this.transporter.sendMail({
+            from: `"SmartLib" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: 'Reset Your SmartLib Password',
+            html
+          });
         }
       },
       { connection: redisClient as any }
@@ -111,6 +140,14 @@ export class EmailService {
 
   async queueDueSoonReminder(email: string, name: string, bookTitle: string, dueDate: string) {
     await this.emailQueue.add('dueSoonReminder', { email, name, bookTitle, dueDate });
+  }
+
+  async queueResetPasswordEmail(email: string, name: string, token: string) {
+    await this.emailQueue.add('resetPassword', { email, name, token });
+  }
+
+  async queueReservationReadyEmail(email: string, name: string, bookTitle: string) {
+    await this.emailQueue.add('reservationReady', { email, name, bookTitle });
   }
 
   async queueOverdueReminder(

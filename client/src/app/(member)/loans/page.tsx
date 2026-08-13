@@ -1,7 +1,8 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { Clock, CheckCircle2, CreditCard, BookMarked, AlertTriangle } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Clock, CheckCircle2, CreditCard, BookMarked, AlertTriangle, X } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuthStore } from '../../../store/authStore';
 import Card from '../../../components/ui/Card';
@@ -25,6 +26,15 @@ interface Fine {
   status: string;
 }
 
+interface MyReservation {
+  id: number;
+  book_id: number;
+  status: string;
+  queue_position: number | null;
+  reservation_date: string;
+  books: { id: number; title: string };
+}
+
 // GET /borrowings and GET /fines are now member-scoped: authorize() allows
 // 'member', and the controller filters to the caller's own data
 // (borrowingRepo.findByMemberId / circulationService.getFinesForMember)
@@ -33,6 +43,8 @@ interface Fine {
 // see git history for the earlier "not available yet" version of this page.
 export default function LoansPage() {
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const loansQuery = useQuery<{ data: Borrowing[] }>({
     queryKey: ['loans', user?.id],
@@ -45,6 +57,25 @@ export default function LoansPage() {
     queryFn: async () => (await api.get('/fines')).data,
     enabled: !!user,
   });
+
+  const reservationsQuery = useQuery<MyReservation[]>({
+    queryKey: ['my-reservations', user?.id],
+    queryFn: async () => (await api.get('/reservations/my')).data,
+    enabled: !!user,
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async (id: number) => {
+      setCancellingId(id);
+      await api.delete(`/reservations/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-reservations', user?.id] });
+    },
+    onSettled: () => setCancellingId(null),
+  });
+
+  const reservations = reservationsQuery.data ?? [];
 
   const loans = loansQuery.data?.data ?? [];
   const activeLoans = loans.filter((l) => !l.return_date);
@@ -141,16 +172,66 @@ export default function LoansPage() {
 
       <section className="space-y-3">
         <h2 className="text-xs font-mono uppercase tracking-widest opacity-60">Reservation Queue</h2>
-        <Card surface="light" className="p-6 flex items-start gap-3">
-          <BookMarked className="shrink-0 mt-0.5 opacity-60" />
-          <div>
-            <p className="font-bold text-sm">Personal reservation list isn&apos;t available yet</p>
-            <p className="text-sm opacity-70 mt-1">
-              GET /reservations lists everyone&apos;s holds for staff, but it isn&apos;t scoped to a
-              single member yet - unlike loans/fines above, this gap hasn&apos;t been closed.
-            </p>
-          </div>
-        </Card>
+
+        {reservationsQuery.isLoading && (
+          <div className="h-20 animate-pulse border" style={{ borderColor: 'var(--color-signal-border-light)' }} />
+        )}
+
+        {reservationsQuery.isError && (
+          <Card surface="light" className="p-6 flex items-center gap-3" style={{ color: 'var(--color-signal-overdue)' }}>
+            <AlertTriangle size={18} />
+            Failed to load your reservations.
+          </Card>
+        )}
+
+        {reservationsQuery.isSuccess && reservations.length === 0 && (
+          <Card surface="light" className="p-8 text-center">
+            <BookMarked className="mx-auto mb-2 opacity-60" />
+            <p className="font-bold">No active reservations</p>
+            <p className="opacity-60 text-sm">Books you reserve will show up here with your queue position.</p>
+          </Card>
+        )}
+
+        {reservations.map((r) => (
+          <Card key={r.id} surface="light" className="p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <BookMarked size={18} className="opacity-60 shrink-0" />
+              <div>
+                <p className="font-bold text-sm">{r.books.title}</p>
+                <p className="text-xs opacity-60 font-mono mt-0.5">
+                  {r.status === 'pending' && r.queue_position
+                    ? `Queue position #${r.queue_position} — estimated wait ~${r.queue_position * 7} days`
+                    : r.status === 'ready_for_pickup'
+                    ? 'Ready for pickup at the library'
+                    : r.status === 'approved'
+                    ? 'Approved — awaiting pickup notice'
+                    : r.status}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span
+                className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${
+                  r.status === 'ready_for_pickup'
+                    ? 'bg-green-100 text-green-800 border-green-200'
+                    : r.status === 'approved'
+                    ? 'bg-blue-100 text-blue-800 border-blue-200'
+                    : 'bg-amber-100 text-amber-800 border-amber-200'
+                }`}
+              >
+                {r.status.replace(/_/g, ' ')}
+              </span>
+              <button
+                onClick={() => cancelMutation.mutate(r.id)}
+                disabled={cancellingId === r.id}
+                className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 disabled:opacity-40"
+                title="Cancel reservation"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </Card>
+        ))}
       </section>
 
       {history.length > 0 && (

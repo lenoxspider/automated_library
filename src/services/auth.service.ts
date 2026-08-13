@@ -142,7 +142,7 @@ export class AuthService {
 
     await this.userRepo.update(user.id, { reset_token: resetToken, reset_token_expiry: expiry });
 
-    // NOTE: Enqueue reset email via EmailService here
+    await this.emailService.queueResetPasswordEmail(user.email, user.name, resetToken);
   }
 
   async resetPassword(token: string, password: string) {

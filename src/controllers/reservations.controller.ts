@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
+import { container } from 'tsyringe';
 import prisma from '../config/prisma';
 import { z } from 'zod';
+import { EmailService } from '../services/email.service';
+
+const emailService = container.resolve(EmailService);
 
 const createReservationSchema = z.object({
   book_id: z.number().int(),
@@ -121,10 +125,17 @@ export const createReservation = asyncHandler(async (req: Request, res: Response
 
 export const cancelReservation = asyncHandler(async (req: Request, res: Response) => {
   const id = parseInt(req.params.id as string);
+  const currentUser = (req as any).user;
 
   const reservation = await prisma.reservations.findUnique({ where: { id } });
   if (!reservation) {
     res.status(404).json({ error: 'Reservation not found' });
+    return;
+  }
+
+  // Members may only cancel their own reservations; staff can cancel any.
+  if (currentUser.role === 'member' && reservation.member_id !== Number(currentUser.id)) {
+    res.status(403).json({ error: 'You can only cancel your own reservations' });
     return;
   }
 
@@ -135,7 +146,10 @@ export const cancelReservation = asyncHandler(async (req: Request, res: Response
 export const approveReservation = asyncHandler(async (req: Request, res: Response) => {
   const id = parseInt(req.params.id as string);
 
-  const reservation = await prisma.reservations.findUnique({ where: { id } });
+  const reservation = await prisma.reservations.findUnique({
+    where: { id },
+    include: { books: { select: { title: true } }, users: { select: { name: true, email: true } } }
+  });
   if (!reservation) {
     res.status(404).json({ error: 'Reservation not found' });
     return;
@@ -149,6 +163,12 @@ export const approveReservation = asyncHandler(async (req: Request, res: Respons
     where: { id },
     data: { status: 'approved' }
   });
+
+  await emailService.queueReservationReadyEmail(
+    reservation.users.email,
+    reservation.users.name,
+    reservation.books.title
+  );
 
   res.json(updated);
 });
@@ -168,6 +188,18 @@ export const bulkUpdateReservations = asyncHandler(async (req: Request, res: Res
   else {
     res.status(400).json({ error: 'Invalid action' });
     return;
+  }
+
+  if (newStatus === 'ready_for_pickup') {
+    const toNotify = await prisma.reservations.findMany({
+      where: { id: { in: ids } },
+      include: { books: { select: { title: true } }, users: { select: { name: true, email: true } } }
+    });
+    await Promise.all(
+      toNotify.map((r) =>
+        emailService.queueReservationReadyEmail(r.users.email, r.users.name, r.books.title)
+      )
+    );
   }
 
   const result = await prisma.reservations.updateMany({

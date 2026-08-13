@@ -128,7 +128,7 @@ export default function ReservationsPage() {
   };
 
   return (
-    <div className="relative h-[calc(100vh-4rem)] flex flex-col bg-gray-50 dark:bg-slate-900">
+    <div className="relative h-[calc(100vh-12rem)] flex flex-col bg-gray-50 dark:bg-slate-900">
       
       {/* Toast Notification */}
       {toastMessage && (
