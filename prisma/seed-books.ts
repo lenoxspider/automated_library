@@ -86,7 +86,16 @@ async function main() {
           isbn,
           total_copies: totalCopies,
           available_copies: totalCopies,
-          cover_path: coverPath
+          cover_path: coverPath,
+          book_copies: {
+            create: Array.from({ length: totalCopies }).map((_, i) => ({
+              barcode: `B-${isbn}-${i + 1}`,
+              status: 'Available',
+              branch: 'Main Library',
+              section: genre,
+              shelf: `Shelf ${Math.floor(Math.random() * 10) + 1}`
+            }))
+          }
         }
       });
 

@@ -37,6 +37,7 @@ export default function CatalogPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [genreFilter, setGenreFilter] = useState('all');
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available'>('all');
+  const [branchFilter, setBranchFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [selectedBook, setSelectedBook] = useState<BookDetail | null>(null);
 
@@ -52,21 +53,25 @@ export default function CatalogPage() {
   // Log search queries (debounced) — use useCallback to keep ref stable
   const logSearchFn = useCallback(async (q: string) => {
     if (q.length > 2) {
-      try { await api.post('/search-history', { query: q }); } catch { /* ignore */ }
+      try { 
+        await api.post('/search-history', { query: q }); 
+        queryClient.invalidateQueries({ queryKey: ['search-history'] });
+      } catch { /* ignore */ }
     }
-  }, []);
+  }, [queryClient]);
   useEffect(() => {
     logSearchFn(debouncedSearch);
   }, [debouncedSearch, logSearchFn]);
 
   // Server-side book query
   const { data, isLoading } = useQuery<BooksResponse>({
-    queryKey: ['books', debouncedSearch, genreFilter, availabilityFilter, page],
+    queryKey: ['books', debouncedSearch, genreFilter, availabilityFilter, branchFilter, page],
     queryFn: async () => {
       const params = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
       if (debouncedSearch) params.set('q', debouncedSearch);
       if (genreFilter !== 'all') params.set('genre', genreFilter);
       if (availabilityFilter !== 'all') params.set('availability', availabilityFilter);
+      if (branchFilter !== 'all') params.set('branch', branchFilter);
       return (await api.get(`/books?${params}`)).data;
     },
     placeholderData: (prev) => prev
@@ -76,6 +81,13 @@ export default function CatalogPage() {
   const { data: genres } = useQuery<string[]>({
     queryKey: ['genres'],
     queryFn: async () => (await api.get('/books/genres')).data,
+    staleTime: Infinity
+  });
+
+  // Branches from inventory locations
+  const { data: branches } = useQuery<string[]>({
+    queryKey: ['book-branches'],
+    queryFn: async () => (await api.get('/books/branches')).data,
     staleTime: Infinity
   });
 
@@ -99,10 +111,10 @@ export default function CatalogPage() {
 
   // New arrivals: only shown on the first unfiltered page
   const newArrivals = useMemo(() => {
-    return !debouncedSearch && genreFilter === 'all' && availabilityFilter === 'all' && page === 1
+    return !debouncedSearch && genreFilter === 'all' && availabilityFilter === 'all' && branchFilter === 'all' && page === 1
       ? books.slice(0, 4)
       : [];
-  }, [books, debouncedSearch, genreFilter, availabilityFilter, page]);
+  }, [books, debouncedSearch, genreFilter, availabilityFilter, branchFilter, page]);
 
   const reserve = useMutation({
     mutationFn: async (bookId: number) => {
@@ -182,6 +194,23 @@ export default function CatalogPage() {
                 );
               })}
             </div>
+          </div>
+
+          <div className="mb-6">
+            <label htmlFor="branch-filter" className="block text-sm font-bold text-gray-900 dark:text-slate-100 mb-3">Branch</label>
+            <select
+              id="branch-filter"
+              value={branchFilter}
+              onChange={(event) => { setBranchFilter(event.target.value); setPage(1); }}
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="all">All branches</option>
+              {(branches ?? []).map((branch) => (
+                <option key={branch} value={branch}>
+                  {branch}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { HelpCircle, BookMarked, Clock, CreditCard, Quote, Mail, Search } from 'lucide-react';
+import { HelpCircle, BookMarked, Clock, CreditCard, Quote, Mail, Search, Star } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 
 interface FaqItem {
@@ -39,6 +39,12 @@ const faqs: FaqItem[] = [
     question: 'What is the Research Tools feature?',
     answer:
       'Open any book from the Catalog and use the Cite button to generate a ready-to-copy citation in APA, MLA, or Chicago style — useful for bibliographies and reference lists.',
+  },
+  {
+    icon: Star,
+    question: 'How do Community Contributions work?',
+    answer:
+      'You can earn Library Points by helping us improve our catalog! Submit metadata corrections, book reviews, or custom tags on the Contributions page. When a librarian approves your submission, you earn 10 points per contribution. Reaching 50 points automatically unlocks a 28-day extended loan perk.',
   },
 ];
 

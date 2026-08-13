@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle2, Hash, Camera, Globe, Upload, Search, Check, Quote, Copy } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { X, Clock, CheckCircle2, Hash, Camera, Globe, Upload, Search, Check, Quote, Copy, MapPin } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import BookCover from '../ui/BookCover';
 import StatusBadge, { type BookStatus } from '../ui/StatusBadge';
 import Button from '../ui/Button';
@@ -24,6 +24,12 @@ export interface BookDetail {
   cover_path?: string | null;
 }
 
+export interface BookLocation {
+  id: number;
+  branch: string | null;
+  section: string | null;
+  shelf: string | null;
+}
 export interface MyReservation {
   id: number;
   book_id: number;
@@ -54,6 +60,14 @@ export default function BookDetailModal({
   const status = statusFor(book);
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+
+  const bookId = book.public_id || book.isbn;
+  const { data: locations = [], isLoading: locationsLoading } = useQuery<BookLocation[]>({
+    queryKey: ['book-locations', bookId],
+    queryFn: async () => (await api.get(`/books/${encodeURIComponent(bookId)}/locations`)).data,
+    enabled: Boolean(bookId),
+    staleTime: 5 * 60 * 1000
+  });
 
   const isLibrarianOrAdmin = user?.role === 'librarian' || user?.role === 'admin';
 
@@ -252,6 +266,38 @@ export default function BookDetailModal({
                   {' '}/ {book.total_copies} available
                 </dd>
               </div>
+            <div className="mt-4 border-t border-gray-200 dark:border-slate-700 pt-4">
+              <dt className="flex items-center gap-2 text-gray-500 dark:text-slate-400">
+                <MapPin size={16} />
+                <span>Available locations</span>
+              </dt>
+              <dd className="mt-2">
+                {locationsLoading ? (
+                  <span className="text-sm text-gray-500 dark:text-slate-400">Loading locations...</span>
+                ) : locations.length > 0 ? (
+                  <div className="space-y-2">
+                    {locations.map((location) => (
+                      <div
+                        key={location.id}
+                        className="rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/60 px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-slate-100">
+                          <MapPin size={14} className="text-indigo-600 dark:text-indigo-400" />
+                          {location.branch || 'Branch not assigned'}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                          {[location.section, location.shelf].filter(Boolean).join(' · ') || 'Location not assigned'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-500 dark:text-slate-400">
+                    {book.available_copies > 0 ? 'Location not recorded' : 'No available copies'}
+                  </span>
+                )}
+              </dd>
+            </div>
             </dl>
 
             <button

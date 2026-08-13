@@ -51,8 +51,8 @@ export default function CirculationDesk() {
           return;
         }
         await api.post('/borrowings', {
-          copy_id: parseInt(barcode, 10),
-          member_id: parseInt(memberId, 10),
+          copy_barcode: barcode,
+          member_identifier: memberId,
         });
         setMessage({ type: 'success', text: `Checked out copy #${barcode} to member #${memberId}` });
       } else {
@@ -117,7 +117,7 @@ export default function CirculationDesk() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-3">
-              {mode === 'checkout' ? 'Scan Copy ID' : 'Scan Borrowing ID'}
+              Scan Book Barcode
             </label>
             <div className="relative flex items-center">
               <ScanLine className="absolute left-4 opacity-40" size={22} />
@@ -126,7 +126,7 @@ export default function CirculationDesk() {
                 autoFocus
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                placeholder="Scan or enter ID..."
+                placeholder="Scan book barcode..."
                 className="w-full bg-transparent border-2 py-4 pl-14 pr-4 text-xl font-mono outline-none"
                 style={{ borderColor: 'var(--color-signal-border-dark)' }}
                 required
@@ -137,7 +137,7 @@ export default function CirculationDesk() {
           {mode === 'checkout' && (
             <div>
               <label className="block text-xs font-mono uppercase tracking-widest opacity-60 mb-3">
-                Member ID
+                Student ID / Username
               </label>
               <input
                 type="text"
