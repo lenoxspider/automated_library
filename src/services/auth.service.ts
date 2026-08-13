@@ -147,6 +147,23 @@ export class AuthService {
     }
 
     await this.userRepo.update(user.id, { is_verified: 1, verification_token: null });
+
+    const accessToken = jwt.sign({ sub: user.id, role: user.role }, ACCESS_SECRET, {
+      expiresIn: '15m'
+    });
+    const refreshToken = crypto.randomBytes(40).toString('hex');
+    await redisClient.set(`rt_${user.id}`, refreshToken, 'EX', 30 * 24 * 60 * 60);
+
+    return { accessToken, refreshToken, user };
+  }
+
+  async setUsername(userId: number, username: string) {
+    const existing = await prisma.users.findUnique({ where: { username } });
+    if (existing && existing.id !== userId) {
+      throw new AuthError(400, 'Username is already taken');
+    }
+
+    await this.userRepo.update(userId, { username });
   }
 
   async forgotPassword(email: string) {
@@ -168,7 +185,7 @@ export class AuthService {
     const user = await prisma.users.findFirst({
       where: {
         reset_token: token,
-        reset_token_expiry: { gte: new Date() }
+        reset_token_expiry: { gte: new Date() as any }
       }
     });
     if (!user) {

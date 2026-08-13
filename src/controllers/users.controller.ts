@@ -17,6 +17,20 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const id = parseInt(req.params.id as string);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const currentUser = (req as any).user;
+
+  const targetUser = await userRepo.findById(id);
+  if (!targetUser) {
+    res.status(404).json({ error: 'User not found.' });
+    return;
+  }
+
+  if (targetUser.role === 'admin' && currentUser.role !== 'admin') {
+    res.status(403).json({ error: 'Forbidden. Librarians cannot delete admin accounts.' });
+    return;
+  }
+
   await userRepo.delete(id);
   res.json({ message: 'User deleted successfully.' });
 });
@@ -38,6 +52,13 @@ const createUserSchema = z.object({
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const data = createUserSchema.parse(req.body);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const currentUser = (req as any).user;
+
+  if (data.role === 'admin' && currentUser.role !== 'admin') {
+    res.status(403).json({ error: 'Forbidden. Librarians cannot create admin accounts.' });
+    return;
+  }
 
   const hashedPassword = await bcrypt.hash(data.password, 10);
   const verifyToken = crypto.randomBytes(32).toString('hex');

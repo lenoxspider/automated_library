@@ -113,8 +113,26 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   const token = req.params.token as string;
 
   try {
-    await authService.verifyEmail(token);
-    res.json({ message: 'Email verified successfully. You may now log in.' });
+    const { accessToken, refreshToken, user } = await authService.verifyEmail(token);
+    res.cookie('accessToken', accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+    res.cookie('refreshToken', refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+    res.json({ message: 'Email verified successfully.', user });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+});
+
+export const setUsername = asyncHandler(async (req: Request, res: Response) => {
+  const { username } = z.object({ username: z.string().min(3) }).parse(req.body);
+  const userId = (req as any).user?.id;
+
+  try {
+    await authService.setUsername(userId, username);
+    res.json({ message: 'Username updated successfully' });
   } catch (err) {
     if (err instanceof AuthError) {
       res.status(err.status).json({ error: err.message });

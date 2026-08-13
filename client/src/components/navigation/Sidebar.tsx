@@ -77,6 +77,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const librarianLinks = [
     { name: 'Circulation', href: '/circulation', icon: ArrowLeftRight },
     { name: 'Reservations', href: '/reservations', icon: CalendarClock },
+    { name: 'Accounts', href: '/users', icon: UserRound },
     { name: 'Manage Fines', href: '/manage-fines', icon: CircleDollarSign },
     { name: 'Inventory', href: '/inventory', icon: Boxes },
     { name: 'Acquisitions', href: '/acquisitions', icon: PackagePlus },

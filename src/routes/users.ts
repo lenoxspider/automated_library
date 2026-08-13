@@ -8,9 +8,9 @@ const router = Router();
 router.get('/', authenticate, authorize(['admin', 'librarian']), usersController.getUsers);
 router.get('/:id/history', authenticate, usersController.getUserHistory);
 
-// Admin only routes
-router.post('/', authenticate, authorize(['admin']), usersController.createUser);
-router.delete('/:id', authenticate, authorize(['admin']), usersController.deleteUser);
+// Admin and Librarian routes
+router.post('/', authenticate, authorize(['admin', 'librarian']), usersController.createUser);
+router.delete('/:id', authenticate, authorize(['admin', 'librarian']), usersController.deleteUser);
 
 // Profile
 router.put('/profile', authenticate, usersController.updateProfile);
