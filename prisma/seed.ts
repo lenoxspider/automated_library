@@ -46,6 +46,25 @@ async function main() {
     }
   });
   console.log(`Librarian user ready: ${librarian.username} (id=${librarian.id})`);
+
+  // 3. Seed Student Roster (test credentials for registration validation)
+  const students = [
+    { name: 'John Doe', student_id: '20812345', index_number: '987654' },
+    { name: 'Jane Smith', student_id: '20812346', index_number: '987655' },
+    { name: 'Kofi Mensah', student_id: '20812347', index_number: '987656' }
+  ];
+
+  for (const s of students) {
+    const student = await prisma.student_roster.upsert({
+      where: { student_id: s.student_id },
+      update: {
+        name: s.name,
+        index_number: s.index_number
+      },
+      create: s
+    });
+    console.log(`Student roster entry ready: ${student.name} (ID=${student.student_id}, Index=${student.index_number})`);
+  }
 }
 
 main()
