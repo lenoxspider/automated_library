@@ -62,6 +62,7 @@ router.post('/register', authController.register);
  *         description: Email verified
  */
 router.get('/verify/:token', authController.verifyEmail);
+router.post('/set-username', authenticate, authController.setUsername);
 
 /**
  * @swagger
