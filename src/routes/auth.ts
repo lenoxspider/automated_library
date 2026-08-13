@@ -31,6 +31,8 @@ router.post('/login', loginRateLimiter, authController.login);
  */
 router.post('/refresh', authController.refreshToken);
 
+router.post('/verify-roster', authController.verifyRoster);
+
 /**
  * @swagger
  * /auth/register:

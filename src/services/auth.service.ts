@@ -95,9 +95,17 @@ export class AuthService {
     return { accessToken };
   }
 
+  async verifyRoster(studentId: string, indexNumber: string) {
+    const student = await this.userService.verifyRoster(studentId, indexNumber);
+    if (!student) {
+      throw new AuthError(400, 'Roster verification failed. Invalid Student ID or Index Number.');
+    }
+    return student;
+  }
+
   async register(data: RegisterInput): Promise<users> {
-    const isValidStudent = await this.userService.verifyRoster(data.studentId, data.indexNumber);
-    if (!isValidStudent) {
+    const student = await this.userService.verifyRoster(data.studentId, data.indexNumber);
+    if (!student) {
       throw new AuthError(400, 'Roster verification failed. Invalid Student ID or Index Number.');
     }
 

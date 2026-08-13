@@ -6,6 +6,7 @@ import { useThemeStore } from '../../../store/themeStore';
 import api from '../../../lib/api';
 
 export default function RegisterPage() {
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,9 +19,9 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  // Local dark mode state -> now global
   const { dark, toggleDark } = useThemeStore();
   const [mounted, setMounted] = useState(false);
+  
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
@@ -29,10 +30,36 @@ export default function RegisterPage() {
     setError('');
   };
 
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.studentId || !formData.indexNumber) {
+      setError('Please enter both Student ID and Index Number.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await api.post('/auth/verify-roster', {
+        studentId: formData.studentId,
+        indexNumber: formData.indexNumber,
+      });
+      setFormData(prev => ({ ...prev, name: response.data.name }));
+      setStep(2);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'Verification failed. Invalid Student ID or Index Number.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password || !formData.studentId || !formData.indexNumber) {
-      setError('Please fill in all fields.');
+    if (!formData.email || !formData.password) {
+      setError('Please enter both email and password.');
       return;
     }
     setError('');
@@ -115,113 +142,133 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <form onSubmit={handleRegister} className="flex flex-col gap-5">
-              
-              {/* Name */}
-              <div>
-                <label className={`block text-sm font-medium mb-1.5 ${label}`}>Full Name</label>
-                <div className="relative">
-                  <svg className={`absolute left-3 top-1/2 -translate-y-1/2 ${muted}`} width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6a5 5 0 0110 0H3z"/>
-                  </svg>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="John Doe"
-                    className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
-                  />
+            {step === 1 ? (
+              <form onSubmit={handleVerify} className="flex flex-col gap-5">
+                <div className="text-sm font-medium mb-1 text-slate-500 dark:text-slate-400">
+                  Step 1: Verify Student Credentials
                 </div>
-              </div>
 
-              {/* Email */}
-              <div>
-                <label className={`block text-sm font-medium mb-1.5 ${label}`}>Email Address</label>
-                <div className="relative">
-                  <svg className={`absolute left-3 top-1/2 -translate-y-1/2 ${muted}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="you@library.com"
-                    className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
-                  />
+                {/* Flex row for IDs */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Student ID */}
+                  <div>
+                    <label className={`block text-sm font-medium mb-1.5 ${label}`}>Student ID</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="studentId"
+                        value={formData.studentId}
+                        onChange={handleChange}
+                        placeholder="21012345"
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Index Number */}
+                  <div>
+                    <label className={`block text-sm font-medium mb-1.5 ${label}`}>Index Number</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="indexNumber"
+                        value={formData.indexNumber}
+                        onChange={handleChange}
+                        placeholder="6123456"
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Password */}
-              <div>
-                <label className={`block text-sm font-medium mb-1.5 ${label}`}>Password</label>
-                <div className="relative">
-                  <svg className={`absolute left-3 top-1/2 -translate-y-1/2 ${muted}`} width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <rect x="3" y="7" width="10" height="8" rx="1.5"/>
-                    <path d="M5 7V5a3 3 0 016 0v2" strokeLinecap="round"/>
-                  </svg>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    minLength={6}
-                    className={`w-full pl-9 pr-10 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
-                  />
-                  <button type="button" onClick={() => setShowPassword(s => !s)}
-                    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${muted} hover:text-indigo-500`}>
-                    {showPassword
-                      ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/><path d="M2 2l12 12" strokeLinecap="round"/></svg>
-                      : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+                {/* Verify Button */}
+                <button type="submit" disabled={loading}
+                  className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+                  {loading
+                    ? <><svg className="animate-spin" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3"/><path d="M14 8a6 6 0 00-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>Verifying...</>
+                    : 'Verify Credentials'
+                  }
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="flex flex-col gap-5">
+                <div className="flex flex-col gap-1.5 bg-green-50 dark:bg-slate-900 border border-green-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm">
+                  <div className="font-semibold text-green-700 dark:text-indigo-400 flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    Credentials Verified!
+                  </div>
+                  <div className="text-slate-700 dark:text-slate-300">
+                    <span className="font-medium">Name:</span> {formData.name}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    ID: {formData.studentId} | Index: {formData.indexNumber}
+                  </div>
+                </div>
+
+                <div className="text-sm font-medium mb-1 text-slate-500 dark:text-slate-400">
+                  Step 2: Complete Profile Registration
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1.5 ${label}`}>Email Address</label>
+                  <div className="relative">
+                    <svg className={`absolute left-3 top-1/2 -translate-y-1/2 ${muted}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="student@knust.edu.gh"
+                      className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1.5 ${label}`}>Password</label>
+                  <div className="relative">
+                    <svg className={`absolute left-3 top-1/2 -translate-y-1/2 ${muted}`} width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="7" width="10" height="8" rx="1.5"/>
+                      <path d="M5 7V5a3 3 0 016 0v2" strokeLinecap="round"/>
+                    </svg>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      minLength={6}
+                      className={`w-full pl-9 pr-10 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
+                    />
+                    <button type="button" onClick={() => setShowPassword(s => !s)}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${muted} hover:text-indigo-500`}>
+                      {showPassword
+                        ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/><path d="M2 2l12 12" strokeLinecap="round"/></svg>
+                        : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setStep(1)}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-3 rounded-xl transition-colors">
+                    Back
+                  </button>
+                  <button type="submit" disabled={loading}
+                    className="flex-[2] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+                    {loading
+                      ? <><svg className="animate-spin" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3"/><path d="M14 8a6 6 0 00-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>Creating Account...</>
+                      : 'Create Account'
                     }
                   </button>
                 </div>
-              </div>
-
-              {/* Flex row for IDs */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Student ID */}
-                <div>
-                  <label className={`block text-sm font-medium mb-1.5 ${label}`}>Student ID</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="studentId"
-                      value={formData.studentId}
-                      onChange={handleChange}
-                      placeholder="21012345"
-                      className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
-                    />
-                  </div>
-                </div>
-
-                {/* Index Number */}
-                <div>
-                  <label className={`block text-sm font-medium mb-1.5 ${label}`}>Index Number</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="indexNumber"
-                      value={formData.indexNumber}
-                      onChange={handleChange}
-                      placeholder="6123456"
-                      className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit */}
-              <button type="submit" disabled={loading}
-                className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-                {loading
-                  ? <><svg className="animate-spin" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3"/><path d="M14 8a6 6 0 00-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>Creating Account...</>
-                  : 'Create Account'
-                }
-              </button>
-            </form>
+              </form>
+            )}
 
             <p className={`text-sm text-center mt-6 ${muted}`}>
               Already have an account?{' '}

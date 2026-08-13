@@ -88,6 +88,26 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+const verifyRosterSchema = z.object({
+  studentId: z.string().min(1),
+  indexNumber: z.string().min(1)
+});
+
+export const verifyRoster = asyncHandler(async (req: Request, res: Response) => {
+  const { studentId, indexNumber } = verifyRosterSchema.parse(req.body);
+
+  try {
+    const student = await authService.verifyRoster(studentId, indexNumber);
+    res.json({ name: student.name });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+});
+
 export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   const token = req.params.token as string;
 
