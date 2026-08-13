@@ -14,19 +14,20 @@ model book_copies {
   branch     String?
   section    String?
   shelf      String?
+  lost_at    DateTime?
   books      books        @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   borrowings borrowings[]
 }
 
 model books {
-  id               Int            @id @default(autoincrement())
-  public_id        String?        @unique @default(uuid())
+  id               Int             @id @default(autoincrement())
+  public_id        String?         @unique @default(uuid())
   title            String
   author           String
   genre            String
-  isbn             String         @unique
-  total_copies     Int            @default(1)
-  available_copies Int            @default(1)
+  isbn             String          @unique
+  total_copies     Int             @default(1)
+  available_copies Int             @default(1)
   cover_path       String?
   book_copies      book_copies[]
   reservations     reservations[]
@@ -89,28 +90,32 @@ model student_roster {
 }
 
 model users {
-  id                 Int            @id @default(autoincrement())
-  public_id          String?        @unique @default(uuid())
-  username           String         @unique
-  password           String
-  role               String
-  name               String
-  email              String
-  is_verified        Int?           @default(0)
-  verification_token String?
-  student_id         String?
-  index_number       String?
-  reset_token        String?
-  reset_token_expiry DateTime?
-  account_status     String?        @default("active")
-  language           String?        @default("en")
-  email_notifications Boolean       @default(true)
-  library_points      Int           @default(0)
+  id                  Int               @id @default(autoincrement())
+  public_id           String?           @unique @default(uuid())
+  username            String            @unique
+  password            String
+  role                String
+  name                String
+  email               String
+  created_at          DateTime          @default(now())
+  is_verified         Int?              @default(0)
+  verification_token  String?
+  student_id          String?
+  index_number        String?
+  reset_token         String?
+  reset_token_expiry  DateTime?
+  reset_code          String?
+  reset_code_expiry   DateTime?
+  account_status      String?           @default("active")
+  language            String?           @default("en")
+  email_notifications Boolean           @default(true)
+  library_points      Int               @default(0)
   borrowings          borrowings[]
-  reservations       reservations[]
-  search_history     search_history[]
-  support_tickets    support_tickets[]
-  contributions      contributions[]
+  reservations        reservations[]
+  search_history      search_history[]
+  support_tickets     support_tickets[]
+  contributions       contributions[]
+  saved_reports       saved_reports[]
 
   @@index([email])
 }
@@ -144,11 +149,11 @@ model support_tickets {
 }
 
 model audit_logs {
-  id          Int    @id @default(autoincrement())
-  admin_id    Int
-  action      String
-  details     String
-  timestamp   String
+  id        Int    @id @default(autoincrement())
+  admin_id  Int
+  action    String
+  details   String
+  timestamp String
 }
 
 model api_keys {
@@ -177,4 +182,17 @@ model contributions {
   created_at        String
   users             users  @relation(fields: [member_id], references: [id], onDelete: Cascade)
   books             books  @relation(fields: [book_id], references: [id], onDelete: Cascade)
+}
+
+model saved_reports {
+  id         Int      @id @default(autoincrement())
+  owner_id   Int
+  name       String
+  definition Json
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  users      users    @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+
+  @@index([owner_id])
+  @@index([updated_at])
 }

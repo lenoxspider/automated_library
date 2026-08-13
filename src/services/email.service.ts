@@ -124,6 +124,27 @@ export class EmailService {
             subject: 'Reset Your SmartLib Password',
             html
           });
+        } else if (job.name === 'resetPasswordCode') {
+          const { email, name, code } = job.data;
+          const safeName = Handlebars.escapeExpression(name);
+          const html =
+            '<!doctype html><html><body style="font-family:Arial,sans-serif;color:#1f2937">' +
+            '<h2>Reset your SmartLib password</h2>' +
+            '<p>Hello ' +
+            safeName +
+            ',</p>' +
+            '<p>Use this verification code to continue resetting your password:</p>' +
+            '<p style="font-size:30px;font-weight:700;letter-spacing:8px;color:#4f46e5">' +
+            code +
+            '</p>' +
+            '<p>This code expires in 10 minutes. If you did not request a reset, you can ignore this email.</p>' +
+            '<p>SmartLib</p></body></html>';
+          await this.transporter.sendMail({
+            from: '"SmartLib" <' + process.env.SMTP_USER + '>',
+            to: email,
+            subject: 'Your SmartLib password reset code',
+            html
+          });
         }
       },
       { connection: redisClient as any }
@@ -140,6 +161,9 @@ export class EmailService {
 
   async queueResetPasswordEmail(email: string, name: string, token: string) {
     await this.emailQueue.add('resetPassword', { email, name, token });
+  }
+  async queueResetPasswordCodeEmail(email: string, name: string, code: string) {
+    await this.emailQueue.add('resetPasswordCode', { email, name, code });
   }
 
   async queueReservationReadyEmail(email: string, name: string, bookTitle: string) {

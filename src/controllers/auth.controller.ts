@@ -148,7 +148,45 @@ export const forgotPassword = asyncHandler(async (req: Request, res: Response) =
   await authService.forgotPassword(email);
 
   // Same message regardless of whether the email exists, to prevent enumeration.
-  res.json({ message: 'If that email exists, a reset link has been sent.' });
+  res.json({ message: 'If that email exists, a verification code has been sent.' });
+});
+
+export const verifyResetCode = asyncHandler(async (req: Request, res: Response) => {
+  const { email, code } = z
+    .object({
+      email: z.string().email(),
+      code: z.string().regex(/^\d{6}$/)
+    })
+    .parse(req.body);
+  try {
+    const resetToken = await authService.verifyResetCode(email, code);
+    res.json({ resetToken });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+});
+
+export const resetPasswordWithCode = asyncHandler(async (req: Request, res: Response) => {
+  const { resetToken, password } = z
+    .object({
+      resetToken: z.string().min(20),
+      password: z.string().min(6)
+    })
+    .parse(req.body);
+  try {
+    await authService.resetPassword(resetToken, password);
+    res.json({ message: 'Password reset successfully' });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
 });
 
 export const resetPassword = asyncHandler(async (req: Request, res: Response) => {

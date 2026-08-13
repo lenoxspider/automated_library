@@ -6,10 +6,58 @@ import { UserRepository } from '../repositories/user.repo';
 import { EmailService } from '../services/email.service';
 import asyncHandler from 'express-async-handler';
 import { z } from 'zod';
+import prisma from '../config/prisma';
 
 const userRepo = container.resolve(UserRepository);
 const emailService = container.resolve(EmailService);
 
+export const getProfile = asyncHandler(async (req: Request, res: Response) => {
+  // @ts-expect-error - req.user is provided by authentication middleware
+  const userId = req.user.id as number;
+  const user = await userRepo.findById(userId);
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const [activeLoans, totalBooksBorrowed, currentFines, activeReservations] = await Promise.all([
+    prisma.borrowings.count({ where: { member_id: userId, status: 'borrowed' } }),
+    prisma.borrowings.count({ where: { member_id: userId } }),
+    prisma.fines.aggregate({
+      where: { status: 'unpaid', borrowings: { member_id: userId } },
+      _sum: { amount: true }
+    }),
+    prisma.reservations.count({
+      where: {
+        member_id: userId,
+        status: { in: ['pending', 'approved', 'ready_for_pickup'] }
+      }
+    })
+  ]);
+
+  res.json({
+    user: {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      memberSince: user.created_at,
+      role: user.role,
+      student_id: user.student_id,
+      index_number: user.index_number,
+      account_status: user.account_status,
+      language: user.language,
+      email_notifications: user.email_notifications,
+      library_points: user.library_points
+    },
+    stats: {
+      activeLoans,
+      totalBooksBorrowed,
+      currentFines: currentFines._sum.amount ?? 0,
+      activeReservations
+    }
+  });
+});
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const users = await userRepo.findAll();
   res.json({ data: users, totalCount: users.length });
@@ -85,12 +133,13 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
   // @ts-expect-error - req.user is provided by authentication middleware - Assuming req.user is set by auth middleware
   const userId = req.user.id;
-  const { language, emailNotifications, password, name } = req.body;
+  const { language, emailNotifications, password, name, username } = req.body;
 
   const updateData: any = {};
   if (language) updateData.language = language;
   if (emailNotifications !== undefined) updateData.email_notifications = emailNotifications;
   if (name) updateData.name = name;
+  if (username) updateData.username = username.trim();
   if (password) {
     updateData.password = await bcrypt.hash(password, 10);
   }
@@ -100,6 +149,7 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
     message: 'Profile updated successfully',
     user: {
       name: updatedUser.name,
+      username: updatedUser.username,
       language: updatedUser.language,
       emailNotifications: updatedUser.email_notifications
     }

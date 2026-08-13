@@ -3,7 +3,8 @@ import { authenticate } from '../middlewares/auth';
 import {
   loginRateLimiter,
   registerRateLimiter,
-  forgotPasswordRateLimiter
+  forgotPasswordRateLimiter,
+  resetCodeRateLimiter
 } from '../middlewares/rateLimiters';
 import * as authController from '../controllers/auth.controller';
 
@@ -79,6 +80,8 @@ router.post('/set-username', authenticate, authController.setUsername);
  *         description: Reset email sent
  */
 router.post('/forgot-password', forgotPasswordRateLimiter, authController.forgotPassword);
+router.post('/verify-reset-code', resetCodeRateLimiter, authController.verifyResetCode);
+router.post('/reset-password', resetCodeRateLimiter, authController.resetPasswordWithCode);
 
 /**
  * @swagger

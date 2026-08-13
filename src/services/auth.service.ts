@@ -172,16 +172,42 @@ export class AuthService {
   async forgotPassword(email: string) {
     const user = await prisma.users.findFirst({ where: { email } });
     if (!user) {
-      // Caller returns the same message regardless, to prevent email enumeration.
+      // Keep the response identical for existing and non-existing emails.
       return;
     }
+    const code = crypto.randomInt(100000, 1000000).toString();
+    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+    await this.userRepo.update(user.id, {
+      reset_code: codeHash,
+      reset_code_expiry: expiry,
+      reset_token: null,
+      reset_token_expiry: null
+    });
+    await this.emailService.queueResetPasswordCodeEmail(user.email, user.name, code);
+  }
 
+  async verifyResetCode(email: string, code: string) {
+    const user = await prisma.users.findFirst({ where: { email } });
+    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+    if (
+      !user ||
+      !user.reset_code ||
+      !user.reset_code_expiry ||
+      user.reset_code !== codeHash ||
+      user.reset_code_expiry < new Date()
+    ) {
+      throw new AuthError(400, 'Invalid or expired verification code');
+    }
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const expiry = new Date(Date.now() + 3600000); // 1 hour
-
-    await this.userRepo.update(user.id, { reset_token: resetToken, reset_token_expiry: expiry });
-
-    await this.emailService.queueResetPasswordEmail(user.email, user.name, resetToken);
+    const expiry = new Date(Date.now() + 15 * 60 * 1000);
+    await this.userRepo.update(user.id, {
+      reset_token: resetToken,
+      reset_token_expiry: expiry,
+      reset_code: null,
+      reset_code_expiry: null
+    });
+    return resetToken;
   }
 
   async resetPassword(token: string, password: string) {
@@ -199,7 +225,9 @@ export class AuthService {
     await this.userRepo.update(user.id, {
       password: hashedPassword,
       reset_token: null,
-      reset_token_expiry: null
+      reset_token_expiry: null,
+      reset_code: null,
+      reset_code_expiry: null
     });
   }
 }

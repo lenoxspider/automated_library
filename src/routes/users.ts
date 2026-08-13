@@ -13,6 +13,7 @@ router.post('/', authenticate, authorize(['admin', 'librarian']), usersControlle
 router.delete('/:id', authenticate, authorize(['admin', 'librarian']), usersController.deleteUser);
 
 // Profile
+router.get('/profile', authenticate, usersController.getProfile);
 router.put('/profile', authenticate, usersController.updateProfile);
 
 export default router;

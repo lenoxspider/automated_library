@@ -8,6 +8,7 @@ import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import BookCover from '../components/ui/BookCover';
+import ThemeSwitch from '../components/ui/ThemeSwitch';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface DbBook {
@@ -151,7 +152,7 @@ function BookCard({ book, dark }: { book: Book; dark: boolean }) {
 export default function Home() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { dark, toggleDark } = useThemeStore();
+  const { dark } = useThemeStore();
 
   const [query, setQuery] = useState('');
   const [activeGenre, setActiveGenre] = useState('Recommended');
@@ -282,22 +283,8 @@ export default function Home() {
           </nav>
 
           {/* Right actions */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleDark}
-              className={`p-2 rounded-lg transition-colors ${dark ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
-              title="Toggle dark mode"
-            >
-              {dark ? (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 12A4 4 0 1 0 8 4a4 4 0 0 0 0 8zm0 1.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zM8 2a.75.75 0 0 0 .75-.75V.75a.75.75 0 0 0-1.5 0v.5A.75.75 0 0 0 8 2zm0 12a.75.75 0 0 0-.75.75v.5a.75.75 0 0 0 1.5 0v-.5A.75.75 0 0 0 8 14z" />
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z" />
-                </svg>
-              )}
-            </button>
+          <div className="flex items-center gap-3">
+            <ThemeSwitch />
             <Link
               href="/login"
               className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"

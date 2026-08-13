@@ -84,7 +84,13 @@ export async function updateSingleInventory(req: Request, res: Response) {
     const { branch, section, shelf, status } = req.body;
     const updated = await prisma.book_copies.update({
       where: { id },
-      data: { branch, section, shelf, status }
+      data: {
+        branch,
+        section,
+        shelf,
+        status,
+        lost_at: status?.toLowerCase() === 'lost' ? new Date() : null
+      }
     });
 
     res.json({ success: true, data: updated });
