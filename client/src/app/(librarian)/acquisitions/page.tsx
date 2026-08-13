@@ -148,7 +148,7 @@ export default function AcquisitionsPage() {
         <p className="text-gray-500 dark:text-slate-400 mt-1">Manage purchase orders and receive inventory.</p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1">
           <Card className="p-6 sticky top-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
             <div className="flex items-center gap-2 mb-6">
@@ -216,7 +216,7 @@ export default function AcquisitionsPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-2 relative min-h-[400px]">
+        <div className="lg:col-span-3 relative min-h-[400px]">
           <Card className="overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 h-full flex flex-col shadow-sm">
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left text-sm whitespace-nowrap">
