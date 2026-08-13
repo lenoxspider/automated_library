@@ -118,42 +118,42 @@ export default function ReservationsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending': return <span className="text-xs font-mono" style={{ color: 'var(--color-signal-pending)' }}>PENDING</span>;
-      case 'approved': return <span className="text-xs font-mono" style={{ color: 'var(--color-signal-available)' }}>APPROVED</span>;
-      case 'ready_for_pickup': return <span className="text-xs font-mono" style={{ color: 'var(--color-signal-available)' }}>READY FOR PICKUP</span>;
-      case 'cancelled': return <span className="text-xs font-mono" style={{ color: 'var(--color-signal-overdue)' }}>CANCELLED</span>;
-      case 'expired': return <span className="text-xs font-mono opacity-60">EXPIRED</span>;
-      default: return <span className="text-xs font-mono opacity-60">{status.toUpperCase()}</span>;
+      case 'pending': return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-semibold rounded-full border border-yellow-200 dark:border-yellow-800">Pending</span>;
+      case 'approved': return <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-semibold rounded-full border border-blue-200 dark:border-blue-800">Approved</span>;
+      case 'ready_for_pickup': return <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs font-semibold rounded-full border border-green-200 dark:border-green-800">Ready for Pickup</span>;
+      case 'cancelled': return <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 text-xs font-semibold rounded-full border border-red-200 dark:border-red-800">Cancelled</span>;
+      case 'expired': return <span className="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400 text-xs font-semibold rounded-full border border-gray-200 dark:border-gray-700">Expired</span>;
+      default: return <span className="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400 text-xs font-semibold rounded-full border border-gray-200 dark:border-gray-700">{status}</span>;
     }
   };
 
   return (
-    <div className="relative h-[calc(100vh-12rem)] flex flex-col">
+    <div className="relative h-[calc(100vh-12rem)] flex flex-col bg-gray-50 dark:bg-slate-900">
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-transparent text-white dark: px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-5">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 dark:bg-slate-100 text-white dark:text-gray-900 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-5">
           <CheckCircle2 size={18} className="text-green-400 dark:text-green-600" />
           <span className="font-medium text-sm">{toastMessage}</span>
         </div>
       )}
 
       {/* HEADER */}
-      <div className="px-6 py-5 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0" style={{ borderColor: 'var(--color-signal-border-dark)' }}>
+      <div className="px-6 py-5 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight ">Reservations</h1>
-          <p className="text-sm  mt-1">Manage patron requests, holds, and waitlists.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100">Reservations</h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Manage patron requests, holds, and waitlists.</p>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={() => refetch()}
-            className="p-2  hover:bg-transparent dark:hover:bg-slate-800 rounded-md transition-colors"
+            className="p-2 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-md transition-colors"
             title="Refresh"
           >
             <RefreshCw size={18} className={isFetching ? 'animate-spin text-indigo-500' : ''} />
           </button>
           <button 
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium  bg-transparent border  rounded-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
           >
             <Download size={16} /> Export CSV
           </button>
@@ -171,22 +171,22 @@ export default function ReservationsPage() {
         <div className="flex-1 flex flex-col overflow-hidden relative">
           
           {/* SEARCH & FILTERS */}
-          <div className="p-4 bg-white/50  border-b  shrink-0 space-y-3 backdrop-blur-sm">
+          <div className="p-4 bg-white/50 dark:bg-slate-900/50 border-b border-gray-200 dark:border-slate-800 shrink-0 space-y-3 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 " size={18} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   type="text"
                   placeholder="Search title, author, patron name, or email..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-transparent border  rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm "
+                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900 dark:text-slate-100"
                 />
               </div>
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold  uppercase tracking-wider mr-2">Status:</span>
+              <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mr-2">Status:</span>
               {['pending', 'approved', 'ready_for_pickup', 'cancelled', 'expired'].map(st => (
                 <button
                   key={st}
@@ -194,7 +194,7 @@ export default function ReservationsPage() {
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
                     statusFilter.includes(st) 
                       ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-800' 
-                      : 'bg-white  border-gray-200 hover:bg-gray-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'
                   }`}
                 >
                   {st.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
@@ -204,27 +204,27 @@ export default function ReservationsPage() {
           </div>
 
           {/* TABLE */}
-          <Card surface="dark" className="flex-1 overflow-auto relative">
+          <div className="flex-1 overflow-auto relative bg-white dark:bg-slate-950">
             {isLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/80  backdrop-blur-sm z-10">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm z-10">
                 <LoadingSpinner />
               </div>
             ) : reservations.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center  p-8">
+              <div className="h-full flex flex-col items-center justify-center text-gray-500 dark:text-slate-400 p-8">
                 <AlertCircle size={48} className="mb-4 opacity-20" />
-                <p className="text-lg font-medium  mb-1">No reservations found</p>
+                <p className="text-lg font-medium text-gray-900 dark:text-slate-100 mb-1">No reservations found</p>
                 <p className="text-sm">Try adjusting your search or filters.</p>
               </div>
             ) : (
               <table className="w-full text-sm text-left border-collapse">
-                <thead className="sticky top-0 opacity-80 border-b z-10 uppercase text-xs font-mono font-bold tracking-wider" style={{ borderColor: 'var(--color-signal-border-dark)', backgroundColor: 'var(--color-signal-bg-dark)' }}>
+                <thead className="sticky top-0 bg-gray-100 dark:bg-slate-900 text-gray-700 dark:text-slate-300 border-b border-gray-200 dark:border-slate-800 z-10 uppercase text-xs font-bold tracking-wider">
                   <tr>
                     <th className="p-4 w-12 text-center">
                       <input 
                         type="checkbox" 
                         checked={selectedIds.size > 0 && selectedIds.size === reservations.length}
                         onChange={selectAll}
-                        className="rounded  text-indigo-600 focus:ring-indigo-500 bg-transparent"
+                        className="rounded border-gray-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-800"
                       />
                     </th>
                     <th className="p-4 w-20">ID</th>
@@ -235,7 +235,7 @@ export default function ReservationsPage() {
                     <th className="p-4">Requested On</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-200 dark:divide-slate-800">
                   {reservations.map(res => (
                     <tr 
                       key={res.id} 
@@ -247,7 +247,7 @@ export default function ReservationsPage() {
                           type="checkbox" 
                           checked={selectedIds.has(res.id)}
                           onChange={() => toggleSelection(res.id)}
-                          className="rounded  text-indigo-600 focus:ring-indigo-500 bg-transparent"
+                          className="rounded border-gray-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-800"
                         />
                       </td>
                       <td className="p-4 font-mono text-xs opacity-60">#{res.id}</td>
@@ -256,13 +256,13 @@ export default function ReservationsPage() {
                           {res.books?.cover_path ? (
                             <img src={res.books.cover_path} alt={res.books.title} className="w-8 h-12 object-cover rounded shadow-sm" />
                           ) : (
-                            <div className="w-8 h-12 bg-transparent rounded flex items-center justify-center shadow-sm">
-                              <BookMarked size={16} className="" />
+                            <div className="w-8 h-12 bg-gray-200 dark:bg-slate-800 rounded flex items-center justify-center shadow-sm">
+                              <BookMarked size={16} className="text-gray-400" />
                             </div>
                           )}
                           <div>
-                            <p className="font-semibold  line-clamp-1">{res.books?.title || 'Unknown Book'}</p>
-                            <p className="text-xs ">{res.books?.author || 'Unknown Author'}</p>
+                            <p className="font-semibold text-gray-900 dark:text-slate-100 line-clamp-1">{res.books?.title || 'Unknown Book'}</p>
+                            <p className="text-xs text-gray-500 dark:text-slate-400">{res.books?.author || 'Unknown Author'}</p>
                           </div>
                         </div>
                       </td>
@@ -272,8 +272,8 @@ export default function ReservationsPage() {
                             <User size={12} />
                           </div>
                           <div>
-                            <p className="font-medium  line-clamp-1">{res.users?.name || 'Unknown Patron'}</p>
-                            <p className="text-xs ">{res.users?.email || 'No email'}</p>
+                            <p className="font-medium text-gray-900 dark:text-slate-100 line-clamp-1">{res.users?.name || 'Unknown Patron'}</p>
+                            <p className="text-xs text-gray-500 dark:text-slate-400">{res.users?.email || 'No email'}</p>
                           </div>
                         </div>
                       </td>
@@ -283,13 +283,13 @@ export default function ReservationsPage() {
                       <td className="p-4">
                         {res.status === 'pending' && res.queue_position ? (
                           <div className="flex items-center gap-1.5">
-                            <span className="font-mono font-bold ">#{res.queue_position}</span>
+                            <span className="font-mono font-bold text-gray-700 dark:text-slate-300">#{res.queue_position}</span>
                           </div>
                         ) : (
-                          <span className="">-</span>
+                          <span className="text-gray-400 dark:text-slate-600">-</span>
                         )}
                       </td>
-                      <td className="p-4  text-xs">
+                      <td className="p-4 text-gray-600 dark:text-slate-400 text-xs">
                         {new Date(res.reservation_date).toLocaleDateString()} <br />
                         {new Date(res.reservation_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </td>
@@ -298,25 +298,25 @@ export default function ReservationsPage() {
                 </tbody>
               </table>
             )}
-          </Card>
+          </div>
 
           {/* PAGINATION */}
-          <div className="border-t  bg-transparent p-3 flex items-center justify-between shrink-0">
-            <p className="text-xs ">
+          <div className="border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 flex items-center justify-between shrink-0">
+            <p className="text-xs text-gray-500 dark:text-slate-400">
               Showing {reservations.length > 0 ? (page - 1) * limit + 1 : 0} to {Math.min(page * limit, totalCount)} of <span className="font-bold">{totalCount}</span> reservations
             </p>
             <div className="flex gap-2">
               <button 
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-1 rounded bg-transparent  disabled:opacity-30 hover:bg-transparent dark:hover:bg-slate-700"
+                className="p-1 rounded bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 disabled:opacity-30 hover:bg-gray-200 dark:hover:bg-slate-700"
               >
                 <ChevronLeft size={18} />
               </button>
               <button 
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages || totalPages === 0}
-                className="p-1 rounded bg-transparent  disabled:opacity-30 hover:bg-transparent dark:hover:bg-slate-700"
+                className="p-1 rounded bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 disabled:opacity-30 hover:bg-gray-200 dark:hover:bg-slate-700"
               >
                 <ChevronRight size={18} />
               </button>
@@ -325,12 +325,12 @@ export default function ReservationsPage() {
           
           {/* BULK ACTION TOOLBAR (Floating) */}
           {selectedIds.size > 0 && (
-            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-transparent text-white dark: px-6 py-3 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-slate-100 text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
               <div className="flex items-center gap-2">
                 <span className="flex items-center justify-center w-6 h-6 bg-indigo-500 text-white rounded-full text-xs font-bold">{selectedIds.size}</span>
                 <span className="font-medium text-sm">selected</span>
               </div>
-              <div className="h-6 w-px bg-transparent dark:bg-transparent"></div>
+              <div className="h-6 w-px bg-gray-700 dark:bg-gray-300"></div>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => handleBulkAction('approve')}
@@ -351,7 +351,7 @@ export default function ReservationsPage() {
                   <XCircle size={16} /> Cancel
                 </button>
               </div>
-              <button onClick={() => setSelectedIds(new Set())} className="ml-2  hover:text-white dark:hover:text-black">
+              <button onClick={() => setSelectedIds(new Set())} className="ml-2 text-gray-400 hover:text-white dark:hover:text-black">
                 <X size={18} />
               </button>
             </div>
@@ -361,14 +361,14 @@ export default function ReservationsPage() {
 
         {/* DETAILS DRAWER */}
         {focusedReservation && (
-          <div className="w-80 md:w-96 border-l  bg-transparent shrink-0 flex flex-col shadow-xl z-20 overflow-hidden transform transition-transform animate-in slide-in-from-right">
-            <div className="p-4 border-b  flex justify-between items-center bg-gray-50/50 ">
-              <h2 className="font-bold  flex items-center gap-2">
+          <div className="w-80 md:w-96 border-l border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0 flex flex-col shadow-xl z-20 overflow-hidden transform transition-transform animate-in slide-in-from-right">
+            <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-900/50">
+              <h2 className="font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
                 Reservation Details
               </h2>
               <button 
                 onClick={() => setFocusedReservation(null)}
-                className=" hover: dark:hover:text-slate-100 p-1 rounded-md hover:bg-transparent dark:hover:bg-slate-800 transition-colors"
+                className="text-gray-400 hover:text-gray-900 dark:hover:text-slate-100 p-1 rounded-md hover:bg-gray-200 dark:hover:bg-slate-800 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -379,70 +379,70 @@ export default function ReservationsPage() {
               {/* Status Section */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold  uppercase tracking-wider mb-1">Status</p>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status</p>
                   {getStatusBadge(focusedReservation.status)}
                 </div>
                 {focusedReservation.status === 'pending' && focusedReservation.queue_position && (
                   <div className="text-right">
-                    <p className="text-xs font-semibold  uppercase tracking-wider mb-1">Queue Position</p>
-                    <p className="text-xl font-mono font-bold ">#{focusedReservation.queue_position}</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Queue Position</p>
+                    <p className="text-xl font-mono font-bold text-gray-900 dark:text-slate-100">#{focusedReservation.queue_position}</p>
                   </div>
                 )}
               </div>
 
               {/* Book Details */}
-              <div className="bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border ">
-                <p className="text-xs font-semibold  uppercase tracking-wider mb-3">Item Requested</p>
+              <div className="bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-800">
+                <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-3">Item Requested</p>
                 <div className="flex gap-4">
                   {focusedReservation.books?.cover_path ? (
-                    <img src={focusedReservation.books.cover_path} alt={focusedReservation.books.title} className="w-16 h-24 object-cover rounded shadow border " />
+                    <img src={focusedReservation.books.cover_path} alt={focusedReservation.books.title} className="w-16 h-24 object-cover rounded shadow border border-gray-200 dark:border-slate-700" />
                   ) : (
-                    <div className="w-16 h-24 bg-transparent rounded flex items-center justify-center shadow border ">
-                      <BookMarked size={24} className="" />
+                    <div className="w-16 h-24 bg-gray-200 dark:bg-slate-800 rounded flex items-center justify-center shadow border border-gray-200 dark:border-slate-700">
+                      <BookMarked size={24} className="text-gray-400" />
                     </div>
                   )}
                   <div>
-                    <h3 className="font-bold  leading-tight mb-1">{focusedReservation.books?.title || 'Unknown Book'}</h3>
-                    <p className="text-sm  mb-2">{focusedReservation.books?.author || 'Unknown Author'}</p>
-                    <p className="text-xs font-mono ">ISBN: {focusedReservation.books?.isbn || 'N/A'}</p>
+                    <h3 className="font-bold text-gray-900 dark:text-slate-100 leading-tight mb-1">{focusedReservation.books?.title || 'Unknown Book'}</h3>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 mb-2">{focusedReservation.books?.author || 'Unknown Author'}</p>
+                    <p className="text-xs font-mono text-gray-500 dark:text-slate-500">ISBN: {focusedReservation.books?.isbn || 'N/A'}</p>
                   </div>
                 </div>
               </div>
 
               {/* Patron Details */}
               <div>
-                <p className="text-xs font-semibold  uppercase tracking-wider mb-2">Patron Information</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Patron Information</p>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-700 dark:text-indigo-400">
                     <User size={20} />
                   </div>
                   <div>
-                    <p className="font-semibold ">{focusedReservation.users?.name || 'Unknown Patron'}</p>
-                    <p className="text-sm ">{focusedReservation.users?.email || 'No email'}</p>
+                    <p className="font-semibold text-gray-900 dark:text-slate-100">{focusedReservation.users?.name || 'Unknown Patron'}</p>
+                    <p className="text-sm text-gray-600 dark:text-slate-400">{focusedReservation.users?.email || 'No email'}</p>
                   </div>
                 </div>
                 {focusedReservation.users?.student_id && (
-                  <p className="text-xs  font-mono">ID: {focusedReservation.users.student_id}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-500 font-mono">ID: {focusedReservation.users.student_id}</p>
                 )}
               </div>
 
               {/* Timeline */}
               <div>
-                <p className="text-xs font-semibold  uppercase tracking-wider mb-2">Timeline</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Timeline</p>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="mt-0.5"><Calendar size={14} className="" /></div>
+                    <div className="mt-0.5"><Calendar size={14} className="text-gray-400" /></div>
                     <div>
-                      <p className="text-sm ">Requested</p>
-                      <p className="text-xs ">{new Date(focusedReservation.reservation_date).toLocaleString()}</p>
+                      <p className="text-sm text-gray-900 dark:text-slate-200">Requested</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(focusedReservation.reservation_date).toLocaleString()}</p>
                     </div>
                   </div>
                   {focusedReservation.expiration_date && (
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5"><Clock size={14} className="text-amber-500" /></div>
                       <div>
-                        <p className="text-sm ">Expires</p>
-                        <p className="text-xs ">{new Date(focusedReservation.expiration_date).toLocaleString()}</p>
+                        <p className="text-sm text-gray-900 dark:text-slate-200">Expires</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(focusedReservation.expiration_date).toLocaleString()}</p>
                       </div>
                     </div>
                   )}
@@ -452,7 +452,7 @@ export default function ReservationsPage() {
             </div>
             
             {/* Drawer Actions */}
-            <div className="p-4 border-t  bg-gray-50/50  flex flex-col gap-2 shrink-0">
+            <div className="p-4 border-t border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50 flex flex-col gap-2 shrink-0">
               {focusedReservation.status === 'pending' && (
                 <>
                   <button
@@ -475,7 +475,7 @@ export default function ReservationsPage() {
                 <button
                   disabled={bulkMutation.isPending}
                   onClick={() => bulkMutation.mutate({ ids: [focusedReservation.id], action: 'cancel' })}
-                  className="w-full bg-transparent border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium py-2 rounded-md transition-colors text-sm flex justify-center items-center gap-2 mt-2"
+                  className="w-full bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium py-2 rounded-md transition-colors text-sm flex justify-center items-center gap-2 mt-2"
                 >
                   <XCircle size={16} /> Cancel Reservation
                 </button>
@@ -489,10 +489,10 @@ export default function ReservationsPage() {
       {/* Mock Modal for New Reservation */}
       {isNewModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-lg shadow-2xl p-6 bg-transparent">
+          <Card className="w-full max-w-lg shadow-2xl p-6 bg-white dark:bg-slate-950">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">New Reservation</h2>
-              <button onClick={() => setIsNewModalOpen(false)} className=" hover: dark:hover:text-slate-100">
+              <button onClick={() => setIsNewModalOpen(false)} className="text-gray-400 hover:text-gray-900 dark:hover:text-slate-100">
                 <X size={20} />
               </button>
             </div>
@@ -505,7 +505,7 @@ export default function ReservationsPage() {
                 <label className="block text-sm font-medium mb-1">Search Catalog</label>
                 <input type="text" placeholder="Title, author, or ISBN..." className="w-full px-3 py-2 border rounded-md dark:bg-slate-900 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
               </div>
-              <div className="pt-4 border-t  flex justify-end gap-3 mt-4">
+              <div className="pt-4 border-t border-gray-200 dark:border-slate-800 flex justify-end gap-3 mt-4">
                 <Button variant="ghost" onClick={() => setIsNewModalOpen(false)}>Cancel</Button>
                 <Button>Create Reservation</Button>
               </div>
