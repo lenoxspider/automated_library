@@ -268,7 +268,7 @@ export default function InventoryPage() {
           </div>
 
           {/* FILTERS */}
-          <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-3 flex flex-wrap items-center gap-3 mb-4 shadow-sm transition-colors">
+          <Card className="p-3 flex flex-wrap items-center gap-3 mb-4">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input 
@@ -291,7 +291,7 @@ export default function InventoryPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* BULK ACTIONS TOOLBAR */}
           {selectedIds.size > 0 && (
