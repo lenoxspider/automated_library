@@ -16,6 +16,7 @@ const router = Router();
  */
 router.get('/', bookController.getBooks);
 router.get('/genres', bookController.getGenres);
+router.get('/branches', bookController.getBranches);
 
 /**
  * @swagger
@@ -85,6 +86,7 @@ router.post(
   bookController.uploadCoverFile
 );
 
+router.get('/:id/locations', bookController.getBookLocations);
 router.get('/:id', bookController.getBookById);
 
 /**

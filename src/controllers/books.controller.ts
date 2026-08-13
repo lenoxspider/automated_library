@@ -29,8 +29,9 @@ export const getBooks = asyncHandler(async (req: Request, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 20;
   const genre = (req.query.genre as string) || '';
   const availability = (req.query.availability as string) || '';
+  const branch = (req.query.branch as string) || '';
 
-  const result = await bookRepo.findBooks(query, page, limit, genre, availability);
+  const result = await bookRepo.findBooks(query, page, limit, genre, availability, branch);
 
   res.json({
     data: result.data,
@@ -41,6 +42,21 @@ export const getBooks = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+export const getBranches = asyncHandler(async (_req: Request, res: Response) => {
+  const branches = await bookRepo.getDistinctBranches();
+  res.json(branches);
+});
+
+export const getBookLocations = asyncHandler(async (req: Request, res: Response) => {
+  const publicId = req.params.id as string;
+  const book = await bookRepo.findByPublicId(publicId);
+  if (!book) {
+    res.status(404).json({ error: 'Book not found' });
+    return;
+  }
+  const locations = await bookRepo.getAvailableLocations(book.id);
+  res.json(locations);
+});
 export const getGenres = asyncHandler(async (req: Request, res: Response) => {
   const genres = await bookRepo.getDistinctGenres();
   res.json(genres);
