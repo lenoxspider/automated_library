@@ -232,7 +232,7 @@ export default function RegisterPage() {
                   }
                 </button>
 
-        
+
               </form>
             ) : (
               <form onSubmit={handleRegister} className="flex flex-col gap-5">

@@ -52,9 +52,12 @@ export default function CatalogPage() {
   // Log search queries (debounced) — use useCallback to keep ref stable
   const logSearchFn = useCallback(async (q: string) => {
     if (q.length > 2) {
-      try { await api.post('/search-history', { query: q }); } catch { /* ignore */ }
+      try { 
+        await api.post('/search-history', { query: q }); 
+        queryClient.invalidateQueries({ queryKey: ['search-history'] });
+      } catch { /* ignore */ }
     }
-  }, []);
+  }, [queryClient]);
   useEffect(() => {
     logSearchFn(debouncedSearch);
   }, [debouncedSearch, logSearchFn]);
