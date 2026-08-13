@@ -191,7 +191,7 @@ export default function RegisterPage() {
                       name="studentId"
                       value={formData.studentId}
                       onChange={handleChange}
-                      placeholder="21186730"
+                      placeholder="21012345"
                       className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
                     />
                   </div>
@@ -206,7 +206,7 @@ export default function RegisterPage() {
                       name="indexNumber"
                       value={formData.indexNumber}
                       onChange={handleChange}
-                      placeholder="6136124"
+                      placeholder="6123456"
                       className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-300 ${input}`}
                     />
                   </div>
