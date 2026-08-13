@@ -34,7 +34,7 @@ export class AuthService {
     private userRepo: UserRepository,
     private userService: UserService,
     private emailService: EmailService
-  ) { }
+  ) {}
 
   async login(username: string, password: string) {
     const user = await this.userRepo.findByUsername(username);
