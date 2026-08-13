@@ -19,7 +19,8 @@ export class BookRepository {
     page: number,
     limit: number,
     genre?: string,
-    availability?: string
+    availability?: string,
+    branch?: string
   ): Promise<{ data: books[]; totalCount: number }> {
     const skip = (page - 1) * limit;
     const where: any = {};
@@ -36,6 +37,14 @@ export class BookRepository {
     }
     if (availability === 'available') {
       where.available_copies = { gt: 0 };
+    }
+    if (branch) {
+      where.book_copies = {
+        some: {
+          branch,
+          ...(availability === 'available' ? { status: 'Available' } : {})
+        }
+      };
     }
 
     const [totalCount, data] = await this.prisma.$transaction([
@@ -89,5 +98,21 @@ export class BookRepository {
       distinct: ['genre']
     });
     return books.map((b) => b.genre).filter(Boolean);
+  }
+  async getDistinctBranches(): Promise<string[]> {
+    const copies = await this.prisma.book_copies.findMany({
+      where: { branch: { not: null } },
+      select: { branch: true },
+      distinct: ['branch'],
+      orderBy: { branch: 'asc' }
+    });
+    return copies.map((copy) => copy.branch).filter((branch): branch is string => Boolean(branch));
+  }
+  async getAvailableLocations(bookId: number) {
+    return this.prisma.book_copies.findMany({
+      where: { book_id: bookId, status: 'Available' },
+      select: { id: true, branch: true, section: true, shelf: true },
+      orderBy: [{ branch: 'asc' }, { section: 'asc' }, { shelf: 'asc' }]
+    });
   }
 }

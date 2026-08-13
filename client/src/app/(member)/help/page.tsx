@@ -44,7 +44,7 @@ const faqs: FaqItem[] = [
     icon: Star,
     question: 'How do Community Contributions work?',
     answer:
-      'You can earn Library Points by helping us improve our catalog! Submit metadata corrections, book reviews, or custom tags on the Contributions page. When a librarian approves your submission, you earn points. Reaching 50 points automatically unlocks a 28-day extended loan perk.',
+      'You can earn Library Points by helping us improve our catalog! Submit metadata corrections, book reviews, or custom tags on the Contributions page. When a librarian approves your submission, you earn 10 points per contribution. Reaching 50 points automatically unlocks a 28-day extended loan perk.',
   },
 ];
 
