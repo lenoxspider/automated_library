@@ -63,21 +63,22 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
 });
 
 const registerSchema = z.object({
-  username: z.string().min(1),
   password: z.string().min(6),
   name: z.string().min(1),
   email: z.string().email(),
-  studentId: z.string().min(1),
-  indexNumber: z.string().min(1)
+  studentId: z.string().optional(),
+  indexNumber: z.string().optional(),
+  librarianCode: z.string().optional()
 });
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const data = registerSchema.parse(req.body);
 
   try {
-    await authService.register(data);
+    const newUser = await authService.register(data);
     res.status(201).json({
-      message: 'Registration successful. Please check your email to verify your account.'
+      message: 'Registration successful. Please check your email to verify your account.',
+      username: newUser.username
     });
   } catch (err) {
     if (err instanceof AuthError) {

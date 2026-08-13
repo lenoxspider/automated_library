@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Footer() {
   return (
     <footer className="border-t p-4 text-center text-xs opacity-60 font-mono mt-auto shrink-0 flex flex-col md:flex-row justify-between items-center gap-2" style={{ borderColor: 'var(--color-signal-border-dark)' }}>
@@ -7,8 +9,8 @@ export default function Footer() {
         <span>&copy; {new Date().getFullYear()}</span>
       </div>
       <div className="flex items-center gap-4">
-        <a href="#" className="hover:underline hover:opacity-100 transition-opacity">Help & Documentation</a>
-        <a href="#" className="hover:underline hover:opacity-100 transition-opacity">Contact Support</a>
+        <Link href="/help" className="hover:underline hover:opacity-100 transition-opacity">Help & Documentation</Link>
+        <Link href="/help" className="hover:underline hover:opacity-100 transition-opacity">Contact Support</Link>
       </div>
     </footer>
   );

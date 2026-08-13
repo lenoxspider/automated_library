@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle2, Hash, Camera, Globe, Upload, Search, Check } from 'lucide-react';
+import { X, Clock, CheckCircle2, Hash, Camera, Globe, Upload, Search, Check, Quote, Copy } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import BookCover from '../ui/BookCover';
 import StatusBadge, { type BookStatus } from '../ui/StatusBadge';
@@ -10,6 +10,7 @@ import Button from '../ui/Button';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
+import { generateCitations, type CitationStyle } from '../../lib/citation';
 
 export interface BookDetail {
   id: number;
@@ -55,6 +56,15 @@ export default function BookDetailModal({
   const queryClient = useQueryClient();
 
   const isLibrarianOrAdmin = user?.role === 'librarian' || user?.role === 'admin';
+
+  const [isCiting, setIsCiting] = useState(false);
+  const [citeStyle, setCiteStyle] = useState<CitationStyle>('apa');
+  const citations = generateCitations(book);
+
+  const copyCitation = async () => {
+    await navigator.clipboard.writeText(citations[citeStyle]);
+    toast.success('Citation copied to clipboard');
+  };
 
   // Cover editing states
   const [isEditingCover, setIsEditingCover] = useState(false);
@@ -244,6 +254,44 @@ export default function BookDetailModal({
               </div>
             </dl>
 
+            <button
+              type="button"
+              onClick={() => setIsCiting((v) => !v)}
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              <Quote size={14} />
+              Cite this book
+            </button>
+
+            {isCiting && (
+              <div className="mt-2 border border-gray-200 dark:border-slate-700 rounded-lg p-3 bg-gray-50 dark:bg-slate-800">
+                <div className="flex gap-1 mb-2">
+                  {(['apa', 'mla', 'chicago'] as CitationStyle[]).map((style) => (
+                    <button
+                      key={style}
+                      onClick={() => setCiteStyle(style)}
+                      className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition-colors ${
+                        citeStyle === style
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-400 border border-gray-200 dark:border-slate-700'
+                      }`}
+                    >
+                      {style}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs font-mono text-gray-700 dark:text-slate-300 break-words">
+                  {citations[citeStyle]}
+                </p>
+                <button
+                  onClick={copyCitation}
+                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  <Copy size={12} /> Copy citation
+                </button>
+              </div>
+            )}
+
             <div className="mt-5">
               {reservationBadge()}
               {myReservation ? (
@@ -258,14 +306,20 @@ export default function BookDetailModal({
                   )}
                 </div>
               ) : (
-                <Button
-                  onClick={onReserve}
-                  isLoading={isReserving}
-                  disabled={false}
-                  className="w-full"
-                >
-                  {status === 'available' ? 'Reserve Now' : 'Join Waitlist'}
-                </Button>
+                <>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 mb-3">
+                    Late returns are fined per day overdue, and every loan and reservation is tied to your
+                    student credentials — please return borrowed books on time.
+                  </p>
+                  <Button
+                    onClick={onReserve}
+                    isLoading={isReserving}
+                    disabled={false}
+                    className="w-full"
+                  >
+                    {status === 'available' ? 'Reserve Now' : 'Join Waitlist'}
+                  </Button>
+                </>
               )}
             </div>
           </div>
