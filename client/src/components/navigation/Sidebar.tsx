@@ -115,7 +115,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       <aside
         className={`fixed inset-y-0 left-0 z-50 ${isCollapsed ? 'w-20' : 'w-64'} flex flex-col justify-between transform transition-all duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${mounted && dark ? 'bg-slate-900/80 backdrop-blur-md border-r border-slate-700' : 'bg-white border-r border-gray-200'}`}
       >
-        <div className="p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6">
           <div className={`flex items-center gap-3 mb-10 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
             <div className="flex items-center gap-3 relative">
               <div className="text-indigo-600 shrink-0">

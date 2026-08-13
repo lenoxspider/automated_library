@@ -168,10 +168,10 @@ export default function ReservationsPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* MAIN CONTENT AREA */}
-        <div className="flex-1 flex flex-col overflow-hidden relative">
+        <Card className="flex-1 flex flex-col overflow-hidden relative p-0">
           
           {/* SEARCH & FILTERS */}
-          <div className="p-4 bg-white/50 dark:bg-slate-900/50 border-b border-gray-200 dark:border-slate-800 shrink-0 space-y-3 backdrop-blur-sm">
+          <div className="p-4 border-b border-gray-200 dark:border-slate-700 shrink-0 space-y-3">
             <div className="flex items-center gap-3">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -204,7 +204,7 @@ export default function ReservationsPage() {
           </div>
 
           {/* TABLE */}
-          <div className="flex-1 overflow-auto relative bg-white dark:bg-slate-950">
+          <div className="flex-1 overflow-auto relative">
             {isLoading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm z-10">
                 <LoadingSpinner />
@@ -301,7 +301,7 @@ export default function ReservationsPage() {
           </div>
 
           {/* PAGINATION */}
-          <div className="border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 flex items-center justify-between shrink-0">
+          <div className="border-t border-gray-200 dark:border-slate-700 p-3 flex items-center justify-between shrink-0">
             <p className="text-xs text-gray-500 dark:text-slate-400">
               Showing {reservations.length > 0 ? (page - 1) * limit + 1 : 0} to {Math.min(page * limit, totalCount)} of <span className="font-bold">{totalCount}</span> reservations
             </p>
@@ -357,7 +357,7 @@ export default function ReservationsPage() {
             </div>
           )}
 
-        </div>
+        </Card>
 
         {/* DETAILS DRAWER */}
         {focusedReservation && (

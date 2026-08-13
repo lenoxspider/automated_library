@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -12,13 +11,13 @@
   --color-signal-bg-light: #f9fafb;
   --color-signal-text-dark: #111827;
   --color-signal-text-light: #111827;
-  
+
   --color-signal-available: #4f46e5;
   --color-signal-available-on-light: #4f46e5;
   --color-signal-pending: #d97706;
   --color-signal-overdue: #ef4444;
   --color-signal-reserved: #3b82f6;
-  
+
   --color-signal-border-dark: #e5e7eb;
   --color-signal-border-light: #e5e7eb;
 }
@@ -26,22 +25,39 @@
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  background-color: #f9fafb; /* bg-gray-50 */
-  color: #111827; /* text-gray-900 */
+  background-color: #f9fafb;
+  /* bg-gray-50 */
+  color: #111827;
+  /* text-gray-900 */
 }
 
 /* Map legacy surface classes to modern card styling */
 @layer utilities {
-  .signal-surface-dark, .signal-surface-light {
+
+  .signal-surface-dark,
+  .signal-surface-light {
     background-color: #ffffff !important;
     color: #111827 !important;
-    border-radius: 0.75rem !important; /* rounded-xl */
+    border-radius: 0.75rem !important;
+    /* rounded-xl */
     border-color: #e5e7eb !important;
   }
 }
 
 /* Custom Scrollbar from New Design */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

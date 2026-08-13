@@ -150,7 +150,7 @@ export default function AcquisitionsPage() {
 
       <div className="grid lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1">
-          <Card className="p-6 sticky top-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800">
+          <Card className="p-6 sticky top-6">
             <div className="flex items-center gap-2 mb-6">
               <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
                 <Plus size={20} />
@@ -217,7 +217,7 @@ export default function AcquisitionsPage() {
         </div>
 
         <div className="lg:col-span-3 relative min-h-[400px]">
-          <Card className="overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 h-full flex flex-col shadow-sm">
+          <Card className="overflow-hidden h-full flex flex-col shadow-sm">
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-gray-50 dark:bg-slate-800/50 text-gray-500 dark:text-slate-400 border-b border-gray-200 dark:border-slate-800 sticky top-0">

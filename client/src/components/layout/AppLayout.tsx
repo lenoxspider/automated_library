@@ -34,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={`flex h-screen w-full overflow-hidden font-sans transition-colors duration-200 ${mounted && dark ? 'dark bg-slate-900 text-slate-100' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`flex h-screen w-full overflow-hidden font-sans transition-colors duration-200 ${mounted && dark ? 'bg-slate-900 text-slate-100' : 'bg-gray-50 text-gray-900'}`}>
       <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
       <div className="flex flex-col flex-1 overflow-hidden w-full">
         <TopBar onMenuClick={() => setIsMobileMenuOpen(true)} />

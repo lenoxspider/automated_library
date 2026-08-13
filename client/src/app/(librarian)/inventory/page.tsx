@@ -145,7 +145,7 @@ export default function InventoryPage() {
     <div className="flex h-[calc(100vh-12rem)] overflow-hidden bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
       
       {/* LEFT PANEL: Locations - Collapsible */}
-      <div className={`relative border-r border-gray-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md overflow-hidden shrink-0 transition-all duration-300 ease-in-out hidden md:flex flex-col ${sidebarOpen ? 'w-56' : 'w-10'}`}>
+      <Card className={`relative border-r border-gray-200 dark:border-slate-700 overflow-hidden shrink-0 transition-all duration-300 ease-in-out hidden md:flex flex-col p-0 rounded-none shadow-none ${sidebarOpen ? 'w-56' : 'w-10'}`}>
         {/* Toggle button */}
         <button
           onClick={() => setSidebarOpen(o => !o)}
@@ -209,7 +209,7 @@ export default function InventoryPage() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -323,7 +323,7 @@ export default function InventoryPage() {
           )}
 
           {/* TABLE */}
-          <Card className="overflow-hidden border border-gray-200 dark:border-slate-700">
+          <Card className="overflow-hidden">
             {isLoading ? (
               <LoadingSpinner />
             ) : data?.data.length === 0 ? (
